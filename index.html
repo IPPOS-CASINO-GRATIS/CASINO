@@ -1,0 +1,1959 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Blackjack Trainer Avanzato - Info Hi-Lo</title> <style>
+  @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;700&display=swap');
+
+  /* --- Basic Theme Variables (Light Theme Default - Mantenuto ma non ritoccato) --- */
+  :root {
+    --bg-color: #f4f4f4; /* Light Gray */
+    --text-color: #333; /* Dark Gray */
+    --card-bg: white;
+    --card-text-black: black;
+    --card-text-red: red;
+    --button-bg: #e0e0e0; /* Lighter Gray */
+    --button-text: #333;
+    --button-hover-bg: #d0d0d0;
+    --button-disabled-opacity: 0.5;
+    --highlight-color: #ffeb3b; /* Yellow */
+    --border-color: rgba(0, 0, 0, 0.1);
+    --panel-bg: rgba(0, 0, 0, 0.05);
+    --accent-color: #007bff; /* Blue */
+    --dealer-hidden-card-bg: #aaa;
+    --font-main: 'Nunito', sans-serif; /* Font Applicato */
+  }
+
+  /* --- Dark Theme (MODIFICATO) --- */
+  body[data-theme="dark"] {
+    --bg-color: #1f1f1f; /* Slightly softer dark */
+    --text-color: #dcdcdc; /* Slightly softer white */
+    --card-bg: #383838; /* Dark Gray */
+    --card-text-black: #dcdcdc;
+    --card-text-red: #ff9a8f; /* Softer Light Red */
+    --button-bg: #4a4a4a; /* Medium Gray */
+    --button-text: #dcdcdc;
+    --button-hover-bg: #5a5a5a; /* Hover state managed differently now */
+    --highlight-color: #ffd700; /* Gold */
+    --border-color: rgba(255, 255, 255, 0.15); /* Slightly more visible border */
+    --panel-bg: #2a2a2a; /* More opaque panel */
+    --accent-color: #4fc3f7; /* Lighter, vibrant blue */
+    --dealer-hidden-card-bg: #252525;
+    /* Added radial gradient for depth */
+    background-image: radial-gradient(circle at top center, hsl(0, 0%, 18%) 0%, var(--bg-color) 70%);
+    background-attachment: fixed; /* Prevent gradient scrolling */
+  }
+
+  /* --- General Styles (MODIFICATO) --- */
+  body {
+    font-family: var(--font-main); /* Usa il font importato */
+    text-align: center;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    padding-top: 15px; /* Slightly more padding */
+    margin: 0;
+    transition: background-color 0.3s, color 0.3s, background-image 0.3s;
+    background-image: none; /* Default no gradient for light theme */
+    min-height: 100vh; /* Ensure body takes full height */
+  }
+
+  .game-container {
+    max-width: 1100px; /* Slightly wider */
+    margin: 0 auto;
+    padding: 20px; /* More padding */
+  }
+
+  /* --- Cards (MODIFICATO) --- */
+  .cards {
+    margin: 15px auto; /* More margin */
+    display: flex;
+    justify-content: center;
+    min-height: 115px; /* Adjusted */
+    gap: 12px; /* More gap */
+    flex-wrap: wrap;
+    perspective: 1200px; /* Increased perspective */
+  }
+
+  .card {
+    display: inline-block;
+    border: 1px solid var(--border-color);
+    border-radius: 8px; /* More rounded */
+    background: var(--card-bg);
+    width: 65px; /* Slightly wider */
+    height: 95px; /* Slightly taller */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4); /* Softer shadow */
+    margin: 3px;
+    position: relative;
+    transform-style: preserve-3d;
+    transition: transform 0.7s cubic-bezier(0.4, 0.0, 0.2, 1); /* Smoother transition */
+    transform: rotateY(180deg);
+  }
+
+  .card-inner {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      text-align: center;
+      transform-style: preserve-3d;
+  }
+
+  .card-face {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    border-radius: 8px; /* Match parent */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 5px;
+    box-sizing: border-box;
+  }
+
+  .card-front {
+    background-color: var(--card-bg);
+    /* Subtle gradient for texture */
+    background-image: linear-gradient(to bottom, rgba(255,255,255,0.05) 0%, rgba(0,0,0,0.05) 100%);
+    color: var(--card-text-black);
+    font-size: 22px; /* Larger rank */
+    font-weight: bold;
+    transform: rotateY(0deg);
+    border: 1px solid rgba(0,0,0,0.1); /* Inner border effect */
+  }
+
+  .card-back {
+    background-color: var(--dealer-hidden-card-bg);
+    color: var(--text-color);
+    transform: rotateY(180deg);
+    background-image: linear-gradient(45deg, rgba(255,255,255,0.1) 25%, transparent 25%),
+                      linear-gradient(-45deg, rgba(255,255,255,0.1) 25%, transparent 25%),
+                      linear-gradient(45deg, transparent 75%, rgba(255,255,255,0.1) 75%),
+                      linear-gradient(-45deg, transparent 75%, rgba(255,255,255,0.1) 75%);
+    background-size: 18px 18px; /* Adjusted pattern size */
+  }
+
+  .card.flipped {
+      transform: rotateY(0deg);
+  }
+
+  .card-front.red { color: var(--card-text-red); }
+  .card-front.black { color: var(--card-text-black); }
+
+  .card .suit {
+    font-size: 16px; /* Larger suit */
+    font-weight: normal;
+    line-height: 1.1;
+  }
+
+
+  /* --- Buttons & Betting (MODIFICATO) --- */
+  #buttons, #betting-buttons, #utility-buttons {
+    margin-top: 20px; /* More space */
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px; /* More gap */
+  }
+
+  button, .toggle-switch label {
+    padding: 12px 20px; /* Larger buttons */
+    font-size: 15px; /* Slightly larger font */
+    font-weight: bold; /* Bold text */
+    margin: 5px;
+    cursor: pointer;
+    border: none;
+    border-radius: 8px; /* More rounded */
+    background-color: var(--button-bg);
+    color: var(--button-text);
+    transition: background-color 0.2s ease, opacity 0.3s ease, transform 0.15s ease, box-shadow 0.2s ease;
+    user-select: none;
+    -webkit-user-select: none;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3); /* Add base shadow */
+    letter-spacing: 0.5px; /* Slight letter spacing */
+  }
+  button:hover:not(:disabled) {
+    background-color: var(--button-hover-bg); /* Still change bg slightly */
+    transform: translateY(-2px); /* Lift button on hover */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4); /* Enhance shadow on hover */
+  }
+  button:active:not(:disabled) {
+      transform: translateY(0px); /* Press button down */
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3); /* Reduce shadow on active */
+  }
+  button:disabled {
+    opacity: var(--button-disabled-opacity);
+    cursor: not-allowed;
+    box-shadow: none; /* Remove shadow when disabled */
+    transform: none;
+  }
+  button.hint-highlight {
+      box-shadow: 0 0 12px 4px var(--highlight-color);
+      border: 1px solid var(--highlight-color);
+      transform: translateY(-1px); /* Slight lift for hint */
+  }
+
+  /* --- Betting Area with Chips (MODIFICATO) --- */
+  #betting-area {
+    margin-bottom: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px; /* Increased gap */
+  }
+
+  #proposed-bet-display {
+    font-size: 1.4em; /* Larger */
+    font-weight: bold;
+    color: var(--highlight-color);
+    min-height: 1.5em;
+    background-color: rgba(0,0,0,0.2); /* Subtle background */
+    padding: 5px 15px;
+    border-radius: 5px;
+  }
+
+  #clickable-chips {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px; /* Increased Spacing between chips */
+      margin-bottom: 15px;
+  }
+
+  .chip-button {
+      width: 55px; /* Slightly larger chips */
+      height: 55px;
+      cursor: pointer;
+      border-radius: 50%;
+      border: 3px solid rgba(255, 255, 255, 0.4); /* Thicker border */
+      transition: transform 0.1s ease-out, opacity 0.3s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+      /* Inset shadow for 3D effect */
+      box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.5), 0 1px 2px rgba(0,0,0,0.2);
+      user-select: none;
+      -webkit-user-select: none;
+      background-color: transparent;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden; /* Ensure SVG fits */
+  }
+   .chip-button img { display: block; width: 100%; height: 100%; } /* Ensure SVG fills */
+
+  .chip-button:hover:not([disabled]) {
+      transform: scale(1.03); /* Keep subtle scale */
+      border-color: white;
+      /* Glow effect on hover */
+      box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.5), 0 0 10px 2px var(--highlight-color);
+  }
+
+  .chip-button:active:not([disabled]) {
+      transform: scale(0.97);
+      box-shadow: inset 0 3px 5px rgba(0, 0, 0, 0.6); /* Deeper inset on press */
+  }
+
+  .chip-button[disabled] {
+      opacity: 0.4;
+      cursor: not-allowed;
+      transform: none;
+      border-color: rgba(255, 255, 255, 0.4); /* Reset border */
+      box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.5); /* Keep base inset shadow */
+  }
+  /* Fine Stili Nuovi/Modificati per Fiches */
+
+
+  #bet-chips {
+      min-height: 30px;
+      margin-top: 10px; /* More space */
+      font-size: 1.2em; /* Larger */
+      font-weight: bold;
+      color: var(--text-color);
+      background-color: rgba(0,0,0,0.1);
+      padding: 3px 10px;
+      border-radius: 5px;
+  }
+
+
+  /* --- Player/Dealer Info --- */
+  #player-info, #dealer-info {
+    margin-bottom: 20px; /* More space */
+  }
+  h2 { margin-bottom: 10px; font-size: 1.5em; text-transform: uppercase; letter-spacing: 1px;}
+
+  /* --- Multiple Hands --- */
+  #player-hands-container {
+      display: flex;
+      justify-content: center;
+      gap: 20px; /* Wider gap */
+      flex-wrap: wrap;
+      margin-top: 15px;
+  }
+  .player-hand {
+      border: 2px solid var(--border-color); /* Thicker border */
+      border-radius: 12px; /* More rounded */
+      padding: 15px; /* More padding */
+      min-width: 180px; /* Wider */
+      background-color: var(--panel-bg);
+      position: relative;
+      transition: border-color 0.3s, box-shadow 0.3s;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+  }
+  .player-hand h3 {
+      margin-top: 0;
+      margin-bottom: 8px;
+      font-size: 1.1em; /* Slightly larger */
+      color: var(--accent-color);
+      text-align: center;
+  }
+  .player-hand .cards { min-height: 100px; margin-bottom: 10px; }
+  .player-score { font-size: 1em; margin-bottom: 5px; margin-top: 8px; font-weight: bold; }
+  .hand-status { font-size: 1em; font-weight: bold; color: var(--highlight-color); min-height: 1.2em; text-align: center; }
+  .player-hand.current-hand {
+      border-color: var(--highlight-color);
+      box-shadow: 0 0 15px rgba(255, 223, 0, 0.6); /* Stronger glow */
+  }
+
+
+  #result {
+    color: var(--highlight-color);
+    font-weight: bold;
+    min-height: 1.8em; /* Taller */
+    margin-top: 20px;
+    font-size: 1.3em; /* Larger */
+    white-space: pre-line;
+    background-color: rgba(0,0,0,0.25);
+    padding: 10px;
+    border-radius: 8px;
+  }
+
+
+  /* --- Trainer, Stats, Utilities (MODIFICATO) --- */
+   #trainer-controls, #session-stats, #utility-controls {
+     background-color: var(--panel-bg);
+     border: 1px solid var(--border-color);
+     border-radius: 10px; /* Slightly more rounded */
+     padding: 15px; /* More padding */
+     margin: 20px auto;
+     max-width: 450px; /* Slightly wider */
+     font-size: 1em; /* Base font size */
+     box-shadow: 0 3px 6px rgba(0,0,0,0.3);
+   }
+   #trainer-controls h3, #session-stats h3, #utility-controls h3 {
+       margin-top: 0;
+       margin-bottom: 15px; /* More space */
+       color: var(--accent-color);
+       font-size: 1.2em; /* Larger heading */
+       text-align: center;
+       border-bottom: 1px solid var(--border-color);
+       padding-bottom: 8px;
+       /* NUOVO: Stili per contenere il bottone info */
+       display: flex;
+       justify-content: center;
+       align-items: center;
+       position: relative; /* Necessario se si vuole posizionare il bottone in modo assoluto, ma flex è meglio */
+   }
+   #trainer-controls div, #session-stats div, #utility-controls div:not(:has(button#toggle-trainer-button)) {
+       margin-bottom: 8px; /* More space */
+       display: flex;
+       justify-content: space-between;
+       align-items: center;
+       padding: 3px 0; /* Add vertical padding */
+   }
+   #utility-controls div:has(button#toggle-trainer-button) {
+       margin-top: 15px;
+       text-align: center;
+   }
+   #trainer-controls label, #utility-controls label {
+       margin-right: 15px; /* More space */
+       font-weight: bold;
+   }
+   #trainer-controls span:last-child, #session-stats span:last-child {
+       font-weight: bold; /* Make values bold */
+       color: var(--highlight-color); /* Highlight values */
+   }
+   #session-stats #stats-win-rate {
+       color: var(--accent-color); /* Different color for win rate */
+   }
+
+   /* --- NUOVO: Stile Bottone Info Hi-Lo --- */
+   #hilo-info-button {
+        padding: 0; /* Rimuove padding di default */
+        margin: 0 0 0 10px; /* Spazio a sinistra del titolo */
+        width: 24px; /* Dimensione piccola */
+        height: 24px;
+        font-size: 15px; /* Dimensione del "?" */
+        line-height: 22px; /* Allinea verticalmente il "?" */
+        font-weight: bold;
+        border-radius: 50%; /* Rotondo */
+        background-color: var(--button-bg); /* Colore base bottone */
+        color: var(--button-text);
+        border: 1px solid var(--border-color);
+        box-shadow: none; /* Nessuna ombra */
+        cursor: help; /* Cursore aiuto */
+        vertical-align: middle; /* Allineamento verticale (potrebbe non servire con flex) */
+        transition: background-color 0.2s, border-color 0.2s;
+        flex-shrink: 0; /* Impedisce al bottone di restringersi */
+   }
+   #hilo-info-button:hover {
+        background-color: var(--button-hover-bg);
+        border-color: var(--accent-color);
+        transform: none; /* Sovrascrive hover generale */
+        box-shadow: none;
+   }
+   /* --- Fine Stile Bottone Info --- */
+
+
+   /* --- Toggle Switch (Stesso stile) --- */
+    .toggle-switch {
+      position: relative;
+      display: inline-block;
+      width: 50px; height: 24px;
+      vertical-align: middle;
+    }
+    .toggle-switch input { opacity: 0; width: 0; height: 0; }
+    .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #555; transition: .4s; border-radius: 24px; }
+    .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+    input:checked + .slider { background-color: var(--accent-color); }
+    input:focus + .slider { box-shadow: 0 0 2px var(--accent-color); }
+    input:checked + .slider:before { transform: translateX(26px); }
+
+
+  /* --- Visually Hidden (Invariato) --- */
+  .visually-hidden { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0, 0, 0, 0); border: 0; }
+
+  /* --- Basic Responsiveness (MODIFICATO) --- */
+  @media (max-width: 768px) {
+      .card { width: 60px; height: 90px; border-radius: 6px;}
+      .card-front { font-size: 20px; }
+      .card .suit { font-size: 14px; }
+      button, .toggle-switch label { font-size: 14px; padding: 10px 15px;}
+      #hilo-info-button { width: 22px; height: 22px; font-size: 14px; line-height: 20px; } /* Ridimensiona bottone info */
+      .player-hand { min-width: 160px; padding: 12px; border-radius: 10px;}
+      h1 { font-size: 2em; } /* Adjusted */
+      #trainer-controls, #session-stats, #utility-controls { max-width: 90%; padding: 12px; }
+      .chip-button { width: 50px; height: 50px; border-width: 2px; } /* Adjust chip size */
+  }
+
+   @media (max-width: 480px) {
+      body { padding-top: 10px; }
+      .game-container { padding: 10px; }
+      h1 { font-size: 1.6em; }
+      .cards { min-height: 100px; gap: 8px;} /* Adjusted */
+      .card { width: 50px; height: 75px; border-radius: 4px; margin: 2px;}
+      .card-front { font-size: 16px; }
+      .card .suit { font-size: 12px; }
+      #buttons, #betting-buttons, #utility-buttons { margin-top: 15px; gap: 5px;}
+      button, .toggle-switch label { font-size: 12px; padding: 8px 10px; margin: 3px;}
+      #hilo-info-button { width: 20px; height: 20px; font-size: 12px; line-height: 18px; margin-left: 5px;} /* Ridimensiona ancora bottone info */
+      .player-hand { min-width: 130px; padding: 8px; gap: 8px; border-radius: 8px;}
+      .player-hand .cards { min-height: 80px; }
+      #player-hands-container { gap: 10px; }
+      #result { font-size: 1.1em; margin-top: 15px; padding: 8px;}
+      #trainer-controls, #session-stats, #utility-controls { padding: 10px; margin: 15px auto; font-size: 0.9em;}
+      #trainer-controls h3 { font-size: 1.1em; }
+      #trainer-controls div, #session-stats div, #utility-controls div:not(:has(button#toggle-trainer-button)) { flex-direction: row; align-items: center; } /* Revert stacking maybe */
+      .chip-button { width: 45px; height: 45px; gap: 5px; border-width: 2px;} /* Adjust chip size */
+      #proposed-bet-display { font-size: 1.2em; padding: 4px 10px; }
+   }
+</style>
+</head>
+<body data-theme="dark">
+<div class="game-container">
+    <h1>Blackjack Trainer</h1>
+
+    <div id="utility-controls">
+        <h3>Utilità</h3>
+        <div>
+            <label for="theme-toggle">Tema Scuro</label>
+            <label class="toggle-switch">
+                <input type="checkbox" id="theme-toggle" checked>
+                <span class="slider"></span>
+            </label>
+        </div>
+        <div>
+             <label for="training-mode-toggle">Modalità Allenamento Conteggio</label>
+             <label class="toggle-switch">
+                <input type="checkbox" id="training-mode-toggle">
+                <span class="slider"></span>
+             </label>
+        </div>
+         <div>
+             <label for="show-hints-toggle">Mostra Suggerimenti (Console)</label>
+             <label class="toggle-switch">
+                <input type="checkbox" id="show-hints-toggle">
+                <span class="slider"></span>
+             </label>
+         </div>
+         <div> <button id="toggle-trainer-button" onclick="toggleTrainer()">Mostra Contatore</button>
+         </div>
+    </div>
+
+    <div id="trainer-controls" style="display: none;">
+      <h3>
+        Contatore Carte (Hi-Lo)
+        <button id="hilo-info-button" onclick="showHiLoInfo()" aria-label="Informazioni sul conteggio Hi-Lo" title="Cos'è il conteggio Hi-Lo?">?</button>
+      </h3>
+      <div><span>Conteggio Corrente (Running Count):</span> <span id="running-count">0</span></div>
+      <div><span>Mazzi Rimanenti (stimati):</span> <span id="decks-remaining">0.0</span></div>
+      <div><span>Conteggio Reale (True Count):</span> <span id="true-count">0.0</span></div>
+    </div>
+
+    <div id="session-stats">
+        <h3>Statistiche Sessione</h3>
+        <div><span>Mani Giocate:</span> <span id="stats-hands">0</span></div>
+        <div><span>Vittorie:</span> <span id="stats-wins">0</span></div>
+        <div><span>Sconfitte:</span> <span id="stats-losses">0</span></div>
+        <div><span>Pareggi:</span> <span id="stats-pushes">0</span></div>
+        <div><span>Blackjack Vinti:</span> <span id="stats-bjs">0</span></div>
+        <div><span>Win Rate (V/V+S):</span> <span id="stats-win-rate">N/A</span></div>
+        <button id="reset-stats-button" onclick="resetStats()" style="margin-top: 10px; width:100%;">Azzera Statistiche</button>
+    </div>
+
+
+    <div id="player-info">
+      <h2>Giocatore</h2>
+      <p id="player-balance">Saldo: $1000</p>
+      <div id="bet-chips">Puntata Mano: $0</div>
+      <div id="player-hands-container">
+          </div>
+    </div>
+
+    <div id="dealer-info">
+      <h2>Banco</h2>
+      <div id="dealer-cards" class="cards" aria-label="Carte del banco"></div>
+      <p id="dealer-score">Punteggio: ???</p>
+    </div>
+
+    <div id="betting-area">
+        <h3>Piazza la tua Puntata</h3>
+        <div id="proposed-bet-display">Puntata: $0</div>
+
+        <div id="clickable-chips">
+             <img src="data:image/svg+xml;charset=utf-8,%3Csvg width='50' height='50' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='50' cy='50' r='48' fill='%23FFFFFF' stroke='%23000000' stroke-width='2'/%3E%3Ctext x='50' y='55' font-family='sans-serif' font-size='40' font-weight='bold' fill='%23000000' text-anchor='middle' dominant-baseline='middle'%3E10%3C/text%3E%3C/svg%3E" alt="Fiche da $10" class="chip-button" data-value="10" width="55" height="55" draggable="false">
+            <img src="data:image/svg+xml;charset=utf-8,%3Csvg width='50' height='50' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='50' cy='50' r='48' fill='%23888888' stroke='%23000000' stroke-width='2'/%3E%3Ctext x='50' y='55' font-family='sans-serif' font-size='40' font-weight='bold' fill='%23FFFFFF' text-anchor='middle' dominant-baseline='middle'%3E20%3C/text%3E%3C/svg%3E" alt="Fiche da $20" class="chip-button" data-value="20" width="55" height="55" draggable="false">
+            <img src="data:image/svg+xml;charset=utf-8,%3Csvg width='50' height='50' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='50' cy='50' r='48' fill='%23FF0000' stroke='%23000000' stroke-width='2'/%3E%3Ctext x='50' y='55' font-family='sans-serif' font-size='40' font-weight='bold' fill='%23FFFFFF' text-anchor='middle' dominant-baseline='middle'%3E50%3C/text%3E%3C/svg%3E" alt="Fiche da $50" class="chip-button" data-value="50" width="55" height="55" draggable="false">
+            <img src="data:image/svg+xml;charset=utf-8,%3Csvg width='50' height='50' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='50' cy='50' r='48' fill='%23000000' stroke='%23FFFFFF' stroke-width='2'/%3E%3Ctext x='50' y='55' font-family='sans-serif' font-size='35' font-weight='bold' fill='%23FFFFFF' text-anchor='middle' dominant-baseline='middle'%3E100%3C/text%3E%3C/svg%3E" alt="Fiche da $100" class="chip-button" data-value="100" width="55" height="55" draggable="false">
+            <img src="data:image/svg+xml;charset=utf-8,%3Csvg width='50' height='50' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='50' cy='50' r='48' fill='%23800080' stroke='%23FFFFFF' stroke-width='2'/%3E%3Ctext x='50' y='55' font-family='sans-serif' font-size='35' font-weight='bold' fill='%23FFFFFF' text-anchor='middle' dominant-baseline='middle'%3E500%3C/text%3E%3C/svg%3E" alt="Fiche da $500" class="chip-button" data-value="500" width="55" height="55" draggable="false">
+            <img src="data:image/svg+xml;charset=utf-8,%3Csvg width='50' height='50' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='50' cy='50' r='48' fill='%23FFA500' stroke='%23000000' stroke-width='2'/%3E%3Ctext x='50' y='55' font-family='sans-serif' font-size='30' font-weight='bold' fill='%23000000' text-anchor='middle' dominant-baseline='middle'%3E1000%3C/text%3E%3C/svg%3E" alt="Fiche da $1000" class="chip-button" data-value="1000" width="55" height="55" draggable="false">
+            <img src="data:image/svg+xml;charset=utf-8,%3Csvg width='50' height='50' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='50' cy='50' r='48' fill='%230000FF' stroke='%23FFFFFF' stroke-width='2'/%3E%3Ctext x='50' y='55' font-family='sans-serif' font-size='30' font-weight='bold' fill='%23FFFFFF' text-anchor='middle' dominant-baseline='middle'%3E2000%3C/text%3E%3C/svg%3E" alt="Fiche da $2000" class="chip-button" data-value="2000" width="55" height="55" draggable="false">
+        </div>
+        <div id="betting-buttons">
+          <button id="place-bet-button" onclick="placeBet()" disabled aria-label="Piazza la puntata selezionata">Conferma Puntata</button>
+          <button id="clear-bet-button" onclick="clearProposedBet()" disabled aria-label="Azzera la puntata selezionata">Azzera Puntata</button>
+          <button id="all-in-button" onclick="playerAllIn()" disabled aria-label="Punta tutto il saldo disponibile">All-in</button>
+          <button id="restore-bet-button" onclick="restoreBet()" disabled aria-label="Ripristina l'ultima puntata piazzata">Ripristina Puntata</button>
+      </div>
+    </div>
+    <div id="buttons">
+      <button id="hit-button" onclick="playerHit()" disabled aria-label="Chiedi un'altra carta (H)">Carta (H)</button>
+      <button id="stand-button" onclick="playerStand()" disabled aria-label="Stai con le carte attuali (Spazio/S)">Stai (Spazio/S)</button>
+      <button id="double-down-button" onclick="playerDoubleDown()" disabled aria-label="Raddoppia la puntata e prendi una sola carta (D)">Raddoppia (D)</button>
+      <button id="surrender-button" onclick="playerSurrender()" disabled aria-label="Arrenditi e recupera metà puntata (R)">Resa (R)</button>
+      <button id="split-button" onclick="playerSplit()" disabled aria-label="Dividi le carte (L)">Dividi (L)</button>
+      <button id="new-game-button" onclick="resetGame(true)" disabled aria-label="Inizia una nuova partita (N)">Nuova Partita (N)</button>
+    </div>
+
+    <h2 id="result" aria-live="polite"></h2>
+
+</div>
+
+<script>
+    // --- Constants and Global Variables ---
+    const suits = ['♥', '♦', '♣', '♠'];
+    const ranks = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
+    const numDecks = 6;
+    const localStorageKey = 'blackjackBalance';
+    const lastBetStorageKey = 'blackjackLastBet';
+    const statsStorageKey = 'blackjackStats';
+    const themeStorageKey = 'blackjackTheme';
+
+    let deck = [];
+    let playerHands = []; // Array of hand objects: { cards: [], outcome: null, message: "", status: null, isDoubled: false, fromSplitAces: false }
+    let dealerHand = []; // Array of cards
+    let gameOver = true;
+    let playerBalance = 1000;
+    let currentBet = 0; // Puntata EFFETTIVA della mano corrente
+    let baseBet = 0;    // Puntata base per split/double
+    let lastBet = 10;   // Ultima puntata piazzata
+    let proposedBet = 0; // Puntata costruita cliccando le fiches (NUOVA)
+    let currentPlayerHandIndex = 0;
+
+    // --- New Feature Variables ---
+    let runningCount = 0;
+    let trueCount = 0;
+    let isTrainingMode = false;
+    let showHints = false;
+    let initialDeckSize = numDecks * 52;
+    let stats = { handsPlayed: 0, wins: 0, losses: 0, pushes: 0, blackjacks: 0 };
+
+    // --- DOM Elements ---
+    // Buttons
+    const hitButton = document.getElementById('hit-button');
+    const standButton = document.getElementById('stand-button');
+    const doubleDownButton = document.getElementById('double-down-button');
+    const surrenderButton = document.getElementById('surrender-button');
+    const splitButton = document.getElementById('split-button');
+    const placeBetButton = document.getElementById('place-bet-button');
+    const clearBetButton = document.getElementById('clear-bet-button'); // NUOVO
+    const allInButton = document.getElementById('all-in-button');
+    const restoreBetButton = document.getElementById('restore-bet-button');
+    const newGameButton = document.getElementById('new-game-button');
+    const toggleTrainerButton = document.getElementById('toggle-trainer-button');
+    // const hiloInfoButton = document.getElementById('hilo-info-button'); // Non serve se usiamo onclick
+
+    // Display Areas
+    const resultElement = document.getElementById('result');
+    const playerBalanceElement = document.getElementById('player-balance');
+    const playerHandsContainer = document.getElementById('player-hands-container');
+    const dealerCardsContainer = document.getElementById('dealer-cards');
+    const dealerScoreElement = document.getElementById('dealer-score');
+    // const betAmountInput = document.getElementById('bet-amount'); // RIMOSSO DAL FUNZIONAMENTO
+    const clickableChipsContainer = document.getElementById('clickable-chips'); // NUOVO
+    const proposedBetDisplay = document.getElementById('proposed-bet-display'); // NUOVO
+    const betChipsContainer = document.getElementById('bet-chips'); // Ora mostra PUNTATA MANO
+
+    // Trainer Display Elements
+    const trainerControls = document.getElementById('trainer-controls');
+    const runningCountDisplay = document.getElementById('running-count');
+    const trueCountDisplay = document.getElementById('true-count');
+    const decksRemainingDisplay = document.getElementById('decks-remaining');
+
+    // Stats Display Elements
+    const statsHandsDisplay = document.getElementById('stats-hands');
+    const statsWinsDisplay = document.getElementById('stats-wins');
+    const statsLossesDisplay = document.getElementById('stats-losses');
+    const statsPushesDisplay = document.getElementById('stats-pushes');
+    const statsBjsDisplay = document.getElementById('stats-bjs');
+    const statsWinRateDisplay = document.getElementById('stats-win-rate');
+
+    // Utility Toggles
+    const themeToggle = document.getElementById('theme-toggle');
+    const trainingModeToggle = document.getElementById('training-mode-toggle');
+    const showHintsToggle = document.getElementById('show-hints-toggle');
+
+    // --- Sound Function ---
+    function playSound(soundElement) {
+        if (soundElement && soundElement.src && !soundElement.src.endsWith('#') && soundElement.currentSrc) {
+            soundElement.currentTime = 0;
+            soundElement.play().catch(e => console.log("Audio play failed:", e));
+        }
+    }
+
+    // --- Persistence Functions ---
+    function saveGameState() {
+        try {
+            localStorage.setItem(localStorageKey, playerBalance.toString());
+            if (typeof lastBet === 'number' && lastBet > 0) {
+                 localStorage.setItem(lastBetStorageKey, lastBet.toString());
+            } else {
+                 localStorage.removeItem(lastBetStorageKey);
+            }
+            localStorage.setItem(statsStorageKey, JSON.stringify(stats));
+            localStorage.setItem(themeStorageKey, document.body.getAttribute('data-theme') || 'dark');
+        } catch (e) {
+            console.error("Errore nel salvataggio dello stato in localStorage:", e);
+        }
+    }
+
+    function loadGameState() {
+        try {
+            const savedBalance = localStorage.getItem(localStorageKey);
+            playerBalance = (savedBalance !== null && !isNaN(parseInt(savedBalance)) && parseInt(savedBalance) >= 0) ? parseInt(savedBalance) : 1000;
+            const savedLastBet = localStorage.getItem(lastBetStorageKey);
+            lastBet = (savedLastBet !== null && !isNaN(parseInt(savedLastBet)) && parseInt(savedLastBet) > 0) ? parseInt(savedLastBet) : 10;
+        } catch (e) {
+            console.error("Errore caricamento balance/lastBet:", e);
+            playerBalance = 1000; lastBet = 10;
+        }
+        if (playerBalance < 0) playerBalance = 0;
+        if (lastBet < 1) lastBet = 10;
+
+        try {
+            const savedStats = localStorage.getItem(statsStorageKey);
+            if (savedStats) {
+                const parsedStats = JSON.parse(savedStats);
+                stats.handsPlayed = Number(parsedStats.handsPlayed) || 0;
+                stats.wins = Number(parsedStats.wins) || 0;
+                stats.losses = Number(parsedStats.losses) || 0;
+                stats.pushes = Number(parsedStats.pushes) || 0;
+                stats.blackjacks = Number(parsedStats.blackjacks) || 0;
+            } else {
+                 resetStats(false);
+            }
+        } catch (e) {
+             console.error("Errore caricamento stats:", e);
+             resetStats(false);
+        }
+
+         const savedTheme = localStorage.getItem(themeStorageKey);
+         if (savedTheme === 'light') {
+             document.body.setAttribute('data-theme', 'light');
+             if (themeToggle) themeToggle.checked = false;
+         } else {
+             document.body.setAttribute('data-theme', 'dark');
+             if (themeToggle) themeToggle.checked = true;
+         }
+         updateBettingUI();
+         updateStatsDisplay();
+    }
+
+    // --- Core Blackjack Logic ---
+    function getCardValue(rank) {
+        if (['J', 'Q', 'K'].includes(rank)) return 10;
+        if (rank === 'A') return 11;
+        return parseInt(rank);
+    }
+
+    function createDeck(num) {
+        let newDeck = [];
+        for (let i = 0; i < num; i++) {
+            for (const suit of suits) {
+                for (const rank of ranks) {
+                    newDeck.push({ suit: suit, rank: rank, value: getCardValue(rank) });
+                }
+            }
+        }
+        initialDeckSize = newDeck.length;
+        return newDeck;
+    }
+
+    function shuffleDeck(deckToShuffle) {
+        for (let i = deckToShuffle.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [deckToShuffle[i], deckToShuffle[j]] = [deckToShuffle[j], deckToShuffle[i]];
+        }
+        console.log("Mazzo Mescolato");
+    }
+
+    // --- Card Counting Logic ---
+    function getHiLoValue(rank) {
+        const value = getCardValue(rank);
+        if (value >= 2 && value <= 6) return 1;
+        if (value >= 10 || rank === 'A') return -1;
+        return 0;
+    }
+
+    function updateRunningCount(card) {
+        if (!card || !card.rank) return;
+        runningCount += getHiLoValue(card.rank);
+        updateCountDisplay();
+    }
+
+    function updateCountDisplay() {
+         if (isTrainingMode && trainerControls && trainerControls.style.display !== 'none') {
+             const remainingCards = deck.length;
+             const remainingDecksRaw = (remainingCards > 0) ? (remainingCards / 52) : numDecks;
+             const remainingDecks = Math.max(0.5, remainingDecksRaw).toFixed(1);
+             trueCount = (remainingDecksRaw > 0.2) ? (runningCount / remainingDecksRaw) : runningCount * 2; // Approximation for low deck
+             if (runningCountDisplay) runningCountDisplay.textContent = runningCount;
+             if (decksRemainingDisplay) decksRemainingDisplay.textContent = remainingDecks;
+             if (trueCountDisplay) trueCountDisplay.textContent = trueCount.toFixed(1);
+         }
+    }
+
+    function resetCounts() {
+        runningCount = 0;
+        trueCount = 0;
+        updateCountDisplay();
+    }
+
+    // --- Drawing and Displaying Cards ---
+    function drawCard(cardsArray) {
+        if (!Array.isArray(cardsArray)) return null;
+        const reshuffleThreshold = Math.floor(initialDeckSize * 0.25); // Reshuffle at 75% penetration
+        const absoluteMinCards = 10; // Safety minimum
+        if (deck.length < reshuffleThreshold || deck.length < absoluteMinCards) {
+            console.warn(`Mazzo quasi esaurito (${deck.length} carte, soglia ${reshuffleThreshold})! Rimescolo...`);
+            deck = createDeck(numDecks);
+            shuffleDeck(deck);
+            resetCounts();
+            if (resultElement && !gameOver) resultElement.textContent += "\n(Mazzo rimescolato)"; // Append message only if game active
+            if (deck.length < 1) {
+                console.error("Errore critico: impossibile creare/mescolare il mazzo.");
+                return null; // Critical error
+            }
+        }
+        if (deck.length < 1) {
+             console.error("Errore critico: mazzo vuoto.");
+             return null; // Should not happen if reshuffle works
+        }
+        const card = deck.pop();
+        cardsArray.push(card);
+        return card;
+    }
+
+    function calculateScore(cardsArray) {
+        if (!Array.isArray(cardsArray) || cardsArray.length === 0) return 0;
+        let total = 0;
+        let aces = 0;
+        for (let card of cardsArray) {
+            if(!card || typeof card.value === 'undefined') continue; // Skip invalid card objects
+            total += card.value;
+            if (card.rank === 'A') aces++;
+        }
+        // Adjust for Aces
+        while (total > 21 && aces > 0) {
+            total -= 10; // Change Ace value from 11 to 1
+            aces--;
+        }
+        return total;
+    }
+
+    function isBlackjack(cardsArray) {
+        if (!Array.isArray(cardsArray)) return false;
+        return cardsArray.length === 2 && calculateScore(cardsArray) === 21;
+    }
+
+    function displayCards(cardsArray, containerElement, hideFirst = false) {
+        if (!containerElement || !Array.isArray(cardsArray)) return;
+        containerElement.innerHTML = ''; // Clear previous cards
+        cardsArray.forEach((card, index) => {
+            if (!card || !card.rank || !card.suit) {
+                console.error("displayCards: Oggetto carta non valido:", card); return;
+            }
+
+            // Create card elements
+            const cardElement = document.createElement('div');
+            cardElement.className = 'card';
+            cardElement.setAttribute('aria-label', `${card.rank} di ${card.suit}`);
+
+            const cardInner = document.createElement('div');
+            cardInner.className = 'card-inner';
+
+            const cardFront = document.createElement('div');
+            cardFront.className = 'card-face card-front';
+            cardFront.innerHTML = `${card.rank}<br><span class="suit" aria-hidden="true">${card.suit}</span>`;
+            // Apply color class based on suit
+            if (card.suit === '♥' || card.suit === '♦') cardFront.classList.add('red');
+            else cardFront.classList.add('black');
+
+            const cardBack = document.createElement('div');
+            cardBack.className = 'card-face card-back';
+
+            // Assemble card
+            cardInner.appendChild(cardFront);
+            cardInner.appendChild(cardBack);
+            cardElement.appendChild(cardInner);
+
+            // Add to container
+            containerElement.appendChild(cardElement);
+
+            // Determine visibility and apply flip animation
+            const isDealerHoleCard = (containerElement.id === 'dealer-cards' && index === 0);
+            const shouldBeVisible = !(isDealerHoleCard && hideFirst && !gameOver);
+
+            if (shouldBeVisible) {
+                // Use double requestAnimationFrame to ensure transition applies correctly
+                requestAnimationFrame(() => {
+                    requestAnimationFrame(() => {
+                        cardElement.classList.add('flipped');
+                    });
+                });
+            } else {
+                // Ensure hidden card starts visually flipped over immediately
+                 cardElement.style.transform = 'rotateY(180deg)';
+            }
+        });
+    }
+
+
+    // --- UI Update Functions ---
+    function updateScores() {
+        // Update Dealer Score
+        if (dealerScoreElement) {
+            const dealerHoleCardElement = dealerCardsContainer?.querySelector('.card:first-child'); // Target first card specifically
+            const isHoleCardFlipped = dealerHoleCardElement?.classList.contains('flipped');
+            // Show score if game is over OR the hole card is revealed (e.g., during dealer's turn)
+            const showDealerScore = gameOver || isHoleCardFlipped;
+            dealerScoreElement.textContent = showDealerScore ? 'Punteggio: ' + calculateScore(dealerHand) : 'Punteggio: ???'; // Use ??? again
+        }
+
+        // Update Player Scores for potentially multiple hands
+        const playerHandElements = playerHandsContainer.querySelectorAll('.player-hand');
+        playerHands.forEach((handObject, index) => {
+             const scoreElement = playerHandElements[index]?.querySelector('.player-score');
+             if (scoreElement) {
+                 scoreElement.textContent = 'P: ' + calculateScore(handObject.cards); // Short prefix "P:"
+             }
+        });
+    }
+
+    function updateBettingUI() {
+        if (playerBalanceElement) playerBalanceElement.textContent = `Saldo: $${playerBalance}`;
+        if (proposedBetDisplay) proposedBetDisplay.textContent = `Puntata: $${proposedBet}`;
+        if (betChipsContainer) betChipsContainer.textContent = currentBet > 0 ? `Puntata Mano: $${currentBet}` : 'Puntata Mano: $0'; // Always show label
+
+        // Enable/Disable Chips based on ability to add value
+        const chipButtons = clickableChipsContainer?.querySelectorAll('.chip-button');
+        if (chipButtons) {
+             chipButtons.forEach(chip => {
+                 const chipValue = parseInt(chip.dataset.value);
+                 chip.disabled = !gameOver || (proposedBet + chipValue > playerBalance);
+             });
+        }
+
+        // Enable/Disable Betting Action Buttons
+        const canBet = gameOver && playerBalance > 0;
+        if (placeBetButton) placeBetButton.disabled = !gameOver || proposedBet <= 0 || proposedBet > playerBalance || placeBetButton.hasAttribute('data-locked');
+        if (clearBetButton) clearBetButton.disabled = !gameOver || proposedBet <= 0;
+        if (allInButton) allInButton.disabled = !canBet || playerBalance <= 0 || proposedBet === playerBalance; // Disable if already all-in
+        if (restoreBetButton) {
+             const canRestore = canBet && lastBet > 0 && lastBet <= playerBalance && proposedBet !== lastBet;
+             restoreBetButton.disabled = !canRestore;
+        }
+    }
+
+
+     // --- Statistics Functions ---
+     function updateStatsDisplay() {
+        stats.handsPlayed = stats.wins + stats.losses + stats.pushes;
+        const totalDecided = stats.wins + stats.losses;
+        const winRate = totalDecided > 0 ? ((stats.wins / totalDecided) * 100).toFixed(1) + '%' : 'N/A';
+
+        if (statsHandsDisplay) statsHandsDisplay.textContent = stats.handsPlayed;
+        if (statsWinsDisplay) statsWinsDisplay.textContent = stats.wins;
+        if (statsLossesDisplay) statsLossesDisplay.textContent = stats.losses;
+        if (statsPushesDisplay) statsPushesDisplay.textContent = stats.pushes;
+        if (statsBjsDisplay) statsBjsDisplay.textContent = stats.blackjacks;
+        if (statsWinRateDisplay) statsWinRateDisplay.textContent = winRate;
+     }
+
+     function resetStats(updateDisplay = true) {
+         stats = { handsPlayed: 0, wins: 0, losses: 0, pushes: 0, blackjacks: 0 };
+         console.log("Statistiche azzerate.");
+         if (updateDisplay) {
+             updateStatsDisplay();
+             saveGameState(); // Save the reset stats
+         }
+     }
+
+     function updateStatsFromOutcome(outcome) {
+         // Increment stats based on hand outcome
+         switch (outcome) {
+             case 'player_blackjack': stats.wins++; stats.blackjacks++; break;
+             case 'player_win': stats.wins++; break;
+             case 'player_lose':
+             case 'player_bust':
+             case 'dealer_blackjack':
+             case 'player_surrender': // Surrender counts as a loss for win rate purposes
+                 stats.losses++;
+                 break;
+             case 'player_push': stats.pushes++; break;
+         }
+         // Note: handsPlayed is calculated dynamically in updateStatsDisplay
+     }
+
+
+     // --- Basic Strategy Hint Logic (Unchanged - Logic is separate from UI) ---
+     function getBasicStrategyMove(playerHandObject, dealerUpCard) {
+          if (!playerHandObject || !playerHandObject.cards || playerHandObject.cards.length === 0 || !dealerUpCard) return '?';
+          const playerCards = playerHandObject.cards;
+          const playerScore = calculateScore(playerCards);
+          const isSoft = playerCards.some(c => c.rank === 'A') && (calculateScore(playerCards.map(c => (c.rank === 'A' ? { ...c, value: 1 } : c))) !== playerScore);
+          const dealerValue = getCardValue(dealerUpCard.rank);
+          const canSplit = playerCards.length === 2 && getCardValue(playerCards[0].rank) === getCardValue(playerCards[1].rank) && splitButton && !splitButton.disabled;
+          const canDouble = playerCards.length === 2 && doubleDownButton && !doubleDownButton.disabled; // Standard Double rule
+          const canSurrender = playerCards.length === 2 && surrenderButton && !surrenderButton.disabled; // Assumes surrender possible
+
+          // BS Table (H17) - Standard Rules
+          if (canSurrender) { // Early surrender check
+              if (!isSoft && playerScore === 16 && [9, 10, 11].includes(dealerValue)) return 'R';
+              if (!isSoft && playerScore === 15 && dealerValue === 10) return 'R';
+          }
+          if (canSplit) { // Split check
+              const cardValue = getCardValue(playerCards[0].rank);
+              if (cardValue === 11 || cardValue === 8) return 'P';
+              if (cardValue === 10) return 'S';
+              if (cardValue === 9 && ![7, 10, 11].includes(dealerValue)) return 'P';
+              if (cardValue === 7 && dealerValue >= 2 && dealerValue <= 7) return 'P';
+              if (cardValue === 6 && dealerValue >= 2 && dealerValue <= 6) return 'P';
+              if (cardValue === 5) { /* Treat 5,5 as 10 below */ }
+              else if (cardValue === 4 && [5, 6].includes(dealerValue)) return 'P';
+              else if (cardValue === 3 && dealerValue >= 2 && dealerValue <= 7) return 'P';
+              else if (cardValue === 2 && dealerValue >= 2 && dealerValue <= 7) return 'P';
+          }
+          if (isSoft) { // Soft hands check
+              if (playerScore >= 19) return 'S'; // Soft 19, 20
+              if (playerScore === 18) { // Soft 18
+                  if (canDouble && [2, 3, 4, 5, 6].includes(dealerValue)) return 'D';
+                  if ([9, 10, 11].includes(dealerValue)) return 'H';
+                  return 'S';
+              }
+              if (playerScore === 17) { // Soft 17
+                  if (canDouble && [3, 4, 5, 6].includes(dealerValue)) return 'D';
+                  return 'H';
+              }
+              if (playerScore <= 16 && playerScore >= 15) { // Soft 15, 16
+                   if (canDouble && [4, 5, 6].includes(dealerValue)) return 'D';
+                   return 'H';
+              }
+               if (playerScore <= 14 && playerScore >= 13) { // Soft 13, 14
+                  if (canDouble && [5, 6].includes(dealerValue)) return 'D';
+                  return 'H';
+               }
+          }
+           // Hard hands check (or 5,5 treated as Hard 10)
+          if (!isSoft || (playerCards.length === 2 && getCardValue(playerCards[0].rank) === 5)) {
+               const hardScore = (playerCards.length === 2 && getCardValue(playerCards[0].rank) === 5) ? 10 : playerScore; // Use 10 for 5,5
+
+                if (hardScore >= 17) return 'S';
+                if (hardScore >= 13 && hardScore <= 16) {
+                    if (dealerValue >= 2 && dealerValue <= 6) return 'S';
+                    return 'H';
+                }
+                if (hardScore === 12) {
+                    if (dealerValue >= 4 && dealerValue <= 6) return 'S';
+                    return 'H';
+                }
+                if (hardScore === 11) {
+                     if (canDouble) return 'D';
+                     return 'H'; // Should always be possible if can't double
+                }
+                if (hardScore === 10) {
+                     if (canDouble && dealerValue <= 9) return 'D';
+                     return 'H';
+                }
+                if (hardScore === 9) {
+                     if (canDouble && dealerValue >= 3 && dealerValue <= 6) return 'D';
+                     return 'H';
+                }
+                if (hardScore <= 8) return 'H';
+          }
+
+          console.warn("Strategia non determinata (fallback):", { playerCards, playerScore, isSoft, dealerUpCard, dealerValue });
+          return '?'; // Fallback if logic fails
+     }
+
+
+     function showHint() {
+         if (gameOver || playerHands.length === 0 || !showHints || currentPlayerHandIndex >= playerHands.length) return;
+         const currentHandObject = playerHands[currentPlayerHandIndex];
+         const dealerUpCard = dealerHand && dealerHand.length > 1 ? dealerHand[1] : null;
+         if (!currentHandObject || !dealerUpCard || !currentHandObject.cards || currentHandObject.cards.length === 0) return;
+
+         const move = getBasicStrategyMove(currentHandObject, dealerUpCard);
+
+         // Highlight the corresponding button
+         document.querySelectorAll('#buttons button.hint-highlight').forEach(btn => btn.classList.remove('hint-highlight'));
+         let buttonToHighlight = null;
+         switch(move) {
+             case 'H': buttonToHighlight = hitButton; break;
+             case 'S': buttonToHighlight = standButton; break;
+             case 'D': buttonToHighlight = doubleDownButton; break;
+             case 'P': buttonToHighlight = splitButton; break;
+             case 'R': buttonToHighlight = surrenderButton; break;
+         }
+         // Apply highlight only if the suggested action button exists and is enabled
+         if (buttonToHighlight && !buttonToHighlight.disabled) {
+             buttonToHighlight.classList.add('hint-highlight');
+         }
+
+         // Log the hint to the console for detailed info
+         const moveMap = { 'H': 'Carta', 'S': 'Stai', 'D': 'Raddoppia', 'P': 'Dividi', 'R': 'Resa', '?': '?' };
+         const score = calculateScore(currentHandObject.cards);
+         const softText = currentHandObject.cards.some(c => c.rank === 'A') && calculateScore(currentHandObject.cards.map(c => (c.rank === 'A' ? {...c, value: 1} : c))) !== score ? ' Soft' : '';
+         console.log(`--- Suggerimento (Mano ${currentPlayerHandIndex + 1}) --- Giocatore: ${currentHandObject.cards.map(c => c.rank).join(', ')} (${score}${softText}) vs Banco: ${dealerUpCard.rank} -> ${moveMap[move]} (${move}) ---`);
+     }
+
+
+    function setButtonState(canHit, canStand, canDoubleDown, canSurrender, canSplit, canBetActions, canNewGame) {
+        // Enable/disable game action buttons
+        if (hitButton) hitButton.disabled = !canHit;
+        if (standButton) standButton.disabled = !canStand;
+        if (doubleDownButton) doubleDownButton.disabled = !canDoubleDown;
+        if (surrenderButton) surrenderButton.disabled = !canSurrender;
+        if (splitButton) splitButton.disabled = !canSplit;
+        if (newGameButton) newGameButton.disabled = !canNewGame;
+
+        // Betting buttons are handled by updateBettingUI called below
+
+        // Update the betting UI (handles chip/bet button states)
+        updateBettingUI();
+
+        // Clear previous hints and show new one if applicable
+        document.querySelectorAll('#buttons button.hint-highlight').forEach(btn => btn.classList.remove('hint-highlight'));
+        if (!gameOver && !canBetActions && showHints) {
+            // Use timeout to ensure DOM updates before hint calculation/display
+            setTimeout(showHint, 50);
+        }
+    }
+
+
+    function settleBet(handIndex, outcome) {
+        if (handIndex < 0 || handIndex >= playerHands.length) return;
+        const handObject = playerHands[handIndex];
+        if (!handObject || handObject.outcome) return; // Already settled
+
+        handObject.outcome = outcome;
+        updateStatsFromOutcome(outcome); // Update session statistics
+
+        let winnings = 0;
+        let message = "";
+        // Calculate the bet amount for this specific hand (considering double down)
+        let handBet = baseBet * (handObject.isDoubled ? 2 : 1);
+
+        switch (outcome) {
+            case 'player_blackjack':
+                winnings = handBet * 1.5; // 3:2 payout
+                playerBalance += handBet + winnings; // Add original bet + winnings
+                message = `Mano ${handIndex + 1}: Blackjack! Vinci $${winnings.toFixed(2)}`;
+                break;
+            case 'player_win':
+                winnings = handBet; // 1:1 payout
+                playerBalance += handBet + winnings; // Add original bet + winnings
+                message = `Mano ${handIndex + 1}: Vinci $${winnings.toFixed(2)}`;
+                break;
+            case 'player_push':
+                playerBalance += handBet; // Return original bet
+                message = `Mano ${handIndex + 1}: Pareggio ($${handBet.toFixed(2)})`;
+                break;
+            case 'player_surrender':
+                playerBalance += handBet * 0.5; // Return half bet
+                message = `Mano ${handIndex + 1}: Resa (-$${(handBet * 0.5).toFixed(2)})`; // Show loss amount
+                break;
+            case 'player_lose':
+            case 'dealer_blackjack':
+            case 'player_bust':
+                // Bet was already deducted, no balance change here
+                message = `Mano ${handIndex + 1}: Perdi $${handBet.toFixed(2)}`;
+                if (outcome === 'player_bust') message = `Mano ${handIndex + 1}: Sballato (-$${handBet.toFixed(2)})`;
+                if (outcome === 'dealer_blackjack') message = `Mano ${handIndex + 1}: Banco BJ (-$${handBet.toFixed(2)})`;
+                break;
+            default:
+                console.error("Esito sconosciuto in settleBet:", outcome);
+                message = `Mano ${handIndex + 1}: Errore esito`;
+                playerBalance += handBet; // Return bet on error as failsafe?
+                break;
+        }
+
+        // Set the message for the hand and update its status display
+        if (!handObject.message) handObject.message = message;
+        updateHandStatus(handIndex);
+    }
+
+
+    function finalizeGame() {
+         if (gameOver) return; // Prevent multiple finalizations
+
+         // Reveal dealer's hole card (if not already shown) and count it
+         const dealerHoleCardElement = dealerCardsContainer?.querySelector('.card:first-child');
+         const holeCard = dealerHand[0];
+         let holeCardCounted = false;
+         if (holeCard && dealerHoleCardElement && !dealerHoleCardElement.classList.contains('flipped')) {
+             dealerHoleCardElement.classList.add('flipped');
+             updateRunningCount(holeCard); // Count the hole card now
+             holeCardCounted = true;
+             console.log("Rivelo e Conto carta coperta (Finalize):", holeCard);
+             displayCards(dealerHand, dealerCardsContainer, false); // Refresh display
+             updateScores(); // Update dealer score display
+         }
+
+         const dealerScore = calculateScore(dealerHand);
+         let finalMessages = [];
+
+         // Settle each player hand that hasn't been settled yet
+         playerHands.forEach((handObject, index) => {
+             if (!handObject.outcome) { // Only settle unresolved hands
+                 const playerScore = calculateScore(handObject.cards);
+                 let outcome = '';
+                 let comparisonMessage = ''; // Specific win/loss/push reason
+
+                 if (dealerScore > 21) {
+                     outcome = 'player_win';
+                     comparisonMessage = " (Banco sballa)";
+                 } else if (playerScore > dealerScore) {
+                     outcome = 'player_win';
+                 } else if (playerScore < dealerScore) {
+                     outcome = 'player_lose';
+                 } else { // playerScore === dealerScore
+                     outcome = 'player_push';
+                 }
+                 settleBet(index, outcome); // Settle the bet and update stats/balance
+
+                 // Append comparison message if the default message isn't specific enough
+                  if (handObject.message && comparisonMessage && !handObject.message.includes("!")) {
+                      // Avoid appending if message already explains e.g. "Blackjack!"
+                      if (!handObject.message.includes("Blackjack") && !handObject.message.includes("Resa") && !handObject.message.includes("Sballato")) {
+                           handObject.message += comparisonMessage;
+                      }
+                  }
+             }
+             // Collect the final message for this hand
+              finalMessages.push(handObject.message || `Mano ${index + 1}: ??`);
+         });
+
+         // Display combined final messages
+         if (resultElement) resultElement.textContent = finalMessages.join("\n");
+
+         // Officially end the game state
+         endGame();
+    }
+
+
+    function updateHandStatus(handIndex) {
+         const handElement = playerHandsContainer?.querySelector(`#player-hand-${handIndex}`);
+         const statusElement = handElement?.querySelector('.hand-status');
+         if (!statusElement || handIndex < 0 || handIndex >= playerHands.length) return;
+         const handObject = playerHands[handIndex];
+         if (!handObject) return;
+
+         const score = calculateScore(handObject.cards);
+         let statusText = "";
+
+         // Show final outcome preferentially
+         switch (handObject.outcome) {
+             case 'player_bust': statusText = "Sballato!"; break;
+             case 'player_blackjack': statusText = "Blackjack!"; break;
+             case 'player_surrender': statusText = "Resa"; break;
+             case 'player_win': statusText = `Vinto (${score})`; break;
+             case 'dealer_blackjack': statusText = `Perso (Banco BJ)`; break;
+             case 'player_lose': statusText = `Perso (${score})`; break;
+             case 'player_push': statusText = `Pareggio (${score})`; break;
+             default: // If no final outcome, show current game status
+                 if (handObject.status === 'Stood') statusText = `Stai (${score})`;
+                 else if (handObject.isDoubled) statusText = `Raddoppiato (${score})`;
+                 else if (score === 21) statusText = `21!`; // Generic 21 if not BJ
+                 else if (handObject.status === 'Playing') statusText = `Attesa (${score})`; // Waiting for player
+                 else statusText = `(${score})`; // Fallback, just show score
+         }
+         statusElement.textContent = statusText;
+    }
+
+
+    function checkBust(handIndexToCheck = currentPlayerHandIndex) {
+        if (handIndexToCheck < 0 || handIndexToCheck >= playerHands.length) return false;
+        const handObject = playerHands[handIndexToCheck];
+        // Don't check if hand doesn't exist or already has a final outcome
+        if (!handObject || handObject.outcome) return false;
+
+        if (calculateScore(handObject.cards) > 21) {
+            console.log(`Mano ${handIndexToCheck + 1} sballata.`);
+            settleBet(handIndexToCheck, 'player_bust'); // Settle the bet as bust
+            updateHandStatus(handIndexToCheck); // Update status display
+            return true; // Busted
+        }
+        return false; // Not busted
+    }
+
+
+     function endGame() {
+         if (gameOver) return; // Prevent running multiple times
+         gameOver = true;
+         currentPlayerHandIndex = -1; // Indicate no hand is active
+         console.log("--- Fine Mano ---");
+
+         // Ensure final scores/statuses are displayed
+         updateScores();
+         playerHands.forEach((_, index) => updateHandStatus(index));
+
+         // Update button states for the end of the round
+         if (playerBalance <= 0) {
+             if (resultElement) resultElement.textContent += (resultElement.textContent ? "\n" : "") + "GAME OVER! Saldo esaurito.";
+             setButtonState(false, false, false, false, false, false, true); // Only New Game
+         } else {
+             setButtonState(false, false, false, false, false, true, true); // Betting & New Game
+         }
+
+         updateStatsDisplay();
+         saveGameState(); // Save final state
+     }
+
+
+    function addPlayerHandElement(index) {
+         if (!playerHandsContainer) return null;
+         const handDiv = document.createElement('div');
+         handDiv.id = `player-hand-${index}`;
+         handDiv.className = 'player-hand';
+         // Simplified innerHTML structure
+         handDiv.innerHTML = `<h3>Mano ${index + 1}</h3><div class="player-cards cards"></div><p class="player-score">P: 0</p><p class="hand-status"></p>`;
+         playerHandsContainer.appendChild(handDiv);
+         return handDiv;
+    }
+
+    function clearPlayerHandElements() {
+         if (playerHandsContainer) playerHandsContainer.innerHTML = '';
+    }
+
+
+     function dealerPlay() {
+         if (gameOver) return;
+         console.log("Turno del Banco...");
+
+         // Reveal hole card if hidden, count it, update display
+         const dealerHoleCardElement = dealerCardsContainer?.querySelector('.card:first-child');
+         const holeCard = dealerHand[0];
+         if (holeCard && dealerHoleCardElement && !dealerHoleCardElement.classList.contains('flipped')) {
+             dealerHoleCardElement.classList.add('flipped');
+             updateRunningCount(holeCard);
+             console.log("Rivelo e Conto carta coperta (Turno Banco):", holeCard);
+             displayCards(dealerHand, dealerCardsContainer, false);
+             updateScores();
+         }
+
+         // Dealer hits based on H17 rule
+         function hitDealerCard() {
+             if (gameOver) return; // Check again in case game ended while waiting
+
+             const currentScore = calculateScore(dealerHand);
+             const isSoft17 = currentScore === 17 && dealerHand.some(c => c.rank === 'A' && calculateScore(dealerHand.map(card => (card.rank === 'A' ? { ...card, value: 1 } : card))) !== 17);
+
+             if (currentScore < 17 || isSoft17) {
+                 console.log(`Banco pesca (${currentScore}${isSoft17 ? ' Soft' : ''})`);
+                 const drawnCard = drawCard(dealerHand);
+                 if (drawnCard) {
+                     updateRunningCount(drawnCard); // Count the drawn card
+                     displayCards(dealerHand, dealerCardsContainer, false); // Update display
+                     updateScores(); // Update score
+
+                     if (calculateScore(dealerHand) > 21) {
+                         console.log("Banco sballato!");
+                         finalizeGame(); // End game immediately if dealer busts
+                     } else {
+                         setTimeout(hitDealerCard, 800); // Continue hitting after delay
+                     }
+                 } else {
+                     console.error("Errore: Impossibile pescare carta per il banco durante il turno.");
+                     finalizeGame(); // Finalize if error occurs
+                 }
+             } else {
+                 // Dealer stands
+                 console.log(`Banco sta (${currentScore})`);
+                 finalizeGame(); // Finalize the game after dealer stands
+             }
+         }
+
+         // Start the dealer's hitting sequence with a delay
+         setTimeout(hitDealerCard, 800);
+     }
+
+
+    function moveToNextHand() {
+        if (gameOver) return;
+
+        // Deactivate current hand visually
+        const currentHandElement = playerHandsContainer?.querySelector(`#player-hand-${currentPlayerHandIndex}.current-hand`);
+        if (currentHandElement) {
+            currentHandElement.classList.remove('current-hand');
+            updateHandStatus(currentPlayerHandIndex); // Update status display
+        }
+
+        currentPlayerHandIndex++; // Advance to next hand index
+
+        if (currentPlayerHandIndex < playerHands.length) {
+             console.log(`Passo a Mano ${currentPlayerHandIndex + 1}`);
+             const nextHandElement = playerHandsContainer?.querySelector(`#player-hand-${currentPlayerHandIndex}`);
+             if (nextHandElement) nextHandElement.classList.add('current-hand'); // Highlight next hand
+
+             const currentHandObject = playerHands[currentPlayerHandIndex];
+
+             // Skip if hand is invalid or already resolved (e.g. split Aces)
+             if (!currentHandObject || currentHandObject.outcome || currentHandObject.status === 'Stood') {
+                 console.log(`Mano ${currentPlayerHandIndex + 1} già conclusa o non valida, passo oltre.`);
+                 moveToNextHand(); // Recursively call to move again
+                 return;
+             }
+
+              // Set status to playing and update UI
+              currentHandObject.status = 'Playing';
+              updateHandStatus(currentPlayerHandIndex);
+              if (resultElement) resultElement.textContent = `Gioca Mano ${currentPlayerHandIndex + 1}.`;
+
+              const currentCards = currentHandObject.cards;
+              const currentScore = calculateScore(currentCards);
+
+              // Auto-stand if 21 (e.g., after split)
+              if (currentScore === 21) {
+                 console.log(`Mano ${currentPlayerHandIndex + 1} ha 21, stand automatico.`);
+                 playerStand(); // Automatically stand on 21
+                 return;
+              }
+
+              // Determine available actions for the new hand
+              const canHitNext = true; // Always possible if score < 21
+              // Double typically only on first two cards of a *hand* (check rules, here assume yes after split)
+              const canDoubleNext = currentCards.length === 2 && playerBalance >= baseBet;
+              // Re-splitting is usually limited, disable for simplicity or add complex logic
+              const canSplitNext = currentCards.length === 2 && getCardValue(currentCards[0].rank) === getCardValue(currentCards[1].rank) && playerBalance >= baseBet && playerHands.length < 4; // Example re-split logic
+              const canSurrenderNext = false; // Cannot surrender after split
+
+              setButtonState(canHitNext, true, canDoubleNext, canSurrenderNext, canSplitNext, false, false);
+
+        } else {
+            // All player hands are done
+            console.log("Tutte le mani del giocatore completate.");
+            dealerTurnOrFinalize(); // Start dealer's turn or end round
+        }
+    }
+
+
+     function dealerTurnOrFinalize() {
+         setButtonState(false, false, false, false, false, false, false); // Disable all player actions
+
+         // Check if any player hand is still potentially winnable
+         let dealerMustPlay = playerHands.some(hand => hand.outcome !== 'player_bust' && hand.outcome !== 'player_surrender' && hand.outcome !== 'dealer_blackjack');
+
+         if (dealerMustPlay) {
+             if (resultElement) resultElement.textContent = "Turno del banco...";
+             setTimeout(dealerPlay, 1000); // Start dealer's turn
+         } else {
+             // Dealer doesn't need to play if all hands are busts, surrenders, or lost to dealer BJ
+             if (resultElement) resultElement.textContent = "Banco non gioca (mani perse/rese).";
+             setTimeout(endGame, 1200); // End the game directly
+         }
+     }
+
+
+    function playerHit() {
+        if (gameOver || currentPlayerHandIndex < 0 || currentPlayerHandIndex >= playerHands.length) return;
+        const handObject = playerHands[currentPlayerHandIndex];
+        // Check if hitting is allowed for the current hand state
+        if (!handObject || handObject.status === 'Stood' || handObject.isDoubled || calculateScore(handObject.cards) >= 21 || handObject.outcome) {
+            console.log("Hit non permesso per questa mano.");
+            return;
+        }
+
+        const drawnCard = drawCard(handObject.cards);
+        if (drawnCard) {
+             updateRunningCount(drawnCard); // Count the new card
+             // Update UI
+             const handElement = playerHandsContainer?.querySelector(`#player-hand-${currentPlayerHandIndex}`);
+             if(handElement) displayCards(handObject.cards, handElement.querySelector('.player-cards'));
+             updateScores();
+             updateHandStatus(currentPlayerHandIndex); // Show new score
+
+             const score = calculateScore(handObject.cards);
+             if (score > 21) {
+                 // checkBust handles settling bet and updating status
+                 if(checkBust(currentPlayerHandIndex)) {
+                      moveToNextHand(); // Move to next hand only if busted
+                 }
+             } else if (score === 21) {
+                  // Automatically stand on 21 after a hit
+                  playerStand(); // Stand action handles moving to next hand
+             } else {
+                  // Hit successful, still below 21. Disable Double/Split/Surrender.
+                  setButtonState(true, true, false, false, false, false, false);
+             }
+        } else {
+             console.error("Errore pescando carta per il giocatore.");
+             // Handle error, maybe settle as loss and move on
+             settleBet(currentPlayerHandIndex, 'player_lose');
+             moveToNextHand();
+        }
+    }
+
+
+    function playerStand() {
+        if (gameOver || currentPlayerHandIndex < 0 || currentPlayerHandIndex >= playerHands.length) return;
+        const handObject = playerHands[currentPlayerHandIndex];
+        // Check if standing is valid
+        if (!handObject || handObject.status === 'Stood' || handObject.isDoubled || handObject.outcome) {
+             console.log("Stand non necessario/permesso.");
+             return;
+        }
+
+        handObject.status = 'Stood'; // Mark hand as stood
+        const score = calculateScore(handObject.cards);
+        if (resultElement) resultElement.textContent = `Mano ${currentPlayerHandIndex + 1}: stai (${score}).`;
+        updateHandStatus(currentPlayerHandIndex); // Update display
+        setButtonState(false, false, false, false, false, false, false); // Disable actions for this hand
+        moveToNextHand(); // Proceed to next player hand or dealer
+    }
+
+
+    function playerDoubleDown() {
+        if (gameOver || currentPlayerHandIndex < 0 || currentPlayerHandIndex >= playerHands.length) return;
+        const handObject = playerHands[currentPlayerHandIndex];
+        if (!handObject) return;
+
+        // Standard Double Down Rules Check
+        const canDoubleCondition = handObject.cards.length === 2; // Only on first two cards
+        const enoughBalance = playerBalance >= baseBet;
+        const handActive = !handObject.isDoubled && handObject.status !== 'Stood' && !handObject.outcome;
+
+        if (!canDoubleCondition || !enoughBalance || !handActive) {
+            console.log("Raddoppio non permesso.", {canDoubleCondition, enoughBalance, handActive});
+            return;
+        }
+
+        console.log(`Mano ${currentPlayerHandIndex + 1}: Raddoppio`);
+        // Update state and finances
+        playerBalance -= baseBet;
+        currentBet += baseBet; // Update total bet displayed for round
+        handObject.isDoubled = true;
+        updateBettingUI();
+        saveGameState();
+        setButtonState(false, false, false, false, false, false, false); // Disable actions
+
+        // Draw one card
+        const drawnCard = drawCard(handObject.cards);
+        if (drawnCard) {
+            updateRunningCount(drawnCard);
+            // Update display
+            const handElement = playerHandsContainer?.querySelector(`#player-hand-${currentPlayerHandIndex}`);
+            if(handElement) displayCards(handObject.cards, handElement.querySelector('.player-cards'));
+            updateScores();
+            const score = calculateScore(handObject.cards);
+            if (resultElement) resultElement.textContent = `Mano ${currentPlayerHandIndex + 1}: raddoppiato (${score}).`;
+
+            // Check bust after doubling
+            if (checkBust(currentPlayerHandIndex)) {
+                // Status/settle handled by checkBust
+                updateHandStatus(currentPlayerHandIndex);
+            } else {
+                // Hand stands automatically after doubling if not busted
+                handObject.status = 'Stood';
+                updateHandStatus(currentPlayerHandIndex);
+            }
+        } else {
+            console.error("Errore pescando carta per il raddoppio.");
+            settleBet(currentPlayerHandIndex, 'player_lose'); // Failsafe settle
+            updateHandStatus(currentPlayerHandIndex);
+        }
+
+        // Move to next hand/dealer regardless of double outcome
+        moveToNextHand();
+    }
+
+
+    function playerSurrender() {
+         if (gameOver || currentPlayerHandIndex < 0 || currentPlayerHandIndex >= playerHands.length) return;
+         const handObject = playerHands[currentPlayerHandIndex];
+
+         // Standard Surrender Rule Check
+         const canSurrenderCondition = currentPlayerHandIndex === 0 && playerHands.length === 1 && handObject && handObject.cards.length === 2; // Only on first hand, first two cards
+         const handActive = !handObject.isDoubled && handObject.status !== 'Stood' && !handObject.outcome;
+
+         if (!canSurrenderCondition || !handActive) {
+             console.log("Resa non permessa.");
+             return;
+         }
+
+         console.log("Giocatore si arrende.");
+         setButtonState(false, false, false, false, false, false, false); // Disable actions
+         settleBet(currentPlayerHandIndex, 'player_surrender'); // Settle bet
+
+         // Update result message
+         if (resultElement && handObject.message) {
+            resultElement.textContent = handObject.message;
+         } else {
+            resultElement.textContent = "Resa effettuata.";
+         }
+
+         // Surrender ends the round immediately for the player
+         endGame();
+    }
+
+
+    function playerSplit() {
+        if (gameOver || currentPlayerHandIndex < 0 || currentPlayerHandIndex >= playerHands.length) return;
+        const currentHandObject = playerHands[currentPlayerHandIndex];
+        if (!currentHandObject) return;
+
+        // Standard Split Rule Check
+        const cards = currentHandObject.cards;
+        const canSplitCondition = cards.length === 2 && getCardValue(cards[0].rank) === getCardValue(cards[1].rank);
+        const enoughBalance = playerBalance >= baseBet;
+        const handActive = !currentHandObject.isDoubled && currentHandObject.status !== 'Stood' && !currentHandObject.outcome;
+        const maxHandsReached = playerHands.length >= 4; // Limit to 4 hands total
+
+        if (!canSplitCondition || !enoughBalance || !handActive || maxHandsReached) {
+             console.log("Divisione non permessa.", { canSplitCondition, enoughBalance, handActive, maxHandsReached });
+             return;
+        }
+
+        console.log(`Mano ${currentPlayerHandIndex + 1}: Divisione di ${cards[0].rank}`);
+        // Update finances and state
+        playerBalance -= baseBet;
+        currentBet += baseBet;
+        updateBettingUI();
+        saveGameState();
+
+        // Create and insert the new hand object
+        const cardToMove = cards.pop();
+        const isSplitAces = getCardValue(cards[0].rank) === 11;
+        const newHandObject = { cards: [cardToMove], outcome: null, message: "", status: null, isDoubled: false, fromSplitAces: isSplitAces };
+        currentHandObject.fromSplitAces = isSplitAces; // Mark original hand too if aces
+        playerHands.splice(currentPlayerHandIndex + 1, 0, newHandObject);
+
+        // Redraw all hand elements to accommodate the new hand
+        clearPlayerHandElements();
+        playerHands.forEach((handObj, index) => {
+            const handElement = addPlayerHandElement(index);
+            if (handElement) displayCards(handObj.cards, handElement.querySelector('.player-cards')); // Show single card initially
+            updateScores(); updateHandStatus(index);
+        });
+
+        // Hit one card to each of the split hands and count them
+        const originalHandCards = playerHands[currentPlayerHandIndex].cards;
+        const newHandCards = playerHands[currentPlayerHandIndex + 1].cards;
+        const firstCardDrawn = drawCard(originalHandCards); if (firstCardDrawn) updateRunningCount(firstCardDrawn);
+        const secondCardDrawn = drawCard(newHandCards); if (secondCardDrawn) updateRunningCount(secondCardDrawn);
+
+        // Update display for both hands after hitting
+         const currentHandElement = playerHandsContainer?.querySelector(`#player-hand-${currentPlayerHandIndex}`);
+         const newHandElement = playerHandsContainer?.querySelector(`#player-hand-${currentPlayerHandIndex + 1}`);
+         if (currentHandElement) displayCards(originalHandCards, currentHandElement.querySelector('.player-cards'));
+         if (newHandElement) displayCards(newHandCards, newHandElement.querySelector('.player-cards'));
+         updateScores();
+
+        // Set focus and status for the first split hand
+        if (currentHandElement) currentHandElement.classList.add('current-hand');
+        if (newHandElement) newHandElement.classList.remove('current-hand');
+
+        playerHands[currentPlayerHandIndex].status = 'Playing'; // Mark first hand as active
+        updateHandStatus(currentPlayerHandIndex);
+
+        // Handle split Aces rule (auto-stand)
+        if (isSplitAces) {
+             console.log("Assi divisi. Stand automatico per entrambe le mani.");
+             playerHands[currentPlayerHandIndex].status = 'Stood';
+             playerHands[currentPlayerHandIndex + 1].status = 'Stood'; // Mark second hand as stood
+             updateHandStatus(currentPlayerHandIndex);
+             updateHandStatus(currentPlayerHandIndex + 1);
+             if (resultElement) resultElement.textContent = "Assi divisi! Premi 'Stai' per procedere."; // Prompt user action? Or auto-move? Let's auto-move.
+             setButtonState(false, false, false, false, false, false, false); // Disable actions
+             // Wait briefly then move to the second Ace hand (which will also be skipped by moveToNextHand logic)
+             setTimeout(moveToNextHand, 1000);
+        } else {
+             // Handle non-Aces split
+             const scoreHand1 = calculateScore(originalHandCards);
+             if (scoreHand1 === 21) {
+                 // If 21 after split, auto-stand
+                 playerStand(); // Stand handles moving to next hand
+             } else {
+                 // Allow playing the first hand
+                 const canDoubleNow = playerBalance >= baseBet; // Check doubling possibility
+                 const canSplitAgain = getCardValue(originalHandCards[0].rank) === getCardValue(originalHandCards[1].rank) && playerBalance >= baseBet && playerHands.length < 4; // Check re-split
+                 setButtonState(true, true, canDoubleNow, false, canSplitAgain, false, false);
+                 if (resultElement) resultElement.textContent = `Mani divise! Gioca Mano ${currentPlayerHandIndex + 1}.`;
+             }
+        }
+    }
+
+
+    // --- Betting Actions ---
+    function addChipValue(value) {
+        if (gameOver && proposedBet + value <= playerBalance) {
+            proposedBet += value;
+            updateBettingUI();
+        } else if (!gameOver) {
+            console.warn("Non puoi aggiungere fiches durante la mano.");
+        } else {
+            console.warn("Saldo insufficiente per aggiungere questa fiche.");
+            // Optional: Add visual feedback for insufficient funds
+        }
+    }
+
+    function clearProposedBet() {
+        if (gameOver && proposedBet > 0) {
+            proposedBet = 0;
+            updateBettingUI();
+        }
+    }
+
+    function playerAllIn() {
+         if (gameOver && playerBalance > 0) {
+            proposedBet = playerBalance;
+            updateBettingUI();
+         }
+    }
+
+    function restoreBet() {
+        if (gameOver && lastBet > 0 && lastBet <= playerBalance) {
+              proposedBet = lastBet;
+              updateBettingUI();
+              console.log(`Puntata ripristinata a ${lastBet}`);
+        } else if (gameOver && lastBet > playerBalance) {
+             console.warn(`Non puoi ripristinare l'ultima puntata ($${lastBet}), saldo insufficiente ($${playerBalance})`);
+        }
+    }
+
+
+    // --- Game Start and State Management ---
+    function checkInitialBlackjack() {
+        // Check preconditions
+        if (playerHands.length !== 1 || !playerHands[0]?.cards || playerHands[0].cards.length !== 2 || !dealerHand || dealerHand.length !== 2) {
+             console.log("checkInitialBlackjack: Preconditions non soddisfatte.");
+             return false;
+        }
+
+        const playerCards = playerHands[0].cards;
+        const playerHasBJ = isBlackjack(playerCards);
+        const dealerHasBJ = isBlackjack(dealerHand);
+
+        // If either has Blackjack, the hand ends now
+        if (playerHasBJ || dealerHasBJ) {
+            console.log("Check BJ:", { playerHasBJ, dealerHasBJ });
+
+            // Reveal dealer's hole card and count both dealer cards now
+            const holeCard = dealerHand[0];
+            const dealerHoleCardElement = dealerCardsContainer?.querySelector('.card:first-child');
+            let cardsToCount = [];
+            if (holeCard && dealerHoleCardElement && !dealerHoleCardElement.classList.contains('flipped')){
+                  dealerHoleCardElement.classList.add('flipped');
+                  cardsToCount.push(holeCard); // Count hole card
+                  console.log("Conto D Hole (BJ Check):", holeCard);
+            }
+            const dealerUpCard = dealerHand[1];
+            if (dealerUpCard) {
+                cardsToCount.push(dealerUpCard); // Count up card
+                console.log("Conto D Up (BJ Check):", dealerUpCard);
+            }
+            cardsToCount.forEach(card => updateRunningCount(card)); // Update count for revealed cards
+
+            // Update UI fully
+            displayCards(dealerHand, dealerCardsContainer, false);
+            updateScores();
+
+            // Determine outcome and settle bet
+            let outcome = '';
+            const handObject = playerHands[0];
+            if (playerHasBJ && dealerHasBJ) outcome = 'player_push';
+            else if (playerHasBJ) outcome = 'player_blackjack';
+            else outcome = 'dealer_blackjack'; // Dealer must have BJ if player doesn't
+
+            settleBet(0, outcome);
+            if (resultElement) resultElement.textContent = handObject.message; // Display outcome message
+            endGame(); // End the round
+            return true; // Blackjack occurred, game ended
+        }
+
+        // --- No Blackjack: Count only the dealer's UP card ---
+        const dealerUpCard = dealerHand[1];
+        if (dealerUpCard) {
+            updateRunningCount(dealerUpCard);
+            console.log("Conto D Up (No BJ):", dealerUpCard);
+        }
+        return false; // No Blackjack, game continues
+    }
+
+
+    function startGame() {
+        if (!gameOver) { console.warn("startGame chiamato ma il gioco è già in corso."); return; }
+        if (currentBet <= 0) { console.error("startGame chiamato senza una puntata valida."); return; }
+
+        console.log(`--- Inizio Mano (Puntata: $${currentBet}) ---`);
+        try {
+            // Reset state for the new hand
+            playerHands = [{ cards: [], outcome: null, message: "", status: 'Playing', isDoubled: false, fromSplitAces: false }];
+            dealerHand = [];
+            gameOver = false;
+            currentPlayerHandIndex = 0;
+
+            // Clear UI
+            clearPlayerHandElements();
+            const initialHandElement = addPlayerHandElement(0);
+            if(initialHandElement) initialHandElement.classList.add('current-hand');
+            if(dealerCardsContainer) dealerCardsContainer.innerHTML = '';
+            if(dealerScoreElement) dealerScoreElement.textContent = 'Punteggio: ???';
+            if (resultElement) resultElement.textContent = 'Distribuendo...'; // Clear previous result
+
+            // Deal cards and count player cards
+            const cardP1 = drawCard(playerHands[0].cards); if (cardP1) updateRunningCount(cardP1);
+            const cardD1 = drawCard(dealerHand); // Hidden
+            const cardP2 = drawCard(playerHands[0].cards); if (cardP2) updateRunningCount(cardP2);
+            const cardD2 = drawCard(dealerHand); // Upcard (counted after BJ check)
+
+            if (!cardP1 || !cardD1 || !cardP2 || !cardD2) throw new Error("Errore distribuzione carte.");
+
+            console.log("Distribuite:", { P: playerHands[0].cards.map(c=>c.rank+c.suit), D: [ '??', cardD2.rank+cardD2.suit] });
+
+            // Display cards (dealer's first card hidden)
+            const initialPlayerCardsContainer = initialHandElement?.querySelector('.player-cards');
+            if (initialPlayerCardsContainer) displayCards(playerHands[0].cards, initialPlayerCardsContainer, false);
+            displayCards(dealerHand, dealerCardsContainer, true);
+
+            // Update scores and betting display
+            updateScores();
+            updateBettingUI(); // Show the active hand bet
+
+            // Check for Blackjacks (handles game end if BJ occurs)
+            if (!checkInitialBlackjack()) {
+                // No BJ, set initial action buttons
+                const initialPlayerCards = playerHands[0].cards;
+                const score = calculateScore(initialPlayerCards);
+                const canSplitInitial = score < 21 && initialPlayerCards.length === 2 && getCardValue(initialPlayerCards[0].rank) === getCardValue(initialPlayerCards[1].rank) && playerBalance >= baseBet;
+                const canDoubleInitial = score < 21 && initialPlayerCards.length === 2 && playerBalance >= baseBet;
+                const canSurrenderInitial = initialPlayerCards.length === 2; // Assuming surrender allowed
+                const canHitInitial = score < 21;
+
+                setButtonState(canHitInitial, true, canDoubleInitial, canSurrenderInitial, canSplitInitial, false, false);
+                if (resultElement) resultElement.textContent = "Fai la tua mossa.";
+            }
+            // If checkInitialBlackjack was true, game ended, buttons handled by endGame
+
+        } catch (error) {
+            console.error("Errore durante l'avvio della mano:", error);
+            if (resultElement) resultElement.textContent = "Errore avvio mano. Puntata restituita.";
+             playerBalance += currentBet; // Refund bet on critical error
+             currentBet = 0; baseBet = 0;
+             resetGame(false); // Reset to safe state
+        }
+    }
+
+
+    function placeBet() {
+        // Validate conditions for placing a bet
+        if (!gameOver) { console.warn("Tentativo di puntare durante una mano attiva."); return; }
+        if (proposedBet <= 0) { console.warn("Tentativo di puntare 0 o meno."); return; }
+        if (proposedBet > playerBalance) { console.warn("Tentativo di puntare più del saldo."); return; }
+
+        // Set the bet for the hand
+        currentBet = proposedBet;
+        baseBet = proposedBet; // Base for split/double
+        playerBalance -= proposedBet;
+        lastBet = proposedBet; // Remember for restore
+        proposedBet = 0; // Clear the proposal
+
+        console.log(`Puntata piazzata: $${currentBet}`);
+
+        // Lock UI temporarily
+        if (placeBetButton) placeBetButton.setAttribute('data-locked', 'true');
+        setButtonState(false, false, false, false, false, false, false); // Disable all actions
+        updateBettingUI(); // Reflect changes
+
+        // Start game after short delay
+        setTimeout(() => {
+             if (placeBetButton) placeBetButton.removeAttribute('data-locked');
+             startGame();
+        }, 150); // Shorter delay
+    }
+
+
+    function resetGame(resetCountsAndStats = true) {
+        console.log(`--- Reset Gioco (Reset Stats/Counts: ${resetCountsAndStats}) ---`);
+
+        // Handle running out of money
+        if (playerBalance <= 0 && gameOver) {
+            playerBalance = 1000; lastBet = 10; // Reset funds
+            if (resultElement) resultElement.textContent = 'Saldo esaurito! Ripristinato a $1000.';
+            if(resetCountsAndStats) resetStats();
+            saveGameState();
+        } else if (!gameOver && currentBet > 0){
+             // Handle reset during active hand: refund bet
+             console.warn("Reset durante mano attiva. Puntata restituita.");
+             playerBalance += currentBet;
+        }
+
+        // Clear game elements
+        clearPlayerHandElements();
+        if (dealerCardsContainer) dealerCardsContainer.innerHTML = '';
+        if (dealerScoreElement) dealerScoreElement.textContent = 'Punteggio: ???';
+        if (resultElement && (gameOver || playerHands.length === 0)) {
+             resultElement.textContent = 'Piazza la tua puntata.'; // Initial prompt
+        } else if (resultElement) {
+             resultElement.textContent = ''; // Clear result if resetting mid-game
+        }
+
+
+        // Reset game state variables
+        playerHands = []; dealerHand = [];
+        gameOver = true;
+        currentBet = 0; baseBet = 0; proposedBet = 0;
+        currentPlayerHandIndex = -1; // No active hand
+
+        // Reset Deck and Counts
+        deck = createDeck(numDecks);
+        shuffleDeck(deck);
+        if (resetCountsAndStats) resetCounts();
+        else updateCountDisplay(); // Keep counts if requested
+
+        // Set UI for betting phase
+        updateBettingUI();
+        setButtonState(false, false, false, false, false, playerBalance > 0, true);
+        saveGameState(); // Save the reset state
+    }
+
+
+    function toggleTrainer() {
+        const trainerDiv = document.getElementById('trainer-controls');
+        const button = document.getElementById('toggle-trainer-button');
+        if (trainerDiv && button) {
+            const isVisible = trainerDiv.style.display === 'block';
+            trainerDiv.style.display = isVisible ? 'none' : 'block';
+            // Update button text based on visibility state AFTER changing it
+            button.textContent = (trainerDiv.style.display === 'block') ? 'Nascondi Contatore' : 'Mostra Contatore';
+            if (trainerDiv.style.display === 'block' && isTrainingMode) {
+                updateCountDisplay(); // Update counts when shown
+            }
+        }
+    }
+
+    // --- NUOVA FUNZIONE: Mostra Info Hi-Lo ---
+    function showHiLoInfo() {
+        const infoText = `Il sistema Hi-Lo è una strategia di conteggio delle carte nel Blackjack. Assegna un valore a ciascuna carta distribuita:\n\n` +
+                         ` • Carte Basse (2-6): +1\n` +
+                         ` • Carte Neutre (7-9): 0\n` +
+                         ` • Carte Alte (10, J, Q, K, A): -1\n\n` +
+                         `Si tiene traccia del "Conteggio Corrente" (Running Count) sommando i valori delle carte viste.\n\n` +
+                         `Un conteggio positivo alto indica che nel mazzo rimangono più carte alte (favorevoli al giocatore), suggerendo di aumentare la puntata. Un conteggio negativo indica più carte basse rimanenti (favorevoli al banco).\n\n` +
+                         `Il "Conteggio Reale" (True Count) si ottiene dividendo il Conteggio Corrente per il numero stimato di mazzi rimanenti, fornendo una stima più accurata del vantaggio.`;
+        alert(infoText);
+    }
+    // --- Fine Nuova Funzione ---
+
+
+    // --- Event Listeners ---
+    document.addEventListener('DOMContentLoaded', () => {
+        console.log("DOM Caricato - Blackjack Trainer.");
+        loadGameState(); // Load saved state first
+        resetGame(false); // Initialize game display/state without resetting loaded stats/counts
+
+        // Utility Toggle Listeners
+        if (themeToggle) themeToggle.addEventListener('change', () => { document.body.setAttribute('data-theme', themeToggle.checked ? 'dark' : 'light'); saveGameState(); });
+        if (trainingModeToggle) trainingModeToggle.addEventListener('change', () => { isTrainingMode = trainingModeToggle.checked; console.log("Training Mode:", isTrainingMode); if (isTrainingMode) updateCountDisplay(); });
+        if (showHintsToggle) showHintsToggle.addEventListener('change', () => { showHints = showHintsToggle.checked; console.log("Show Hints:", showHints); if (showHints && !gameOver) showHint(); });
+
+        // Chip Click Listener (using event delegation)
+        if (clickableChipsContainer) {
+            clickableChipsContainer.addEventListener('click', (event) => {
+                const chipButton = event.target.closest('.chip-button');
+                if (chipButton && !chipButton.disabled) {
+                    const value = parseInt(chipButton.dataset.value);
+                    if (!isNaN(value)) addChipValue(value);
+                }
+            });
+        }
+
+        // Keyboard Shortcuts Listener
+        document.addEventListener('keydown', function(event) {
+            // Ignore if focused on input/textarea
+            if (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA') {
+                return;
+            }
+
+            // In-Game Actions (Hand Active)
+            if (!gameOver && currentPlayerHandIndex >= 0) {
+                let blockDefault = false;
+                if ((event.key === 'h' || event.key === 'H') && hitButton && !hitButton.disabled) { playerHit(); blockDefault = true; }
+                else if ((event.key === 's' || event.key === 'S' || event.key === ' ') && standButton && !standButton.disabled) { playerStand(); blockDefault = true; }
+                else if ((event.key === 'r' || event.key === 'R') && surrenderButton && !surrenderButton.disabled) { playerSurrender(); blockDefault = true; }
+                else if ((event.key === 'd' || event.key === 'D') && doubleDownButton && !doubleDownButton.disabled) { playerDoubleDown(); blockDefault = true; }
+                else if ((event.key === 'l' || event.key === 'L') && splitButton && !splitButton.disabled) { playerSplit(); blockDefault = true; }
+
+                if (blockDefault) event.preventDefault();
+            }
+            // Betting Phase / End of Round Actions
+            else if (gameOver) {
+                 let blockDefault = false;
+                 if ((event.key === 'n' || event.key === 'N') && newGameButton && !newGameButton.disabled) { resetGame(true); blockDefault = true; }
+                 else if (event.key === 'Enter' && placeBetButton && !placeBetButton.disabled) { placeBet(); blockDefault = true; }
+                 else if ((event.key === 'Backspace' || event.key === 'Delete') && clearBetButton && !clearBetButton.disabled) { clearProposedBet(); blockDefault = true; }
+                 else if ((event.key === 'a' || event.key === 'A') && allInButton && !allInButton.disabled) { playerAllIn(); blockDefault = true; }
+                 else if ((event.key === 'r' || event.key === 'R') && restoreBetButton && !restoreBetButton.disabled) { restoreBet(); blockDefault = true; }
+                 // Allow Spacebar to also trigger "New Game" if available and betting isn't possible
+                 else if (event.key === ' ' && newGameButton && !newGameButton.disabled && placeBetButton && placeBetButton.disabled) { resetGame(true); blockDefault = true;}
+
+
+                 if (blockDefault) event.preventDefault();
+            }
+        });
+
+
+    }); // End DOMContentLoaded
+
+</script>
+</body>
+</html>
