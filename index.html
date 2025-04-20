@@ -1,340 +1,628 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>IPPO’S CASINÒ</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IPPO’S CASINÒ - L'Emozione del Gioco</title>
 
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" integrity="sha512-Fo3rlrZj/k7ujTnHg4CGR2D7kSs0v4LLanw2qksYuRlEzO+tcaEPQogQ0KaoGN26/zrn20ImR1DfuLWnOo7aBA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+        :root {
+            --primary-color: #ffcc00; /* Oro */
+            --background-light: #005f3c;
+            --background-light-gradient: radial-gradient(circle at top left, #007b50, #004d31);
+            --background-dark: #1a1a1a; /* Sfondo scuro più profondo */
+            --text-light: #ffffff;
+            --text-dark: #222222;
+            --card-bg-light: rgba(0, 0, 0, 0.2);
+            --card-bg-dark: rgba(50, 50, 50, 0.7);
+            --shadow-light: rgba(0, 0, 0, 0.3);
+            --shadow-dark: rgba(0, 0, 0, 0.6);
+        }
 
-    body {
-      font-family: 'Playfair Display', serif;
-      background-color: #005f3c;
-      background-image: radial-gradient(circle at top left, #007b50, #004d31);
-      color: white;
-      height: 100vh;
-      overflow: hidden;
-      position: relative;
-      transition: background-color 0.3s, color 0.3s, background-image 0.3s; /* Aggiunto background-image alla transizione */
-    }
+        body {
+            font-family: 'Roboto', sans-serif; /* Cambiato font per leggibilità generale */
+            background-color: var(--background-light);
+            background-image: var(--background-light-gradient);
+            color: var(--text-light);
+            min-height: 100vh; /* Usa min-height per permettere scroll se necessario */
+            overflow-x: hidden; /* Nasconde solo lo scroll orizzontale */
+            position: relative;
+            transition: background-color 0.5s ease, color 0.5s ease, background-image 0.5s ease;
+            display: flex;
+            flex-direction: column; /* Permette al footer (se ci fosse) di stare in basso */
+        }
 
-    /* Stile per il tema scuro (aggiunto per la funzione toggleTheme) */
-    body.dark-theme {
-        background-color: #333333;
-        background-image: none; /* Rimuove il gradiente nel tema scuro */
-        color: white;
-    }
+        body.dark-theme {
+            background-color: var(--background-dark);
+            background-image: none;
+            color: var(--text-light); /* Manteniamo testo bianco su scuro */
+        }
 
+        /* --- Pulsanti in alto --- */
+        .top-buttons {
+            position: absolute;
+            top: 20px;
+            right: 20px; /* Leggermente meno spazio */
+            z-index: 1001; /* Sopra il modal quando si chiude */
+        }
 
-    .top-buttons {
-      position: absolute;
-      top: 20px;
-      right: 30px;
-      z-index: 10;
-    }
+        .settings-button {
+            background-color: rgba(0, 0, 0, 0.5);
+            color: var(--primary-color);
+            border: 1px solid var(--primary-color);
+            border-radius: 50%; /* Cerchio */
+            width: 45px;
+            height: 45px;
+            font-size: 1.2rem; /* Dimensione icona */
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.3s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 2px 8px var(--shadow-light);
+        }
 
-    .settings-button {
-      background-color: #111;
-      color: #ffcc00;
-      border: 1px solid #ffcc00;
-      border-radius: 10px;
-      padding: 10px 20px;
-      font-weight: bold;
-      cursor: pointer;
-      transition: 0.3s;
-    }
+        .settings-button:hover {
+            background-color: rgba(0, 0, 0, 0.7);
+            transform: rotate(45deg) scale(1.1); /* Effetto rotazione e zoom */
+        }
 
-    .settings-button:hover {
-      background-color: #333;
-    }
+        body.dark-theme .settings-button {
+           box-shadow: 0 2px 8px var(--shadow-dark);
+        }
 
-    .container {
-      height: 100%;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      text-align: center;
-      z-index: 2;
-      padding: 20px;
-    }
+        /* --- Modal Impostazioni --- */
+        #settingsModal {
+            display: none;
+            position: fixed; /* Cambiato in fixed per restare visibile allo scroll */
+            top: 75px;
+            right: 20px;
+            background-color: rgba(30, 30, 30, 0.95);
+            backdrop-filter: blur(5px); /* Effetto vetro smerigliato */
+            padding: 25px;
+            border-radius: 15px;
+            z-index: 1000;
+            border: 1px solid var(--primary-color);
+            color: var(--text-light);
+            box-shadow: 0 5px 20px var(--shadow-dark);
+            width: 280px; /* Larghezza fissa */
+            animation: fadeInModal 0.3s ease-out;
+        }
 
-    .logo {
-      font-size: 4rem;
-      color: #ffcc00;
-      text-shadow: 0 0 10px #ffcc00, 0 0 20px #ff9900;
-      animation: glow 2s ease-in-out infinite alternate;
-    }
+         @keyframes fadeInModal {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
 
-    @keyframes glow {
-      from { text-shadow: 0 0 10px #ffcc00, 0 0 20px #ffcc00; }
-      to { text-shadow: 0 0 20px #ffcc00, 0 0 30px #ff9900; }
-    }
+        #settingsModal h3 {
+            font-family: 'Playfair Display', serif;
+            color: var(--primary-color);
+            margin-bottom: 20px;
+            text-align: center;
+            font-size: 1.5rem;
+            border-bottom: 1px solid rgba(255, 204, 0, 0.3);
+            padding-bottom: 10px;
+        }
 
-    .scroll-text {
-      margin-top: 10px;
-      overflow: hidden;
-      height: 30px; /* Altezza adeguata per il font-size */
-      position: relative;
-      width: 80%; /* Larghezza per centrare meglio */
-      max-width: 600px; /* Larghezza massima */
-    }
+        #settingsModal div {
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
 
-    .scroll-text p {
-      position: absolute;
-      white-space: nowrap;
-      animation: scroll-left 15s linear infinite; /* Rallentato un po' */
-      font-size: 1.2rem;
-      color: #ffffffcc;
-      /* Assicura che parta fuori dallo schermo a destra */
-      transform: translateX(100%);
-    }
+        #settingsModal label {
+            color: #eee; /* Leggermente meno brillante dell'oro */
+            margin-right: 15px;
+            font-size: 1rem;
+        }
 
-    @keyframes scroll-left {
-       0% { transform: translateX(100%); } /* Parte da destra */
-      100% { transform: translateX(-100%); } /* Finisce a sinistra */
-    }
+        /* Stile Toggle Switch Moderno */
+        #settingsModal input[type="checkbox"] {
+            opacity: 0; /* Nascondi checkbox di default */
+            width: 0;
+            height: 0;
+            position: absolute;
+        }
 
+        #settingsModal label[for] { /* Applica a label collegate a input */
+             cursor: pointer;
+             position: relative;
+             padding-left: 50px; /* Spazio per lo switch */
+             line-height: 22px; /* Allinea verticalmente */
+             display: inline-block; /* Necessario per padding e altezza */
+        }
 
-    .buttons {
-      margin-top: 50px;
-      display: flex;
-      gap: 40px;
-      flex-wrap: wrap;
-      justify-content: center;
-    }
+        #settingsModal label[for]::before { /* Base dello switch */
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 40px; /* Larghezza switch */
+            height: 22px; /* Altezza switch */
+            background-color: #555; /* Colore base spento */
+            border-radius: 11px; /* Arrotondato */
+            transition: background-color 0.3s;
+        }
 
-    .game-button {
-      background-color: rgba(255, 204, 0, 0.95);
-      color: #000;
-      text-decoration: none;
-      padding: 20px 40px;
-      border-radius: 15px;
-      font-size: 1.3rem;
-      font-weight: bold;
-      display: flex;
-      align-items: center;
-      gap: 15px;
-      transition: transform 0.3s ease, background-color 0.3s ease;
-      box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-    }
+        #settingsModal label[for]::after { /* Pallino dello switch */
+            content: '';
+            position: absolute;
+            left: 2px; /* Posizione iniziale */
+            top: 2px;
+            width: 18px; /* Dimensione pallino */
+            height: 18px;
+            background-color: white;
+            border-radius: 50%;
+            transition: transform 0.3s;
+        }
 
-    .game-button:hover {
-      transform: scale(1.1);
-      background-color: #ffe066;
-    }
+        #settingsModal input[type="checkbox"]:checked + label[for]::before {
+            background-color: var(--primary-color); /* Colore acceso */
+        }
 
-    /* Stili per il modal delle impostazioni */
-    #settingsModal {
-        display: none;
-        position: absolute;
-        top: 70px; /* Posizione sotto il pulsante */
-        right: 30px;
-        background-color: rgba(34, 34, 34, 0.9); /* Sfondo leggermente trasparente */
-        padding: 20px;
-        border-radius: 10px;
-        z-index: 20; /* Assicura che sia sopra altri elementi */
-        border: 1px solid #ffcc00;
-        color: white; /* Colore testo di default */
-        box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-    }
-
-    #settingsModal h3 {
-        color: #ffcc00;
-        margin-bottom: 15px;
-        text-align: center;
-    }
-
-    #settingsModal div {
-        margin-bottom: 10px;
-        display: flex;
-        align-items: center;
-        justify-content: space-between; /* Allinea label e input */
-    }
-
-     #settingsModal label {
-        color: #ffcc00;
-        margin-right: 10px;
-        font-size: 0.9rem;
-    }
-
-    #settingsModal input[type="checkbox"] {
-        cursor: pointer;
-        /* Stili per migliorare l'aspetto della checkbox */
-        appearance: none;
-        width: 18px;
-        height: 18px;
-        border: 1px solid #ffcc00;
-        border-radius: 3px;
-        position: relative;
-        outline: none;
-    }
-
-    #settingsModal input[type="checkbox"]:checked {
-        background-color: #ffcc00;
-    }
-
-     #settingsModal input[type="checkbox"]:checked::after {
-        content: '\2713'; /* Segno di spunta */
-        font-size: 14px;
-        color: #333;
-        position: absolute;
-        top: 0px;
-        left: 2px;
-    }
+        #settingsModal input[type="checkbox"]:checked + label[for]::after {
+            transform: translateX(18px); /* Sposta il pallino */
+        }
 
 
-    audio {
-      display: none; /* Nasconde il player audio di default */
-    }
+        /* --- Contenuto Principale --- */
+        .container {
+            flex-grow: 1; /* Occupa lo spazio rimanente */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 60px 20px 40px; /* Più padding sopra, meno sotto */
+            position: relative; /* Necessario per elementi assoluti interni se servissero */
+        }
 
-    @media screen and (max-width: 600px) {
-      .logo {
-        font-size: 2.5rem;
-      }
+        /* --- Logo Stile Casinò --- */
+        .logo {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(2.5rem, 8vw, 5rem); /* Dimensione fluida */
+            color: var(--primary-color);
+            text-shadow: 0 0 8px rgba(255, 204, 0, 0.8),
+                         0 0 15px rgba(255, 153, 0, 0.7),
+                         0 0 25px rgba(255, 102, 0, 0.5);
+            margin-bottom: 15px; /* Ridotto spazio sotto */
+            animation: pulseGlow 2.5s ease-in-out infinite alternate;
+            letter-spacing: 2px; /* Un po' di spazio tra lettere */
+        }
 
-      .game-button {
-        /* Rimosso flex-direction: column per mantenere icone e testo in linea se possibile */
-        font-size: 1.1rem;
-        padding: 15px 25px;
-        gap: 10px; /* Ridotto spazio tra icona e testo */
-      }
+        @keyframes pulseGlow {
+            from {
+                text-shadow: 0 0 8px rgba(255, 204, 0, 0.7),
+                             0 0 15px rgba(255, 153, 0, 0.6),
+                             0 0 25px rgba(255, 102, 0, 0.4);
+            }
+            to {
+                text-shadow: 0 0 12px rgba(255, 204, 0, 0.9),
+                             0 0 22px rgba(255, 153, 0, 0.8),
+                             0 0 35px rgba(255, 102, 0, 0.6);
+            }
+        }
 
-      .scroll-text {
-         width: 90%; /* Più largo su mobile */
-      }
+        /* --- Testo Scorrevo le --- */
+        .scroll-text-wrapper {
+            width: 100%;
+            max-width: 700px; /* Leggermente più largo */
+            margin: 0 auto 40px auto; /* Spazio sotto */
+            padding: 10px 0;
+            background: rgba(0, 0, 0, 0.2); /* Sfondo semi-trasparente */
+            border-radius: 5px;
+            overflow: hidden;
+            position: relative; /* Per contenere l'elemento animato */
+        }
 
-      .scroll-text p {
-        font-size: 1rem;
-        animation-duration: 12s; /* Più veloce su mobile se necessario */
-      }
+        .scroll-text {
+            display: inline-block; /* Permette animazione transform */
+            white-space: nowrap;
+            padding-left: 100%; /* Inizia fuori dallo schermo a destra */
+            animation: scroll-left 20s linear infinite; /* Più lento */
+            font-size: clamp(0.9rem, 2.5vw, 1.1rem); /* Dimensione fluida */
+            color: rgba(255, 255, 255, 0.85);
+        }
 
-      .top-buttons {
-        right: 15px; /* Meno spazio a destra */
-        top: 15px;
-      }
+        @keyframes scroll-left {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-100%); } /* Muove il testo di tutta la sua larghezza */
+        }
+        /* Ferma animazione su hover */
+        .scroll-text-wrapper:hover .scroll-text {
+            animation-play-state: paused;
+        }
 
-      #settingsModal {
-        right: 15px;
-        top: 60px; /* Adattato alla nuova posizione del pulsante */
-        width: calc(100% - 30px); /* Occupa quasi tutta la larghezza */
-        max-width: 250px; /* Ma con un massimo */
-      }
-    }
-  </style>
+
+        /* --- Selezione Giochi con Card --- */
+        .game-selection {
+            margin-top: 30px; /* Avvicinato un po' */
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 30px; /* Spazio tra le card */
+            perspective: 1000px; /* Abilita visuale 3D per le card */
+            padding: 0 15px; /* Padding laterale per non toccare i bordi */
+        }
+
+        .game-card {
+            background-color: var(--card-bg-light);
+            color: var(--text-light);
+            text-decoration: none;
+            border-radius: 15px;
+            overflow: hidden; /* Nasconde parti dell'immagine che escono */
+            width: 280px; /* Larghezza card */
+            box-shadow: 0 8px 25px var(--shadow-light);
+            transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1),
+                        box-shadow 0.4s cubic-bezier(0.25, 0.8, 0.25, 1),
+                        background-color 0.4s ease;
+            display: flex;
+            flex-direction: column;
+            cursor: pointer;
+            border: 1px solid rgba(255, 204, 0, 0.2); /* Bordo sottile oro */
+            animation: fadeInUp 0.5s ease-out forwards; /* Animazione entrata */
+            opacity: 0; /* Inizia nascosta */
+        }
+
+        /* Animazione entrata per le card */
+        @keyframes fadeInUp {
+             from {
+                opacity: 0;
+                transform: translateY(30px);
+             }
+             to {
+                opacity: 1;
+                transform: translateY(0);
+             }
+        }
+
+        /* Ritardo animazione per ogni card */
+        .game-card:nth-child(1) { animation-delay: 0.2s; }
+        .game-card:nth-child(2) { animation-delay: 0.4s; }
+        /* Aggiungi altri nth-child se hai più giochi */
+
+
+        .game-card:hover {
+            transform: translateY(-15px) rotateX(5deg) scale(1.05); /* Effetto 3D sollevato */
+            box-shadow: 0 15px 40px var(--shadow-dark); /* Ombra più pronunciata */
+            background-color: rgba(0, 0, 0, 0.4);
+            border-color: var(--primary-color); /* Evidenzia bordo su hover */
+        }
+
+        body.dark-theme .game-card {
+            background-color: var(--card-bg-dark);
+            box-shadow: 0 8px 25px var(--shadow-dark);
+        }
+        body.dark-theme .game-card:hover {
+             background-color: rgba(70, 70, 70, 0.8);
+        }
+
+
+        .game-card .game-image {
+            width: 100%;
+            height: 180px; /* Altezza fissa immagine */
+            object-fit: cover; /* Copre l'area senza distorcere */
+            display: block;
+            transition: transform 0.4s ease, filter 0.4s ease;
+            filter: brightness(0.9) saturate(1.1); /* Leggermente scura e più satura */
+        }
+
+        .game-card:hover .game-image {
+            transform: scale(1.1); /* Zoom leggero sull'immagine */
+            filter: brightness(1.1) saturate(1.2); /* Più luminosa e satura su hover */
+        }
+
+        .game-card .game-info {
+            padding: 20px;
+            text-align: center;
+            flex-grow: 1; /* Occupa spazio rimanente */
+            display: flex; /* Per centrare verticalmente se serve */
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .game-card .game-name {
+            font-family: 'Playfair Display', serif; /* Font elegante per il nome */
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 5px; /* Spazio tra nome e icona */
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.5);
+        }
+
+        .game-card .game-icon {
+            font-size: 1.5rem; /* Dimensione icona */
+            color: rgba(255, 255, 255, 0.7); /* Icona meno brillante */
+            transition: color 0.3s ease;
+        }
+
+        .game-card:hover .game-icon {
+            color: var(--primary-color); /* Icona diventa oro su hover */
+        }
+
+        /* --- NUOVO STILE PER I PULSANTI AGGIUNTI --- */
+        .buttons {
+            margin-top: 40px; /* Spazio sopra i nuovi pulsanti */
+            display: flex;
+            gap: 20px; /* Spazio tra i pulsanti */
+            justify-content: center;
+            flex-wrap: wrap; /* Se non ci stanno in larghezza vanno a capo */
+        }
+
+        .game-button {
+            background-color: var(--primary-color);
+            color: var(--text-dark); /* Testo scuro su sfondo oro */
+            padding: 12px 25px;
+            text-decoration: none;
+            border-radius: 25px; /* Bordi molto arrotondati */
+            font-weight: bold;
+            font-size: 1rem;
+            transition: background-color 0.3s, transform 0.3s, box-shadow 0.3s;
+            display: inline-flex; /* Per allineare icona e testo */
+            align-items: center;
+            gap: 8px; /* Spazio tra icona e testo */
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .game-button i {
+             font-size: 1.1rem; /* Dimensione icona */
+        }
+
+        .game-button:hover {
+            background-color: #ffd633; /* Oro leggermente più chiaro */
+            transform: translateY(-3px); /* Leggero sollevamento */
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+        }
+        /* Aggiungere stile per tema scuro se necessario */
+        body.dark-theme .game-button {
+             /* Eventuali aggiustamenti per tema scuro, es. colori */
+             color: var(--background-dark); /* Testo molto scuro */
+             box-shadow: 0 4px 10px rgba(255, 204, 0, 0.2); /* Ombra dorata */
+        }
+         body.dark-theme .game-button:hover {
+             box-shadow: 0 6px 15px rgba(255, 204, 0, 0.3);
+         }
+
+
+        /* --- Audio Nascosto --- */
+        audio {
+            display: none;
+        }
+
+        /* --- Media Queries per Responsive --- */
+        @media screen and (max-width: 768px) {
+            .game-selection {
+                gap: 20px;
+            }
+             .game-card {
+                width: clamp(250px, 80vw, 280px); /* Larghezza adattiva */
+            }
+            .buttons { /* Adatta i nuovi pulsanti */
+                margin-top: 30px;
+                gap: 15px;
+            }
+            .game-button {
+                 padding: 10px 20px;
+                 font-size: 0.95rem;
+            }
+        }
+
+        @media screen and (max-width: 600px) {
+            .top-buttons {
+                top: 15px;
+                right: 15px;
+            }
+            .settings-button {
+                 width: 40px;
+                 height: 40px;
+                 font-size: 1rem;
+            }
+            #settingsModal {
+                top: 65px;
+                right: 15px;
+                width: calc(100% - 30px);
+                max-width: 300px; /* Max larghezza modal su mobile */
+            }
+            .container {
+                padding: 80px 15px 30px; /* Più padding sopra per logo, meno sotto */
+            }
+            .logo {
+                letter-spacing: 1px;
+            }
+            .scroll-text-wrapper {
+                 max-width: 95%;
+                 margin-bottom: 30px;
+            }
+             .scroll-text {
+                 animation-duration: 15s; /* Più veloce su mobile */
+            }
+            .game-selection {
+                 gap: 25px; /* Più spazio verticale */
+                 padding: 0 10px;
+                 margin-top: 20px; /* Ridotto spazio sopra le card */
+            }
+            .game-card {
+                 /* L'hover 3D può essere problematico su mobile, lo semplifichiamo */
+                 transition: transform 0.3s ease, box-shadow 0.3s ease;
+            }
+            .game-card:hover {
+                transform: translateY(-8px) scale(1.03); /* Meno sollevamento */
+                rotate: none; /* No rotazione X */
+            }
+            .game-card .game-image {
+                 height: 160px; /* Immagine leggermente più bassa */
+            }
+            .game-card .game-name {
+                font-size: 1.4rem;
+            }
+            .game-card .game-icon {
+                 font-size: 1.3rem;
+            }
+             .buttons { /* Adatta i nuovi pulsanti su mobile */
+                margin-top: 30px; /* Più spazio sotto le card */
+                gap: 10px; /* Meno spazio tra i pulsanti */
+             }
+             .game-button {
+                  padding: 10px 18px;
+                  font-size: 0.9rem;
+             }
+        }
+
+    </style>
 </head>
 <body>
-  <div class="top-buttons">
-    <button class="settings-button" onclick="toggleSettings()" aria-label="Apri/Chiudi Impostazioni">
-       <i class="fas fa-cog"></i> </button>
-  </div>
-
-  <div id="settingsModal">
-    <h3>Impostazioni</h3>
-    <div>
-      <label for="musicToggle">Musica</label>
-      <input type="checkbox" id="musicToggle" checked onchange="toggleMusic()">
+    <div class="top-buttons">
+        <button class="settings-button" onclick="toggleSettings()" aria-label="Apri/Chiudi Impostazioni">
+            <i class="fas fa-cog fa-spin-hover"></i> </button>
     </div>
-    <div>
-      <label for="themeToggle">Tema Scuro</label>
-      <input type="checkbox" id="themeToggle" onchange="toggleTheme()">
-    </div>
-  </div>
 
-  <div class="container">
-    <div class="logo">IPPO’S CASINÒ</div>
-    <div class="scroll-text">
-      <p>Benvenuto nel casinò dove ogni giocata può cambiare tutto. Prova la fortuna con Blackjack e Poker!</p>
-    </div>
-    <div class="buttons">
-      <a href="blackjack.html" class="game-button"><i class="fas fa-cards"></i> Blackjack</a> <a href="poker.html" class="game-button"><i class="fas fa-dice-d20"></i> Poker</a> </div>
-  </div>
+    <div id="settingsModal">
+        <h3>Impostazioni</h3>
+        <div>
+            <input type="checkbox" id="musicToggle" checked onchange="toggleMusic()">
+            <label for="musicToggle">Musica</label>
+        </div>
+        <div>
+            <input type="checkbox" id="themeToggle" checked onchange="toggleTheme()">
+            <label for="themeToggle">Tema Chiaro</label> </div>
+         </div>
 
-  <audio id="backgroundMusic" loop> <source src="https://www.bensound.com/bensound-music/bensound-jazzyfrenchy.mp3" type="audio/mpeg">
-    Il tuo browser non supporta l’audio.
-  </audio>
+    <div class="container">
+        <div class="logo">IPPO’S CASINÒ</div>
 
-  <script>
-    // Funzione per aprire/chiudere il modal delle impostazioni
-    function toggleSettings() {
-      const modal = document.getElementById('settingsModal');
-      modal.style.display = modal.style.display === 'block' ? 'none' : 'block';
-    }
+        <div class="scroll-text-wrapper">
+            <div class="scroll-text">
+                Benvenuto nel regno del divertimento! ♠️ Tenta la fortuna al Blackjack o sfida il banco a Poker. ✨ Ogni puntata è un'emozione! ♦️ Vieni a scoprire i nostri tavoli! ♣️
+            </div>
+        </div>
 
-    // Funzione per attivare/disattivare la musica
-    function toggleMusic() {
-      const music = document.getElementById('backgroundMusic');
-      const musicToggle = document.getElementById('musicToggle');
-      if (musicToggle.checked) {
-          // Prova a far partire la musica (potrebbe essere bloccato dal browser)
-          music.play().catch(error => console.log("Autoplay bloccato dal browser:", error));
-          music.muted = false; // Assicura che non sia muta
-      } else {
-        music.pause(); // Mette in pausa invece di mutare solo
-        music.currentTime = 0; // Opzionale: riavvolge la traccia
-        music.muted = true; // Muta comunque per sicurezza
-      }
-    }
+        <div class="game-selection">
+            <a href="blackjack.html" class="game-card">
+                <img src="https://placehold.co/400x300/000000/ffcc00?text=Blackjack&font=playfairdisplay" alt="Anteprima gioco Blackjack" class="game-image">
+                <div class="game-info">
+                    <div class="game-name">Blackjack</div>
+                    <i class="fas fa-cards game-icon"></i> </div>
+            </a>
 
-    // Funzione per cambiare tema (chiaro/scuro)
-    function toggleTheme() {
-        const body = document.body;
-        const themeToggle = document.getElementById('themeToggle');
-        // Usa classList.toggle per aggiungere/rimuovere la classe 'dark-theme'
-        body.classList.toggle('dark-theme', !themeToggle.checked); // Aggiunge 'dark-theme' se NON è spuntato
+            <a href="poker.html" class="game-card">
+                 <img src="https://placehold.co/400x300/333333/ffaa00?text=Poker&font=playfairdisplay" alt="Anteprima gioco Poker" class="game-image">
+                 <div class="game-info">
+                    <div class="game-name">Poker</div>
+                    <i class="fas fa-dice-d20 game-icon"></i> </div>
+            </a>
 
-        // Salva la preferenza nel localStorage (opzionale)
-        localStorage.setItem('theme', themeToggle.checked ? 'light' : 'dark');
-    }
+        </div> <div class="buttons">
+          <a href="blackjack.html" class="game-button"><i class="fas fa-spade"></i> Blackjack</a>
+          <a href="poker.html" class="game-button"><i class="fas fa-dice"></i> Poker</a>
+        </div>
+        </div> <audio id="backgroundMusic" loop>
+        <source src="https://www.bensound.com/bensound-music/bensound-jazzyfrenchy.mp3" type="audio/mpeg">
+        Il tuo browser non supporta l'audio.
+    </audio>
 
-    // All'avvio della pagina, controlla le preferenze salvate (opzionale)
-    document.addEventListener('DOMContentLoaded', () => {
-        const savedTheme = localStorage.getItem('theme');
-        const themeToggle = document.getElementById('themeToggle');
-        const body = document.body;
-        const musicToggle = document.getElementById('musicToggle');
+    <script>
+        const settingsModal = document.getElementById('settingsModal');
         const music = document.getElementById('backgroundMusic');
+        const musicToggle = document.getElementById('musicToggle');
+        const themeToggle = document.getElementById('themeToggle');
+        const body = document.body;
 
-        // Applica tema salvato
-        if (savedTheme === 'dark') {
-             body.classList.add('dark-theme');
-             themeToggle.checked = false; // Deseleziona se il tema è scuro
-        } else {
-             body.classList.remove('dark-theme'); // Assicura che non ci sia la classe dark
-             themeToggle.checked = true; // Seleziona se il tema è chiaro (default)
+        // Funzione per aprire/chiudere il modal delle impostazioni
+        function toggleSettings() {
+            const isOpen = settingsModal.style.display === 'block';
+            settingsModal.style.display = isOpen ? 'none' : 'block';
+            // Opzionale: Aggiungi/rimuovi classe per animazione uscita
         }
 
-        // Imposta stato iniziale checkbox musica e muting
-        // Nota: l'autoplay è spesso bloccato, quindi la musica partirà solo se l'utente interagisce
-        // o se il browser lo permette. Iniziamo con la musica muta per evitare errori.
-        music.muted = !musicToggle.checked;
-        if (musicToggle.checked) {
-            // Prova a far partire la musica in modo silenzioso all'inizio
-            // L'utente dovrà poi attivarla con il toggle se l'autoplay fallisce
-             music.play().catch(e => console.log("Autoplay iniziale bloccato"));
-        }
-
-
-        // Chiudi il modal se si clicca fuori
-        window.addEventListener('click', function(event) {
-            const modal = document.getElementById('settingsModal');
-            const settingsButton = document.querySelector('.settings-button');
-            // Se il modal è visibile E il click NON è sul modal o sul suo pulsante di apertura
-            if (modal.style.display === 'block' && !modal.contains(event.target) && !settingsButton.contains(event.target)) {
-                modal.style.display = 'none';
+        // Funzione per attivare/disattivare la musica
+        function toggleMusic() {
+            if (musicToggle.checked) {
+                music.muted = false; // Riattiva audio
+                // Prova a far partire la musica se non sta già suonando
+                if (music.paused) {
+                    music.play().catch(error => console.log("Riproduzione musica bloccata dal browser:", error));
+                }
+            } else {
+                music.pause(); // Mette in pausa
+                // music.currentTime = 0; // Opzionale: riavvolge
+                music.muted = true; // Muta per sicurezza
             }
-        });
-    });
+            // Salva preferenza musica (opzionale)
+             localStorage.setItem('musicEnabled', musicToggle.checked);
+        }
 
-  </script>
+        // Funzione per cambiare tema (chiaro/scuro)
+        function toggleTheme() {
+            // Se il toggle è NON selezionato -> tema scuro
+            // Se il toggle è selezionato -> tema chiaro (default)
+            const useDarkTheme = !themeToggle.checked;
+            body.classList.toggle('dark-theme', useDarkTheme);
+
+            // Salva la preferenza nel localStorage
+            localStorage.setItem('theme', useDarkTheme ? 'dark' : 'light');
+        }
+
+        // All'avvio della pagina
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- Applicazione Tema Salvato ---
+            const savedTheme = localStorage.getItem('theme') || 'light'; // Default chiaro
+            const useDarkTheme = savedTheme === 'dark';
+            body.classList.toggle('dark-theme', useDarkTheme);
+            // Imposta lo stato del toggle INVERSO rispetto al tema
+            // Se è scuro (useDarkTheme=true), il toggle (tema chiaro) deve essere deselezionato
+            themeToggle.checked = !useDarkTheme;
+
+
+            // --- Impostazione Musica Salvata ---
+            const savedMusicPref = localStorage.getItem('musicEnabled');
+             // Default a true (musica attiva) se non c'è preferenza salvata
+            const musicEnabled = savedMusicPref === null ? true : (savedMusicPref === 'true');
+            musicToggle.checked = musicEnabled;
+
+            // Imposta stato iniziale musica (spesso l'autoplay è bloccato all'inizio)
+             music.muted = !musicEnabled; // Inizia muto se disabilitato
+             if (musicEnabled) {
+                // Tenta la riproduzione solo se abilitata.
+                // L'utente potrebbe dover interagire comunque (es. cliccando sul toggle)
+                 music.play().catch(e => {
+                     console.log("Autoplay iniziale musica bloccato.");
+                     // Potresti mostrare un messaggio o un'icona "audio disattivato"
+                 });
+             }
+
+
+            // --- Chiusura Modal Cliccando Fuori ---
+            window.addEventListener('click', function(event) {
+                const settingsButton = document.querySelector('.settings-button');
+                // Se il modal è visibile E il click NON è sul modal O sui suoi figli
+                // E il click NON è sul pulsante di apertura
+                if (settingsModal.style.display === 'block' &&
+                    !settingsModal.contains(event.target) &&
+                    !settingsButton.contains(event.target)) {
+                    settingsModal.style.display = 'none';
+                }
+            });
+
+             // --- Aggiunta classe per effetto hover sull'icona settings ---
+            // Questo è gestito da CSS ma potresti voler aggiungere JS per compatibilità o effetti più complessi
+            const settingsIcon = document.querySelector('.settings-button i');
+            if(settingsIcon) {
+                 settingsButton.addEventListener('mouseenter', () => settingsIcon.classList.add('fa-spin'));
+                 settingsButton.addEventListener('mouseleave', () => settingsIcon.classList.remove('fa-spin'));
+            }
+
+        });
+
+    </script>
 </body>
 </html>
