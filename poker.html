@@ -1,3 +1,4 @@
+Poker ultimo:
 <!DOCTYPE html>
 <html lang="it">
 <head>
@@ -8,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700&display=swap" rel="stylesheet">
-<meta name="google-adsense-account" content="ca-pub-9456850571765688">
+<meta name="google-adsense-account" content="ca-pub-7565515791909001">
 <style>
   /* --- CSS Invariato (uguale alla versione precedente) --- */
   @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;700&display=swap');
@@ -1219,32 +1220,46 @@ function updatePlayersUI() {
     players.forEach(player => {
         const prefix = player.elementPrefix;
         const balanceEl = document.getElementById(`${prefix}-balance`);
-        const betEl = document.getElementById(`${prefix}-bet`);
-        const statusEl = document.getElementById(`${prefix}-status`);
+        const betEl     = document.getElementById(`${prefix}-bet`);
+        const statusEl  = document.getElementById(`${prefix}-status`);
         const cardsContainer = document.getElementById(`${prefix}-cards`);
         const dealerButtonEl = document.getElementById(`dealer-button-p${player.id}`);
 
         if (balanceEl) balanceEl.textContent = player.balance;
-        if (betEl) betEl.textContent = player.currentBet;
-        if (statusEl) { let statusText = player.status; switch(player.status) { case 'active': statusText = 'Attivo'; break; case 'folded': statusText = 'Foldato'; break; case 'all-in': statusText = 'All-in'; break; case 'out': statusText = 'Eliminato'; break; } statusEl.textContent = statusText; }
-        if (dealerButtonEl) dealerButtonEl.style.display = (player.isDealer && !handOver && currentPhase !== 'pre-deal') ? 'flex' : 'none';
+        if (betEl)     betEl.textContent     = player.currentBet;
+        if (statusEl)  statusEl.textContent  = ({
+            active:   'Attivo',
+            folded:   'Foldato',
+            'all-in': 'All-in',
+            out:      'Eliminato'
+        })[player.status] || player.status;
+        if (dealerButtonEl)
+            dealerButtonEl.style.display = (player.isDealer && !handOver && currentPhase !== 'pre-deal')
+                                          ? 'flex' : 'none';
 
         if (cardsContainer) {
-             cardsContainer.innerHTML = '';
-             if (player.hand && player.hand.length > 0) {
-                 player.hand.forEach(card => {
-                     let shouldBeHidden = !card.faceUp;
-                     // Logica visibilità carte: mostra sempre P1, nascondi P2/Bot tranne a fine mano/showdown
-                     if (player.id === 1) { shouldBeHidden = false; card.faceUp = true;}
-                     else if ((gameMode === 'PVP' || player.isBot) && !handOver && currentPhase !== 'showdown') { shouldBeHidden = true; }
-                     if(player.status === 'folded') { shouldBeHidden = true; }
-                     if ((handOver || currentPhase === 'showdown') && player.status !== 'folded') { shouldBeHidden = false; card.faceUp = true; }
-                     displayCard(card, cardsContainer, shouldBeHidden, false); // isNew=false per evitare animazione continua
-                 });
-             }
-        } else { console.error(`Contenitore carte non trovato per ${prefix}`); }
+            cardsContainer.innerHTML = '';
+            player.hand.forEach(card => {
+                // === nuova logica di visibilità ===
+                // se siamo in showdown o mano finita => mostra sempre
+                let shouldBeHidden = false;
+                if (!handOver && currentPhase !== 'showdown') {
+                    // durante la mano: nascondi se non è il giocatore corrente
+                    const currentPlayerId = players[currentPlayerIndex].id;
+                    shouldBeHidden = (player.id !== currentPlayerId);
+                }
+                // se il giocatore ha foldato, le sue carte restano girate
+                if (player.status === 'folded') {
+                    shouldBeHidden = true;
+                }
+                card.faceUp = !shouldBeHidden;
+                displayCard(card, cardsContainer, shouldBeHidden, false);
+            });
+        } else {
+            console.error(`Contenitore carte non trovato per ${prefix}`);
+        }
     });
- }
+}
 
 function updateCommunityAreaUI() {
      if (potAmountSpan) potAmountSpan.textContent = pot; else console.error("potAmountSpan non trovato");
