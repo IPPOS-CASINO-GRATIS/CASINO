@@ -1,4 +1,3 @@
-HTML
 <!DOCTYPE html>
 <html lang="it">
 <head>
@@ -639,9 +638,8 @@ HTML
     function toggleHints() { showHints = showHintsToggle.checked; console.log("Mostra Suggerimenti (Console):", showHints ? "Attivato" : "Disattivato"); if (showHints && !gameOver && playerHands.length > 0 && playerHands[currentPlayerHandIndex]?.status === 'active') { provideHint(); } }
     // Funzione per il nuovo bottone "Cambia Gioco"
     function changeGame() {
-        alert("Funzionalità 'Cambia Gioco' non implementata.\nQui dovresti reindirizzare alla schermata iniziale.");
-        // Esempio di reindirizzamento (da decommentare e modificare con l'URL corretto):
-        // window.location.href = 'schermata_iniziale.html';
+        alert("Funzionalità 'Cambia Gioco' attivata!\nReindirizzamento alla schermata iniziale.");
+        window.location.href = 'index.html';
     }
 
     // --- Basic Strategy Hint (Invariati) ---
