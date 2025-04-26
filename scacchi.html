@@ -657,8 +657,6 @@
             </div>
         </div>
     </div>
-
-[source: 1]
 <script>
     document.addEventListener('DOMContentLoaded', () => {
 
@@ -2740,7 +2738,7 @@
                  if (isReviewingHistory) {
                       const moveData = gameHistory[index]; // Mossa che ha portato a questo stato
                       const playerWhoMadeTheMove = index > 0 ? (moveData?.fenBefore?.split(' ')[1] === 'w' ? 'Bianco' : 'Nero') : null;
-                      const moveNum = index === 0 ? 0 : (moveData?.move?.fullmoveNumber ?? Math.ceil(index / 2) || '?');
+                      const moveNum = index === 0 ? 0 : (moveData?.move?.fullmoveNumber ?? Math.ceil(index / 2));
                       historyStatusText = index === 0
                                         ? 'Inizio Partita'
                                         : `Dopo ${moveNum}${playerWhoMadeTheMove === 'Bianco' ? '.' : '...'} ${moveData?.moveNotation || '??'}`;
