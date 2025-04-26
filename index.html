@@ -12,618 +12,859 @@
     <style>
         * {
             margin: 0;
-            padding: 0;
+            padding: 0; /* [cite: 2] */
             box-sizing: border-box;
         }
 
         :root {
-            --primary-color: #ffcc00; /* Oro */
-            --background-light: #005f3c;
-            --background-light-gradient: radial-gradient(circle at top left, #007b50, #004d31);
-            --background-dark: #1a1a1a; /* Sfondo scuro più profondo */
-            --text-light: #ffffff;
-            --text-dark: #222222;
-            --card-bg-light: rgba(0, 0, 0, 0.2);
-            --card-bg-dark: rgba(50, 50, 50, 0.7);
-            --shadow-light: rgba(0, 0, 0, 0.3);
-            --shadow-dark: rgba(0, 0, 0, 0.6);
+            --primary-color: #ffcc00; /* Oro [cite: 3] */
+            --background-light: #005f3c; /* [cite: 3] */
+            --background-light-gradient: radial-gradient(circle at top left, #007b50, #004d31); /* [cite: 4] */
+            --background-dark: #1a1a1a; /* Sfondo scuro più profondo [cite: 4] */
+            --text-light: #ffffff; /* [cite: 4] */
+            --text-dark: #222222; /* [cite: 5] */
+            --card-bg-light: rgba(0, 0, 0, 0.2); /* [cite: 5] */
+            --card-bg-dark: rgba(50, 50, 50, 0.7); /* [cite: 5] */
+            --shadow-light: rgba(0, 0, 0, 0.3); /* [cite: 5] */
+            --shadow-dark: rgba(0, 0, 0, 0.6); /* [cite: 6] */
+            --section-bg-light: rgba(255, 255, 255, 0.05); /* [cite: 6] */
+            --section-bg-dark: rgba(40, 40, 40, 0.8); /* [cite: 6] */
+            --faq-bg-light: rgba(0, 0, 0, 0.1); /* [cite: 6] */
+            --faq-bg-dark: rgba(20, 20, 20, 0.9); /* [cite: 7] */
+            --intro-btn-bg-light: rgba(0, 0, 0, 0.4); /* NUOVO: Sfondo bottone intro chiaro [cite: 7, 8] */
+            --intro-btn-bg-dark: rgba(50, 50, 50, 0.7); /* NUOVO: Sfondo bottone intro scuro [cite: 8, 9] */
+            --intro-text-bg-light: #fff8e1; /* [cite: 9] */
+            --intro-text-color-light: #3e2723; /* [cite: 10] */
+            --intro-text-bg-dark: #333; /* [cite: 10] */
+            --intro-text-color-dark: #eee; /* [cite: 10] */
+            --details-bg-light: rgba(255, 255, 255, 0.05); /* NUOVO: Sfondo details chiaro [cite: 10, 11] */
+            --details-open-bg-light: rgba(255, 255, 255, 0.08); /* NUOVO: Sfondo details aperti chiaro [cite: 11, 12] */
+            --details-bg-dark: rgba(50, 50, 50, 0.5); /* NUOVO: Sfondo details scuro [cite: 12, 13] */
+            --details-open-bg-dark: rgba(60, 60, 60, 0.7); /* NUOVO: Sfondo details aperti scuro [cite: 13, 14] */
         }
 
         body {
-            font-family: 'Roboto', sans-serif; /* Cambiato font per leggibilità generale */
-            background-color: var(--background-light);
-            background-image: var(--background-light-gradient);
-            color: var(--text-light);
-            min-height: 100vh; /* Usa min-height per permettere scroll se necessario */
-            overflow-x: hidden; /* Nasconde solo lo scroll orizzontale */
-            position: relative;
-            transition: background-color 0.5s ease, color 0.5s ease, background-image 0.5s ease;
-            display: flex;
-            flex-direction: column; /* Permette al footer (se ci fosse) di stare in basso */
+            font-family: 'Roboto', sans-serif; /* [cite: 14] */
+            background-color: var(--background-light); /* [cite: 15] */
+            background-image: var(--background-light-gradient); /* [cite: 15] */
+            color: var(--text-light); /* [cite: 15] */
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative; /* [cite: 15] */
+            transition: background-color 0.5s ease, color 0.5s ease, background-image 0.5s ease; /* [cite: 16] */
+            display: flex; /* [cite: 16] */
+            flex-direction: column; /* [cite: 16] */
         }
 
         body.dark-theme {
-            background-color: var(--background-dark);
-            background-image: none;
-            color: var(--text-light); /* Manteniamo testo bianco su scuro */
+            background-color: var(--background-dark); /* [cite: 17] */
+            background-image: none; /* [cite: 18] */
+            color: var(--text-light); /* [cite: 18] */
         }
 
-        /* --- Pulsanti in alto --- */
-        .top-buttons {
-            position: absolute;
-            top: 20px;
-            right: 20px; /* Leggermente meno spazio */
-            z-index: 1001; /* Sopra il modal quando si chiude */
-        }
-
-        .settings-button {
-            background-color: rgba(0, 0, 0, 0.5);
-            color: var(--primary-color);
-            border: 1px solid var(--primary-color);
-            border-radius: 50%; /* Cerchio */
-            width: 45px;
-            height: 45px;
-            font-size: 1.2rem; /* Dimensione icona */
-            cursor: pointer;
-            transition: background-color 0.3s, transform 0.3s;
-            display: flex;
-            justify-content: center;
+         /* --- MODIFICATO: Posizionamento Bottone Intro Alto a Sinistra --- */
+         #intro-toggle-button {
+            position: absolute; /* O fixed se deve rimanere fisso allo scroll [cite: 19] */
+            top: 20px; /* [cite: 19] */
+            left: 20px; /* [cite: 20] */
+            z-index: 1001; /* Assicura sia sopra altri elementi [cite: 20] */
+            background-color: var(--intro-btn-bg-light); /* [cite: 20] */
+            border: 1px solid var(--primary-color); /* [cite: 21] */
+            color: var(--primary-color); /* [cite: 21] */
+            padding: 8px 12px; /* Leggermente più piccolo [cite: 21] */
+            font-size: 0.85rem; /* Leggermente più piccolo [cite: 21, 22] */
+            font-weight: bold; /* [cite: 22] */
+            border-radius: 20px; /* [cite: 22] */
+            cursor: pointer; /* [cite: 23] */
+            transition: background-color 0.3s, color 0.3s; /* [cite: 23] */
+            display: inline-flex;
             align-items: center;
-            box-shadow: 0 2px 8px var(--shadow-light);
-        }
-
-        .settings-button:hover {
-            background-color: rgba(0, 0, 0, 0.7);
-            transform: rotate(45deg) scale(1.1); /* Effetto rotazione e zoom */
-        }
-
-        body.dark-theme .settings-button {
-           box-shadow: 0 2px 8px var(--shadow-dark);
-        }
-
-        /* --- Modal Impostazioni --- */
-        #settingsModal {
-            display: none;
-            position: fixed; /* Cambiato in fixed per restare visibile allo scroll */
-            top: 75px;
-            right: 20px;
-            background-color: rgba(30, 30, 30, 0.95);
-            backdrop-filter: blur(5px); /* Effetto vetro smerigliato */
-            padding: 25px;
-            border-radius: 15px;
-            z-index: 1000;
-            border: 1px solid var(--primary-color);
-            color: var(--text-light);
-            box-shadow: 0 5px 20px var(--shadow-dark);
-            width: 280px; /* Larghezza fissa */
-            animation: fadeInModal 0.3s ease-out;
-        }
-
-         @keyframes fadeInModal {
-            from { opacity: 0; transform: translateY(-10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        #settingsModal h3 {
-            font-family: 'Playfair Display', serif;
-            color: var(--primary-color);
-            margin-bottom: 20px;
-            text-align: center;
-            font-size: 1.5rem;
-            border-bottom: 1px solid rgba(255, 204, 0, 0.3);
-            padding-bottom: 10px;
-        }
-
-        #settingsModal div {
-            margin-bottom: 15px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        #settingsModal label {
-            color: #eee; /* Leggermente meno brillante dell'oro */
-            margin-right: 15px;
-            font-size: 1rem;
-        }
-
-        /* Stile Toggle Switch Moderno */
-        #settingsModal input[type="checkbox"] {
-            opacity: 0; /* Nascondi checkbox di default */
-            width: 0;
-            height: 0;
-            position: absolute;
-        }
-
-        #settingsModal label[for] { /* Applica a label collegate a input */
-             cursor: pointer;
-             position: relative;
-             padding-left: 50px; /* Spazio per lo switch */
-             line-height: 22px; /* Allinea verticalmente */
-             display: inline-block; /* Necessario per padding e altezza */
-        }
-
-        #settingsModal label[for]::before { /* Base dello switch */
-            content: '';
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 40px; /* Larghezza switch */
-            height: 22px; /* Altezza switch */
-            background-color: #555; /* Colore base spento */
-            border-radius: 11px; /* Arrotondato */
-            transition: background-color 0.3s;
-        }
-
-        #settingsModal label[for]::after { /* Pallino dello switch */
-            content: '';
-            position: absolute;
-            left: 2px; /* Posizione iniziale */
-            top: 2px;
-            width: 18px; /* Dimensione pallino */
-            height: 18px;
-            background-color: white;
-            border-radius: 50%;
-            transition: transform 0.3s;
-        }
-
-        #settingsModal input[type="checkbox"]:checked + label[for]::before {
-            background-color: var(--primary-color); /* Colore acceso */
-        }
-
-        #settingsModal input[type="checkbox"]:checked + label[for]::after {
-            transform: translateX(18px); /* Sposta il pallino */
-        }
-
-
-        /* --- Contenuto Principale --- */
-        .container {
-            flex-grow: 1; /* Occupa lo spazio rimanente */
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-            padding: 60px 20px 40px; /* Più padding sopra, meno sotto */
-            position: relative; /* Necessario per elementi assoluti interni se servissero */
-        }
-
-        /* --- Logo Stile Casinò --- */
-        .logo {
-            font-family: 'Playfair Display', serif;
-            font-size: clamp(2.5rem, 8vw, 5rem); /* Dimensione fluida */
-            color: var(--primary-color);
-            text-shadow: 0 0 8px rgba(255, 204, 0, 0.8),
-                         0 0 15px rgba(255, 153, 0, 0.7),
-                         0 0 25px rgba(255, 102, 0, 0.5);
-            margin-bottom: 15px; /* Ridotto spazio sotto */
-            animation: pulseGlow 2.5s ease-in-out infinite alternate;
-            letter-spacing: 2px; /* Un po' di spazio tra lettere */
-        }
-
-        @keyframes pulseGlow {
-            from {
-                text-shadow: 0 0 8px rgba(255, 204, 0, 0.7),
-                             0 0 15px rgba(255, 153, 0, 0.6),
-                             0 0 25px rgba(255, 102, 0, 0.4);
-            }
-            to {
-                text-shadow: 0 0 12px rgba(255, 204, 0, 0.9),
-                             0 0 22px rgba(255, 153, 0, 0.8),
-                             0 0 35px rgba(255, 102, 0, 0.6);
-            }
-        }
-
-        /* --- Testo Scorrevo le --- */
-        .scroll-text-wrapper {
-            width: 100%;
-            max-width: 700px; /* Leggermente più largo */
-            margin: 0 auto 40px auto; /* Spazio sotto */
-            padding: 10px 0;
-            background: rgba(0, 0, 0, 0.2); /* Sfondo semi-trasparente */
-            border-radius: 5px;
-            overflow: hidden;
-            position: relative; /* Per contenere l'elemento animato */
-        }
-
-        .scroll-text {
-            display: inline-block; /* Permette animazione transform */
-            white-space: nowrap;
-            padding-left: 100%; /* Inizia fuori dallo schermo a destra */
-            animation: scroll-left 20s linear infinite; /* Più lento */
-            font-size: clamp(0.9rem, 2.5vw, 1.1rem); /* Dimensione fluida */
-            color: rgba(255, 255, 255, 0.85);
-        }
-
-        @keyframes scroll-left {
-            0% { transform: translateX(0); }
-            100% { transform: translateX(-100%); } /* Muove il testo di tutta la sua larghezza */
-        }
-        /* Ferma animazione su hover */
-        .scroll-text-wrapper:hover .scroll-text {
-            animation-play-state: paused;
-        }
-
-
-        /* --- Selezione Giochi con Card --- */
-        .game-selection {
-            margin-top: 30px; /* Avvicinato un po' */
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 30px; /* Spazio tra le card */
-            perspective: 1000px; /* Abilita visuale 3D per le card */
-            padding: 0 15px; /* Padding laterale per non toccare i bordi */
-        }
-
-        .game-card {
-            background-color: var(--card-bg-light);
-            color: var(--text-light);
-            text-decoration: none;
-            border-radius: 15px;
-            overflow: hidden; /* Nasconde parti dell'immagine che escono */
-            width: 280px; /* Larghezza card */
-            box-shadow: 0 8px 25px var(--shadow-light);
-            transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1),
-                        box-shadow 0.4s cubic-bezier(0.25, 0.8, 0.25, 1),
-                        background-color 0.4s ease;
-            display: flex;
-            flex-direction: column;
-            cursor: pointer;
-            border: 1px solid rgba(255, 204, 0, 0.2); /* Bordo sottile oro */
-            animation: fadeInUp 0.5s ease-out forwards; /* Animazione entrata */
-            opacity: 0; /* Inizia nascosta */
-        }
-
-        /* Animazione entrata per le card */
-        @keyframes fadeInUp {
-             from {
-                opacity: 0;
-                transform: translateY(30px);
-             }
-             to {
-                opacity: 1;
-                transform: translateY(0);
-             }
-        }
-
-        /* Ritardo animazione per ogni card */
-        .game-card:nth-child(1) { animation-delay: 0.2s; }
-        .game-card:nth-child(2) { animation-delay: 0.4s; }
-        /* Aggiungi altri nth-child se hai più giochi */
-
-
-        .game-card:hover {
-            transform: translateY(-15px) rotateX(5deg) scale(1.05); /* Effetto 3D sollevato */
-            box-shadow: 0 15px 40px var(--shadow-dark); /* Ombra più pronunciata */
-            background-color: rgba(0, 0, 0, 0.4);
-            border-color: var(--primary-color); /* Evidenzia bordo su hover */
-        }
-
-        body.dark-theme .game-card {
-            background-color: var(--card-bg-dark);
-            box-shadow: 0 8px 25px var(--shadow-dark);
-        }
-        body.dark-theme .game-card:hover {
-             background-color: rgba(70, 70, 70, 0.8);
-        }
-
-
-        .game-card .game-image {
-            width: 100%;
-            height: 180px; /* Altezza fissa immagine */
-            object-fit: cover; /* Copre l'area senza distorcere */
-            display: block;
-            transition: transform 0.4s ease, filter 0.4s ease;
-            filter: brightness(0.9) saturate(1.1); /* Leggermente scura e più satura */
-        }
-
-        .game-card:hover .game-image {
-            transform: scale(1.1); /* Zoom leggero sull'immagine */
-            filter: brightness(1.1) saturate(1.2); /* Più luminosa e satura su hover */
-        }
-
-        .game-card .game-info {
-            padding: 20px;
-            text-align: center;
-            flex-grow: 1; /* Occupa spazio rimanente */
-            display: flex; /* Per centrare verticalmente se serve */
-            flex-direction: column;
-            justify-content: center;
-        }
-
-        .game-card .game-name {
-            font-family: 'Playfair Display', serif; /* Font elegante per il nome */
-            font-size: 1.6rem;
-            font-weight: 700;
-            color: var(--primary-color);
-            margin-bottom: 5px; /* Spazio tra nome e icona */
-            text-shadow: 1px 1px 3px rgba(0,0,0,0.5);
-        }
-
-        .game-card .game-icon {
-            font-size: 1.5rem; /* Dimensione icona */
-            color: rgba(255, 255, 255, 0.7); /* Icona meno brillante */
-            transition: color 0.3s ease;
-        }
-
-        .game-card:hover .game-icon {
-            color: var(--primary-color); /* Icona diventa oro su hover */
-        }
-
-        /* --- NUOVO STILE PER I PULSANTI AGGIUNTI --- */
-        .buttons {
-            margin-top: 40px; /* Spazio sopra i nuovi pulsanti */
-            display: flex;
-            gap: 20px; /* Spazio tra i pulsanti */
-            justify-content: center;
-            flex-wrap: wrap; /* Se non ci stanno in larghezza vanno a capo */
-        }
-
-        .game-button {
-            background-color: var(--primary-color);
-            color: var(--text-dark); /* Testo scuro su sfondo oro */
-            padding: 12px 25px;
-            text-decoration: none;
-            border-radius: 25px; /* Bordi molto arrotondati */
-            font-weight: bold;
-            font-size: 1rem;
-            transition: background-color 0.3s, transform 0.3s, box-shadow 0.3s;
-            display: inline-flex; /* Per allineare icona e testo */
-            align-items: center;
-            gap: 8px; /* Spazio tra icona e testo */
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-        }
-
-        .game-button i {
-             font-size: 1.1rem; /* Dimensione icona */
-        }
-
-        .game-button:hover {
-            background-color: #ffd633; /* Oro leggermente più chiaro */
-            transform: translateY(-3px); /* Leggero sollevamento */
-            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
-        }
-        /* Aggiungere stile per tema scuro se necessario */
-        body.dark-theme .game-button {
-             /* Eventuali aggiustamenti per tema scuro, es. colori */
-             color: var(--background-dark); /* Testo molto scuro */
-             box-shadow: 0 4px 10px rgba(255, 204, 0, 0.2); /* Ombra dorata */
-        }
-         body.dark-theme .game-button:hover {
-             box-shadow: 0 6px 15px rgba(255, 204, 0, 0.3);
+            gap: 6px; /* Spazio ridotto icona-testo [cite: 23, 24] */
+            box-shadow: 0 2px 5px var(--shadow-light); /* [cite: 24, 25] */
+         }
+         #intro-toggle-button:hover {
+            background-color: var(--primary-color); /* [cite: 25] */
+            color: var(--text-dark); /* [cite: 26] */
+         }
+         body.dark-theme #intro-toggle-button {
+             background-color: var(--intro-btn-bg-dark); /* [cite: 26] */
+             box-shadow: 0 2px 5px var(--shadow-dark); /* [cite: 27] */
          }
 
 
-        /* --- Audio Nascosto --- */
-        audio {
-            display: none;
+        /* --- Pulsanti Impostazioni Alto a Destra --- */
+        .top-buttons {
+            position: absolute; /* [cite: 27] */
+            top: 20px; /* [cite: 28] */
+            right: 20px; /* [cite: 28] */
+            z-index: 1001;
         }
 
-        /* --- Media Queries per Responsive --- */
-        @media screen and (max-width: 768px) {
-            .game-selection {
-                gap: 20px;
-            }
-             .game-card {
-                width: clamp(250px, 80vw, 280px); /* Larghezza adattiva */
-            }
-            .buttons { /* Adatta i nuovi pulsanti */
-                margin-top: 30px;
-                gap: 15px;
-            }
-            .game-button {
-                 padding: 10px 20px;
-                 font-size: 0.95rem;
-            }
+        .settings-button {
+            background-color: rgba(0, 0, 0, 0.5); /* [cite: 28] */
+            color: var(--primary-color); /* [cite: 29] */
+            border: 1px solid var(--primary-color); /* [cite: 29] */
+            border-radius: 50%;
+            width: 45px;
+            height: 45px;
+            font-size: 1.2rem;
+            cursor: pointer; /* [cite: 29] */
+            transition: background-color 0.3s, transform 0.3s; /* [cite: 30] */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 2px 8px var(--shadow-light); /* [cite: 30, 31] */
+        }
+        .settings-button:hover {
+            background-color: rgba(0, 0, 0, 0.7); /* [cite: 31] */
+            transform: rotate(45deg) scale(1.1); /* [cite: 32] */
+        }
+        body.dark-theme .settings-button {
+           box-shadow: 0 2px 8px var(--shadow-dark); /* [cite: 32, 33] */
         }
 
+        /* Modal Impostazioni */
+        #settingsModal {
+            display: none; /* [cite: 33] */
+            position: fixed; /* [cite: 34] */
+            top: 75px; /* [cite: 34] */
+            right: 20px; /* [cite: 34] */
+            background-color: rgba(30, 30, 30, 0.95);
+            backdrop-filter: blur(5px);
+            padding: 25px;
+            border-radius: 15px;
+            z-index: 1000; /* [cite: 34] */
+            border: 1px solid var(--primary-color); /* [cite: 35] */
+            color: var(--text-light); /* [cite: 35] */
+            box-shadow: 0 5px 20px var(--shadow-dark); /* [cite: 35] */
+            width: 280px;
+            animation: fadeInModal 0.3s ease-out; /* [cite: 35, 36] */
+        }
+        @keyframes fadeInModal { from { opacity: 0; transform: translateY(-10px); /* [cite: 36] */ } to { opacity: 1; transform: translateY(0); } } /* [cite: 36, 37] */
+        #settingsModal h3 { font-family: 'Playfair Display', serif; /* [cite: 37] */ color: var(--primary-color); margin-bottom: 20px; text-align: center; font-size: 1.5rem; border-bottom: 1px solid rgba(255, 204, 0, 0.3); padding-bottom: 10px; /* [cite: 38] */ }
+        #settingsModal div { margin-bottom: 15px; display: flex; align-items: center; justify-content: space-between; /* [cite: 39] */ }
+        #settingsModal label { color: #eee; margin-right: 15px; font-size: 1rem; /* [cite: 40] */ }
+        #settingsModal input[type="checkbox"] { opacity: 0; width: 0; height: 0; position: absolute; /* [cite: 41] */ }
+        #settingsModal label[for] { cursor: pointer; position: relative; padding-left: 50px; line-height: 22px; /* [cite: 42] */ display: inline-block; }
+        #settingsModal label[for]::before { content: ''; position: absolute; left: 0; /* [cite: 43] */ top: 0; width: 40px; height: 22px; background-color: #555; border-radius: 11px; transition: background-color 0.3s; /* [cite: 44] */ }
+        #settingsModal label[for]::after { content: ''; position: absolute; left: 2px; top: 2px; /* [cite: 45] */ width: 18px; height: 18px; background-color: white; border-radius: 50%; transition: transform 0.3s; /* [cite: 46] */ }
+        #settingsModal input[type="checkbox"]:checked + label[for]::before { background-color: var(--primary-color); /* [cite: 47] */ }
+        #settingsModal input[type="checkbox"]:checked + label[for]::after { transform: translateX(18px); /* [cite: 48, 49] */ }
+
+        /* Contenuto Principale */
+        .container {
+            flex-grow: 1; /* [cite: 49] */
+            display: flex; /* [cite: 50] */
+            flex-direction: column; /* [cite: 50] */
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 80px 20px 40px; /* Aumentato padding sopra per dare spazio ai bottoni [cite: 50, 51] */
+            position: relative; /* [cite: 51] */
+            width: 100%; /* [cite: 52] */
+        }
+
+        /* Logo */
+        .logo { font-family: 'Playfair Display', serif; /* [cite: 52] */ font-size: clamp(2.5rem, 8vw, 5rem); color: var(--primary-color); text-shadow: 0 0 8px rgba(255, 204, 0, 0.8), 0 0 15px rgba(255, 153, 0, 0.7), 0 0 25px rgba(255, 102, 0, 0.5); /* [cite: 53] */ margin-bottom: 15px; animation: pulseGlow 2.5s ease-in-out infinite alternate; letter-spacing: 2px; /* [cite: 54] */ }
+        @keyframes pulseGlow { from { text-shadow: 0 0 8px rgba(255, 204, 0, 0.7), 0 0 15px rgba(255, 153, 0, 0.6), 0 0 25px rgba(255, 102, 0, 0.4); /* [cite: 55] */ } to { text-shadow: 0 0 12px rgba(255, 204, 0, 0.9), 0 0 22px rgba(255, 153, 0, 0.8), 0 0 35px rgba(255, 102, 0, 0.6); /* [cite: 56] */ } }
+
+        /* Testo Intro Nascosto */
+        #intro-text {
+            display: none; /* [cite: 57] */
+            padding: 20px; /* [cite: 58] */
+            border-radius: 10px;
+            margin: 20px auto 30px auto; /* Spazio sopra e sotto [cite: 58] */
+            max-width: 700px; /* [cite: 58] */
+            text-align: center; /* [cite: 59] */
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1); /* [cite: 59] */
+            line-height: 1.6;
+            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease; /* [cite: 59] */
+            background-color: var(--intro-text-bg-light); /* [cite: 60] */
+            color: var(--intro-text-color-light); /* [cite: 60] */
+            border: 1px solid var(--primary-color); /* [cite: 60] */
+        }
+        #intro-text.visible { display: block; /* [cite: 60] */ animation: fadeIn 0.5s ease; } /* [cite: 61] */
+        body.dark-theme #intro-text { background-color: var(--intro-text-bg-dark); color: var(--intro-text-color-dark); /* [cite: 61] */ border-color: #555; } /* [cite: 62] */
+        @keyframes fadeIn { from { opacity: 0; /* [cite: 62] */ } to { opacity: 1; } } /* [cite: 62, 63] */
+
+        /* Testo Scorrevo le */
+        .scroll-text-wrapper { width: 100%; /* [cite: 63] */ max-width: 700px; margin: 0 auto 40px auto; padding: 10px 0; background: rgba(0, 0, 0, 0.2); border-radius: 5px; overflow: hidden; /* [cite: 64] */ position: relative; } /* [cite: 64, 65] */
+        .scroll-text { display: inline-block; white-space: nowrap; padding-left: 100%; /* [cite: 65] */ animation: scroll-left 20s linear infinite; font-size: clamp(0.9rem, 2.5vw, 1.1rem); color: rgba(255, 255, 255, 0.85); /* [cite: 66] */ }
+        @keyframes scroll-left { 0% { transform: translateX(0); } 100% { transform: translateX(-100%); /* [cite: 67] */ } } /* [cite: 67, 68] */
+        .scroll-text-wrapper:hover .scroll-text { animation-play-state: paused; /* [cite: 68, 69] */ }
+
+        /* Selezione Giochi con Card */
+        .game-selection { margin-top: 30px; /* [cite: 69] */ display: flex; flex-wrap: wrap; justify-content: center; gap: 30px; perspective: 1000px; padding: 0 15px; width: 100%; /* [cite: 70, 71] */ }
+        .game-card { background-color: var(--card-bg-light); color: var(--text-light); text-decoration: none; border-radius: 15px; overflow: hidden; /* [cite: 71] */ width: 280px; box-shadow: 0 8px 25px var(--shadow-light); transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1), box-shadow 0.4s cubic-bezier(0.25, 0.8, 0.25, 1), background-color 0.4s ease; /* [cite: 72] */ display: flex; flex-direction: column; cursor: pointer; border: 1px solid rgba(255, 204, 0, 0.2); animation: fadeInUp 0.5s ease-out forwards; opacity: 0; /* [cite: 73] */ }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); /* [cite: 74] */ } to { opacity: 1; transform: translateY(0); } } /* [cite: 74, 75] */
+        .game-card:nth-child(1) { animation-delay: 0.2s; /* [cite: 75] */ } .game-card:nth-child(2) { animation-delay: 0.4s; } .game-card:nth-child(3) { animation-delay: 0.6s; } /* Delay for Chess */
+        .game-card:hover { transform: translateY(-15px) rotateX(5deg) scale(1.05); /* [cite: 76, 77] */ box-shadow: 0 15px 40px var(--shadow-dark); background-color: rgba(0, 0, 0, 0.4); border-color: var(--primary-color); /* [cite: 77, 78] */ }
+        body.dark-theme .game-card { background-color: var(--card-bg-dark); box-shadow: 0 8px 25px var(--shadow-dark); /* [cite: 78, 79] */ }
+        body.dark-theme .game-card:hover { background-color: rgba(70, 70, 70, 0.8); /* [cite: 79, 80] */ }
+        .game-card .game-image { width: 100%; height: 180px; object-fit: cover; display: block; /* [cite: 80] */ transition: transform 0.4s ease, filter 0.4s ease; filter: brightness(0.9) saturate(1.1); /* [cite: 81] */ }
+        .game-card:hover .game-image { transform: scale(1.1); filter: brightness(1.1) saturate(1.2); /* [cite: 82, 83] */ }
+        .game-card .game-info { padding: 20px; text-align: center; flex-grow: 1; display: flex; /* [cite: 83] */ flex-direction: column; justify-content: center; } /* [cite: 84] */
+        .game-card .game-name { font-family: 'Playfair Display', serif; /* [cite: 84] */ font-size: 1.6rem; font-weight: 700; color: var(--primary-color); margin-bottom: 5px; text-shadow: 1px 1px 3px rgba(0,0,0,0.5); /* [cite: 85] */ }
+        .game-card .game-icon { font-size: 1.5rem; color: rgba(255, 255, 255, 0.7); /* [cite: 86] */ transition: color 0.3s ease; } /* [cite: 87] */
+        .game-card:hover .game-icon { color: var(--primary-color); /* [cite: 87, 88] */ }
+
+        /* Pulsanti sotto le card */
+        .buttons { margin-top: 40px; /* [cite: 88] */ display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; width: 100%; margin-bottom: 50px; /* [cite: 89] */ }
+        .game-button { background-color: var(--primary-color); color: var(--text-dark); padding: 12px 25px; text-decoration: none; /* [cite: 90] */ border-radius: 25px; font-weight: bold; font-size: 1rem; transition: background-color 0.3s, transform 0.3s, box-shadow 0.3s; display: inline-flex; align-items: center; gap: 8px; /* [cite: 91] */ box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2); } /* [cite: 92] */
+        .game-button i { font-size: 1.1rem; /* [cite: 92, 93] */ }
+        .game-button:hover { background-color: #ffd633; transform: translateY(-3px); /* [cite: 93] */ box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3); } /* [cite: 94] */
+        body.dark-theme .game-button { color: var(--background-dark); /* [cite: 94] */ box-shadow: 0 4px 10px rgba(255, 204, 0, 0.2); } /* [cite: 95] */
+        body.dark-theme .game-button:hover { box-shadow: 0 6px 15px rgba(255, 204, 0, 0.3); /* [cite: 95, 96] */ }
+
+        /* --- MODIFICATO: Stili Sezioni Info Collassabili --- */
+        .info-section { /* Ora si applica al <details> esterno */
+            width: 100%; /* [cite: 96] */
+            max-width: 900px; /* [cite: 97] */
+            margin: 0 auto 30px auto; /* Ridotto spazio sotto [cite: 97] */
+            border-radius: 10px; /* Ridotto radius [cite: 97, 98] */
+            background-color: var(--section-bg-light); /* [cite: 98] */
+            border: 1px solid rgba(255, 204, 0, 0.3); /* [cite: 99] */
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transition: background-color 0.5s ease, border-color 0.5s ease; /* [cite: 99] */
+            overflow: hidden; /* Nasconde bordi interni quando chiuso [cite: 100] */
+        }
+        body.dark-theme .info-section {
+            background-color: var(--section-bg-dark); /* [cite: 100] */
+            border-color: rgba(255, 204, 0, 0.5); /* [cite: 101] */
+            box-shadow: 0 5px 20px rgba(0,0,0,0.3); /* [cite: 101, 102] */
+        }
+
+        /* Stile per il Titolo Principale (Summary) */
+        .info-section > summary {
+            padding: 18px 25px; /* [cite: 102] */
+            font-family: 'Playfair Display', serif; /* [cite: 103] */
+            color: var(--primary-color); /* [cite: 103] */
+            font-size: 1.8rem; /* Leggermente ridotto [cite: 103] */
+            text-align: center; /* [cite: 103] */
+            cursor: pointer; /* [cite: 104] */
+            list-style: none; /* Rimuove freccia default [cite: 104] */
+            position: relative; /* [cite: 104] */
+            transition: background-color 0.3s; /* [cite: 105] */
+            background-color: rgba(0,0,0,0.1); /* Sfondo leggero per il titolo [cite: 105] */
+            border-bottom: 1px solid transparent; /* Bordo che appare quando aperto [cite: 105, 106] */
+        }
+        body.dark-theme .info-section > summary {
+            background-color: rgba(255,255,255,0.05); /* [cite: 106, 107] */
+        }
+        .info-section > summary:hover {
+            background-color: rgba(0,0,0,0.2); /* [cite: 107, 108] */
+        }
+        body.dark-theme .info-section > summary:hover {
+            background-color: rgba(255,255,255,0.1); /* [cite: 108, 109] */
+        }
+        .info-section > summary::-webkit-details-marker { display: none; /* [cite: 109, 110] */ }
+        .info-section > summary::before { /* Icona +/- per titolo principale */
+             content: '\f055'; /* FontAwesome plus-circle [cite: 110, 111] */
+             font-family: 'Font Awesome 6 Free'; /* [cite: 111] */
+             font-weight: 900; /* [cite: 112] */
+             position: absolute;
+             left: 25px; /* Icona a sinistra [cite: 112] */
+             top: 50%; /* [cite: 112] */
+             transform: translateY(-50%); /* [cite: 113] */
+             transition: transform 0.3s ease, color 0.3s ease; /* [cite: 113] */
+             color: rgba(255, 204, 0, 0.8); /* [cite: 113] */
+             font-size: 0.7em; /* Più piccola [cite: 113, 114] */
+        }
+        .info-section[open] > summary::before {
+             content: '\f056'; /* FontAwesome minus-circle [cite: 114, 115] */
+             color: var(--primary-color); /* [cite: 115, 116] */
+        }
+        .info-section[open] > summary {
+             border-bottom-color: rgba(255, 204, 0, 0.3); /* Mostra bordo sotto quando aperto [cite: 116, 117] */
+        }
+        body.dark-theme .info-section[open] > summary {
+             border-bottom-color: rgba(255, 204, 0, 0.5); /* [cite: 117, 118] */
+        }
+
+        /* Contenitore Interno (appare quando sezione aperta) */
+        .info-content-wrapper {
+            padding: 15px 30px 30px 30px; /* Padding interno [cite: 118, 119] */
+        }
+
+        /* Stili per le Sotto-Sezioni Collassabili (details interni) */
+        .info-content-wrapper details {
+            background-color: var(--details-bg-light); /* [cite: 119] */
+            border-radius: 8px; /* [cite: 120] */
+            margin-bottom: 15px;
+            border: 1px solid rgba(255, 204, 0, 0.2);
+            transition: background-color 0.3s, border-color 0.3s; /* [cite: 120, 121] */
+        }
+        .info-content-wrapper details:hover {
+            border-color: rgba(255, 204, 0, 0.5); /* [cite: 121, 122] */
+        }
+         .info-content-wrapper details[open] {
+            background-color: var(--details-open-bg-light); /* [cite: 122] */
+            border-color: rgba(255, 204, 0, 0.6); /* [cite: 123] */
+        }
+        body.dark-theme .info-content-wrapper details {
+             background-color: var(--details-bg-dark); /* [cite: 123] */
+             border-color: rgba(255, 204, 0, 0.4); /* [cite: 124] */
+        }
+        body.dark-theme .info-content-wrapper details[open] {
+             background-color: var(--details-open-bg-dark); /* [cite: 124] */
+             border-color: rgba(255, 204, 0, 0.7); /* [cite: 125] */
+        }
+
+        /* Stile per i Titoli delle Sotto-Sezioni (summary interni) */
+        .info-content-wrapper details summary {
+            padding: 12px 18px; /* [cite: 125] */
+            font-size: 1.2rem; /* Dimensione titolo sotto-sezione [cite: 126] */
+            font-weight: bold; /* [cite: 126] */
+            color: #e0e0e0; /* Leggermente meno bianco del testo [cite: 127] */
+            cursor: pointer; /* [cite: 127] */
+            list-style: none; /* [cite: 128] */
+            position: relative;
+            transition: color 0.3s; /* [cite: 128] */
+        }
+        .info-content-wrapper details summary:hover {
+             color: var(--primary-color); /* [cite: 128, 129] */
+        }
+        .info-content-wrapper details summary::-webkit-details-marker { display: none; /* [cite: 129, 130] */ }
+        .info-content-wrapper details summary::before { /* Icona +/- per sotto-sezioni */
+             content: '\f067'; /* plus [cite: 130, 131] */
+             font-family: 'Font Awesome 6 Free'; /* [cite: 131] */
+             font-weight: 900; /* [cite: 132] */
+             position: absolute;
+             right: 18px; /* [cite: 132] */
+             top: 50%;
+             transform: translateY(-50%);
+             transition: transform 0.3s ease, color 0.3s ease; /* [cite: 132] */
+             color: rgba(255, 204, 0, 0.7); /* [cite: 133] */
+             font-size: 0.8em;
+        }
+         .info-content-wrapper details[open] summary::before {
+             content: '\f068'; /* minus [cite: 133, 134] */
+             color: var(--primary-color); /* [cite: 134, 135] */
+        }
+
+        /* Contenuto delle Sotto-Sezioni */
+        .info-subsection-content {
+            padding: 10px 20px 20px 20px; /* [cite: 135] */
+            border-top: 1px solid rgba(255, 204, 0, 0.15); /* [cite: 136] */
+            margin-top: 8px;
+        }
+         body.dark-theme .info-subsection-content {
+             border-top-color: rgba(255, 204, 0, 0.3); /* [cite: 136, 137] */
+        }
+         .info-subsection-content p, .info-subsection-content li {
+            font-size: 0.95rem; /* [cite: 137] */
+            line-height: 1.6; /* [cite: 138] */
+            color: rgba(220, 220, 220, 0.9); /* Modificato per coerenza [cite: 138] */
+            margin-bottom: 10px; /* [cite: 138, 139] */
+        }
+        body.dark-theme .info-subsection-content p, body.dark-theme .info-subsection-content li {
+             color: rgba(210, 210, 210, 0.95); /* Modificato per coerenza [cite: 139, 140] */
+        }
+         .info-subsection-content ul, .info-subsection-content ol {
+             margin-left: 15px; /* [cite: 140] */
+             padding-left: 15px; /* [cite: 141] */
+         }
+         .info-subsection-content ul { list-style: disc; /* [cite: 141, 142] */ }
+         .info-subsection-content strong { color: white; /* [cite: 142, 143] */ }
+         .info-subsection-content em { font-style: italic; color: #ddd; /* [cite: 143, 144] */ }
+
+        /* Stile Tabella Punti */
+        .poker-hands-table { width: 100%; /* [cite: 144] */ border-collapse: collapse; margin: 15px 0; font-size: 0.9rem; /* Leggermente più piccolo dentro details [cite: 145] */ }
+        .poker-hands-table th, .poker-hands-table td { border: 1px solid rgba(255, 204, 0, 0.4); /* [cite: 145] */ padding: 8px 10px; text-align: left; } /* [cite: 146] */
+        .poker-hands-table th { background-color: rgba(255, 204, 0, 0.1); /* [cite: 146] */ color: var(--primary-color); font-weight: bold; } /* [cite: 147] */
+        body.dark-theme .poker-hands-table th, body.dark-theme .poker-hands-table td { border-color: rgba(255, 204, 0, 0.6); /* [cite: 147, 148] */ }
+        body.dark-theme .poker-hands-table th { background-color: rgba(255, 204, 0, 0.2); /* [cite: 148, 149] */ }
+
+        /* Sezione FAQ */
+        #faq-section { width: 100%; /* [cite: 149] */ max-width: 900px; margin: 0 auto 50px auto; padding: 30px; border-radius: 15px; background-color: var(--faq-bg-light); color: var(--text-light); /* [cite: 150] */ border: 1px solid rgba(255, 204, 0, 0.2); box-shadow: 0 5px 15px rgba(0,0,0,0.1); transition: background-color 0.5s ease, border-color 0.5s ease; /* [cite: 151] */ }
+        body.dark-theme #faq-section { background-color: var(--faq-bg-dark); border-color: rgba(255, 204, 0, 0.4); /* [cite: 152] */ box-shadow: 0 5px 20px rgba(0,0,0,0.2); } /* [cite: 153] */
+        #faq-section h3 { font-family: 'Playfair Display', serif; /* [cite: 153] */ color: var(--primary-color); font-size: 2rem; text-align: center; margin-bottom: 30px; border-bottom: 1px solid var(--primary-color); padding-bottom: 10px; /* [cite: 154, 155] */ }
+        #faq-section details { background-color: var(--details-bg-light); border-radius: 8px; margin-bottom: 15px; /* [cite: 155] */ border: 1px solid rgba(255, 204, 0, 0.2); /* Modificato per coerenza [cite: 156] */ transition: border-color 0.3s ease, background-color 0.3s ease; /* [cite: 156, 157] */ }
+        #faq-section details:hover { border-color: rgba(255, 204, 0, 0.5); /* [cite: 157, 158] */ }
+        #faq-section details[open] { background-color: var(--details-open-bg-light); border-color: rgba(255, 204, 0, 0.6); /* Modificato per coerenza [cite: 158, 159] */ }
+        body.dark-theme #faq-section details { background-color: var(--details-bg-dark); /* [cite: 159] */ border-color: rgba(255, 204, 0, 0.4); /* Modificato per coerenza [cite: 160] */ }
+        body.dark-theme #faq-section details[open] { background-color: var(--details-open-bg-dark); /* [cite: 160] */ border-color: rgba(255, 204, 0, 0.7); /* Modificato per coerenza [cite: 161] */ }
+        #faq-section summary { padding: 15px 20px; /* [cite: 161] */ font-weight: bold; font-size: 1.1rem; color: #f0f0f0; cursor: pointer; list-style: none; position: relative; transition: color 0.3s ease; /* [cite: 162, 163] */ }
+        #faq-section summary:hover { color: var(--primary-color); /* [cite: 163, 164] */ }
+        #faq-section summary::-webkit-details-marker { display: none; /* [cite: 164, 165] */ }
+        #faq-section summary::before { content: '\f067'; font-family: 'Font Awesome 6 Free'; font-weight: 900; /* [cite: 165, 166] */ position: absolute; right: 20px; top: 50%; transform: translateY(-50%) rotate(0deg); transition: transform 0.3s ease, color 0.3s ease; /* [cite: 166, 167] */ color: rgba(255, 204, 0, 0.7); font-size: 0.9em; } /* [cite: 167] */
+        #faq-section details[open] summary::before { content: '\f068'; /* [cite: 167] */ transform: translateY(-50%) rotate(0deg); color: var(--primary-color); } /* [cite: 168] */
+        .faq-content { padding: 5px 25px 20px 25px; /* [cite: 168] */ border-top: 1px solid rgba(255, 204, 0, 0.2); margin-top: 10px; } /* [cite: 169] */
+        .faq-content p, .faq-content li { font-size: 0.95rem; /* [cite: 169] */ line-height: 1.6; color: rgba(220, 220, 220, 0.9); margin-bottom: 8px; } /* [cite: 170] */
+        body.dark-theme .faq-content p, body.dark-theme .faq-content li { color: rgba(210, 210, 210, 0.95); /* [cite: 170, 171] */ }
+        .faq-content strong { color: white; /* [cite: 171, 172] */ }
+
+        /* Audio Nascosto */
+        audio { display: none; /* [cite: 172, 173] */ }
+
+        /* Media Queries */
+        @media screen and (max-width: 960px) {
+             .info-section, #faq-section { max-width: 95%; /* [cite: 173] */ padding: 20px; } /* Ridotto padding [cite: 174] */
+             .info-section > summary { font-size: 1.6rem; /* [cite: 174] */ padding: 15px 20px; } /* [cite: 175] */
+             .info-section > summary::before { left: 20px; /* [cite: 175, 176] */ }
+             #faq-section h3 { font-size: 1.8rem; /* [cite: 176, 177] */ }
+             /* .info-section h4 { font-size: 1.3rem; } - Rimosso [cite: 177, 178] */
+             .info-content-wrapper { padding: 15px 20px 20px 20px; /* [cite: 178, 179] */ }
+             .info-content-wrapper details summary { font-size: 1.1rem; /* [cite: 179] */ padding: 10px 15px; } /* [cite: 180] */
+             .info-content-wrapper details summary::before { right: 15px; /* [cite: 180, 181] */ }
+             .info-subsection-content { padding: 10px 15px 15px 15px; /* [cite: 181, 182] */ }
+             #faq-section summary { font-size: 1rem; /* [cite: 182, 183] */ }
+        }
+         @media screen and (max-width: 768px) {
+             .container { padding: 70px 15px 30px; /* Spazio per bottoni angoli [cite: 183, 184] */ }
+             #intro-toggle-button { top: 15px; /* [cite: 184] */ left: 15px; padding: 6px 10px; font-size: 0.8rem; } /* [cite: 185] */
+             .top-buttons { top: 15px; /* [cite: 185] */ right: 15px; } /* [cite: 186] */
+             .settings-button { width: 40px; /* [cite: 186] */ height: 40px; font-size: 1.1rem; } /* [cite: 187] */
+             #settingsModal { top: 65px; /* [cite: 187] */ right: 15px; } /* [cite: 188] */
+             .game-card { width: clamp(250px, 80vw, 280px); /* [cite: 188, 189] */ }
+             .buttons { margin-top: 30px; gap: 15px; /* [cite: 189] */ margin-bottom: 30px; /* Modificato per coerenza [cite: 190] */ }
+             .game-button { padding: 10px 20px; /* [cite: 190] */ font-size: 0.95rem; } /* [cite: 191] */
+             .info-section, #faq-section { padding: 15px; /* [cite: 191] */ margin-bottom: 25px; /* Modificato per coerenza [cite: 192] */ }
+             .info-section > summary { font-size: 1.4rem; /* [cite: 192] */ padding: 12px 15px; } /* [cite: 193] */
+             .info-section > summary::before { left: 15px; /* [cite: 193, 194] */ }
+             #faq-section h3 { font-size: 1.6rem; margin-bottom: 20px; /* [cite: 194, 195] */ }
+             /* .info-section h4 { font-size: 1.2rem; margin-top: 20px; margin-bottom: 8px;} - Rimosso [cite: 195, 196] */
+             .info-content-wrapper { padding: 10px 15px 15px 15px; /* [cite: 196, 197] */ }
+             .info-content-wrapper details summary { font-size: 1rem; /* [cite: 197] */ padding: 10px 15px;} /* [cite: 198] */
+             .info-subsection-content { padding: 8px 15px 12px 15px; /* [cite: 198, 199] */ }
+             .info-subsection-content p, .info-subsection-content li, .faq-content p, .faq-content li { font-size: 0.9rem; /* Modificato per coerenza [cite: 199, 200] */ line-height: 1.6; } /* [cite: 200] */
+             #faq-section summary { font-size: 1rem; /* [cite: 200, 201] */ padding: 12px 15px;} /* [cite: 201] */
+             #faq-section summary::before { right: 15px; /* [cite: 201, 202] */ }
+             .faq-content { padding: 5px 15px 15px 15px; /* Modificato per coerenza [cite: 202, 203] */ }
+             #intro-toggle-button { margin-bottom: 0; /* Rimosso margine sotto, gestito da container padding [cite: 203, 204] */ }
+             #intro-text { padding: 15px; /* [cite: 204] */ margin: 15px auto 25px auto; /* Modificato per coerenza [cite: 205] */ }
+        }
         @media screen and (max-width: 600px) {
-            .top-buttons {
-                top: 15px;
-                right: 15px;
-            }
-            .settings-button {
-                 width: 40px;
-                 height: 40px;
-                 font-size: 1rem;
-            }
-            #settingsModal {
-                top: 65px;
-                right: 15px;
-                width: calc(100% - 30px);
-                max-width: 300px; /* Max larghezza modal su mobile */
-            }
-            .container {
-                padding: 80px 15px 30px; /* Più padding sopra per logo, meno sotto */
-            }
-            .logo {
-                letter-spacing: 1px;
-            }
-            .scroll-text-wrapper {
-                 max-width: 95%;
-                 margin-bottom: 30px;
-            }
-             .scroll-text {
-                 animation-duration: 15s; /* Più veloce su mobile */
-            }
-            .game-selection {
-                 gap: 25px; /* Più spazio verticale */
-                 padding: 0 10px;
-                 margin-top: 20px; /* Ridotto spazio sopra le card */
-            }
-            .game-card {
-                 /* L'hover 3D può essere problematico su mobile, lo semplifichiamo */
-                 transition: transform 0.3s ease, box-shadow 0.3s ease;
-            }
-            .game-card:hover {
-                transform: translateY(-8px) scale(1.03); /* Meno sollevamento */
-                rotate: none; /* No rotazione X */
-            }
-            .game-card .game-image {
-                 height: 160px; /* Immagine leggermente più bassa */
-            }
-            .game-card .game-name {
-                font-size: 1.4rem;
-            }
-            .game-card .game-icon {
-                 font-size: 1.3rem;
-            }
-             .buttons { /* Adatta i nuovi pulsanti su mobile */
-                margin-top: 30px; /* Più spazio sotto le card */
-                gap: 10px; /* Meno spazio tra i pulsanti */
-             }
-             .game-button {
-                  padding: 10px 18px;
-                  font-size: 0.9rem;
-             }
+            .container { padding: 70px 10px 20px; /* [cite: 205, 206] */ }
+            .logo { font-size: clamp(2rem, 10vw, 3.5rem); /* [cite: 206, 207] */ }
+            .scroll-text-wrapper { margin-bottom: 25px; /* [cite: 207, 208] */ }
+            .scroll-text { animation-duration: 15s; /* [cite: 208, 209] */ }
+            .game-selection { gap: 20px; /* Modificato per coerenza [cite: 209, 210] */ margin-top: 20px; } /* [cite: 210] */
+            .game-card:hover { transform: translateY(-8px) scale(1.03); /* [cite: 210] */ rotate: none; } /* [cite: 211] */
+            .game-card .game-image { height: 160px; /* [cite: 211, 212] */ }
+            .game-card .game-name { font-size: 1.4rem; /* [cite: 212, 213] */ }
+            .game-card .game-icon { font-size: 1.3rem; /* [cite: 213, 214] */ }
+            .buttons { margin-top: 25px; /* Modificato per coerenza [cite: 214, 215] */ gap: 10px; margin-bottom: 25px; /* Modificato per coerenza [cite: 215] */ }
+            .game-button { padding: 10px 18px; /* [cite: 215] */ font-size: 0.9rem; } /* [cite: 216] */
+            .info-section, #faq-section { padding: 10px; /* [cite: 216] */ margin-bottom: 20px; /* Modificato per coerenza [cite: 217] */ border-radius: 8px; } /* [cite: 217] */
+            .info-section > summary { font-size: 1.3rem; /* [cite: 217] */ padding: 10px 12px; } /* [cite: 218] */
+            #faq-section h3 { font-size: 1.4rem; /* [cite: 218] */ margin-bottom: 15px; } /* [cite: 219] */
+            /* .info-section h4 { font-size: 1.1rem; } - Rimosso [cite: 219, 220] */
+            .info-content-wrapper { padding: 10px 10px 10px 10px; /* [cite: 220, 221] */ }
+            .info-content-wrapper details { margin-bottom: 10px; /* [cite: 221, 222] */ }
+            .info-content-wrapper details summary { font-size: 0.95rem; /* [cite: 222] */ padding: 8px 12px;} /* [cite: 223] */
+            .info-subsection-content { padding: 6px 12px 10px 12px; /* [cite: 223, 224] */ }
+            .info-subsection-content p, .info-subsection-content li, .faq-content p, .faq-content li { font-size: 0.85rem; /* [cite: 224, 225] */ }
+            #faq-section summary { font-size: 0.95rem; /* [cite: 225] */ padding: 10px 12px;} /* [cite: 226] */
+             #intro-text { font-size: 0.9rem; /* [cite: 226, 227] */ }
         }
 
     </style>
 </head>
 <body>
+
+    <button id="intro-toggle-button"><i class="fas fa-info-circle"></i> Benvenuto!</button>
+
     <div class="top-buttons">
         <button class="settings-button" onclick="toggleSettings()" aria-label="Apri/Chiudi Impostazioni">
-            <i class="fas fa-cog fa-spin-hover"></i> </button>
+            <i class="fas fa-cog"></i>
+        </button>
     </div>
 
     <div id="settingsModal">
         <h3>Impostazioni</h3>
         <div>
-            <input type="checkbox" id="musicToggle" checked onchange="toggleMusic()">
-            <label for="musicToggle">Musica</label>
-        </div>
+            <input type="checkbox" id="musicToggle" onchange="toggleMusic()">
+            <label for="musicToggle">Musica</label> </div>
         <div>
-            <input type="checkbox" id="themeToggle" checked onchange="toggleTheme()">
-            <label for="themeToggle">Tema Chiaro</label> </div>
-         </div>
+             <input type="checkbox" id="themeToggle" onchange="toggleTheme()"> <label for="themeToggle">Tema Chiaro</label>
+        </div>
+     </div>
 
     <div class="container">
         <div class="logo">IPPO’S CASINÒ</div>
 
+        <div id="intro-text">
+            <strong>Benvenuto su IPPOS CASINÒ – Il tuo tavolo da gioco sempre aperto!</strong><br><br> Su IPPO’S CASINÒ il divertimento è senza limiti: giochi gratis, senza attese, senza registrazione! Sfida la fortuna a Blackjack o Poker, perfeziona la tua strategia e vivi l’adrenalina del vero casinò direttamente dal tuo smartphone o PC. Semplice, veloce, emozionante: qui sei sempre al centro dell’azione. Cosa aspetti? Il tavolo è pronto per te! </div>
+
         <div class="scroll-text-wrapper">
             <div class="scroll-text">
-                Benvenuto nel regno del divertimento! ♠️ Tenta la fortuna al Blackjack o sfida il banco a Poker. ✨ Ogni puntata è un'emozione! ♦️ Vieni a scoprire i nostri tavoli! ♣️
-            </div>
+                 Benvenuto nel regno del divertimento! ♠️ Tenta la fortuna al Blackjack o sfida il banco a Poker. ✨ Ogni puntata è un'emozione! ♦️ Vieni a scoprire i nostri tavoli! ♣️ </div>
         </div>
 
         <div class="game-selection">
             <a href="blackjack.html" class="game-card">
                 <img src="https://placehold.co/400x300/000000/ffcc00?text=Blackjack&font=playfairdisplay" alt="Anteprima gioco Blackjack" class="game-image">
                 <div class="game-info">
-                    <div class="game-name">Blackjack</div>
-                    <i class="fas fa-cards game-icon"></i> </div>
+                    <div class="game-name">Blackjack</div> <i class="fas fa-cards game-icon"></i> </div>
             </a>
-
             <a href="poker.html" class="game-card">
                  <img src="https://placehold.co/400x300/333333/ffaa00?text=Poker&font=playfairdisplay" alt="Anteprima gioco Poker" class="game-image">
                  <div class="game-info">
-                    <div class="game-name">Poker</div>
-                    <i class="fas fa-dice-d20 game-icon"></i> </div>
-            </a>
+                     <div class="game-name">Poker</div> <i class="fas fa-dice-d20 game-icon"></i> </div>
+             </a>
+             <a href="scacchi.html" class="game-card">
+                 <img src="https://placehold.co/400x300/eeeeee/555555?text=Scacchi&font=playfairdisplay" alt="Anteprima gioco Scacchi" class="game-image">
+                 <div class="game-info">
+                     <div class="game-name">Scacchi</div> <i class="fas fa-chess-knight game-icon"></i>
+                 </div>
+             </a>
+            </div>
 
-        </div> <div class="buttons">
-          <a href="blackjack.html" class="game-button"><i class="fas fa-spade"></i> Blackjack</a>
-          <a href="poker.html" class="game-button"><i class="fas fa-dice"></i> Poker</a>
+        <div class="buttons">
+          <a href="blackjack.html" class="game-button"><i class="fas fa-spade"></i> Gioca a Blackjack</a>
+          <a href="poker.html" class="game-button"><i class="fas fa-dice"></i> Gioca a Poker</a> <a href="scacchi.html" class="game-button"><i class="fas fa-chess"></i> Gioca a Scacchi</a>
         </div>
-        </div> <audio id="backgroundMusic" loop>
-        <source src="https://www.bensound.com/bensound-music/bensound-jazzyfrenchy.mp3" type="audio/mpeg">
-        Il tuo browser non supporta l'audio.
-    </audio>
+
+    </div>
+
+    <details id="poker-info" class="info-section">
+        <summary>Poker (Texas Hold'em) - Clicca per Dettagli</summary>
+        <div class="info-content-wrapper">
+
+            <details>
+                <summary>Introduzione al Poker</summary>
+                <div class="info-subsection-content">
+                    <p>Il Poker è uno dei giochi di carte più iconici e diffusi al mondo, noto per la sua combinazione di abilità, strategia e un pizzico di fortuna. Le sue origini sono dibattute, ma forme simili si giocavano già secoli fa in Europa e Persia. La versione moderna, in particolare il <strong>Texas Hold'em</strong>, ha guadagnato immensa popolarità grazie ai tornei trasmessi in TV e alla sua presenza online.</p> <p>È famoso perché non si basa solo sulla fortuna delle carte ricevute, ma richiede capacità di lettura degli avversari, gestione del rischio (<em>bankroll management</em>), calcolo delle probabilità e controllo emotivo. Vincere a Poker significa spesso prendere le decisioni giuste nel lungo periodo, anche se singole mani possono essere imprevedibili.</p> </div>
+            </details>
+
+            <details>
+                <summary>Regole del Poker (Texas Hold'em Semplificato)</summary>
+                 <div class="info-subsection-content">
+                     <p>Nel Texas Hold'em, l'obiettivo è formare la migliore mano possibile di 5 carte, utilizzando una qualsiasi combinazione delle proprie <strong>due carte private</strong> (<em>hole cards</em>) e delle <strong>cinque carte comuni</strong> scoperte sul tavolo.</p> <ul>
+                        <li><strong>Blinds:</strong> Prima della distribuzione, due giocatori pagano le puntate obbligatorie (Piccolo Buio e Grande Buio) per creare un piatto iniziale.</li> <li><strong>Pre-Flop:</strong> Ogni giocatore riceve due carte coperte. Segue un giro di puntate iniziando dal giocatore alla sinistra del Grande Buio. Si può scegliere di vedere (<em>Call</em>), rilanciare (<em>Raise</em>) o lasciare la mano (<em>Fold</em>).</li> <li><strong>Flop:</strong> Se almeno due giocatori restano in gioco, vengono scoperte tre carte comuni sul tavolo. Segue un altro giro di puntate, iniziando dal giocatore alla sinistra del Bottone (Dealer). Ora si può anche fare <em>Check</em> (passare l'azione) se nessuno ha puntato prima.</li> <li><strong>Turn:</strong> Viene scoperta una quarta carta comune. Segue un altro giro di puntate.</li> <li><strong>River:</strong> Viene scoperta la quinta e ultima carta comune. Segue l'ultimo giro di puntate.</li> <li><strong>Showdown:</strong> Se dopo l'ultimo giro di puntate rimangono almeno due giocatori, questi mostrano le loro carte. Vince chi ha la combinazione di 5 carte di valore più alto. Se un giocatore rimane solo perché tutti gli altri hanno foldato, vince il piatto senza dover mostrare le carte.</li> </ul>
+                </div>
+            </details>
+
+             <details>
+                <summary>Valori delle Mani (Dal più alto al più basso)</summary> <div class="info-subsection-content">
+                    <p>La forza delle mani nel Poker determina il vincitore allo showdown. Ecco la classifica standard:</p> <table class="poker-hands-table">
+                         <thead> <tr><th>Mano</th><th>Descrizione Esempio</th></tr> </thead>
+                         <tbody>
+                             <tr><td><strong>Scala Reale (Royal Flush)</strong></td><td>A<span style="color:red">♥</span> K<span style="color:red">♥</span> Q<span style="color:red">♥</span> J<span style="color:red">♥</span> 10<span style="color:red">♥</span> (Asso-Dieci dello stesso seme)</td></tr> <tr><td><strong>Scala Colore (Straight Flush)</strong></td><td>9<span style="color:black">♠</span> 8<span style="color:black">♠</span> 7<span style="color:black">♠</span> 6<span style="color:black">♠</span> 5<span style="color:black">♠</span> (Cinque carte in sequenza dello stesso seme)</td></tr>
+                             <tr><td><strong>Poker (Four of a Kind)</strong></td><td>J<span style="color:black">♣</span> J<span style="color:red">♦</span> J<span style="color:red">♥</span> J<span style="color:black">♠</span> 3<span style="color:red">♥</span> (Quattro carte dello stesso valore)</td></tr> <tr><td><strong>Full (Full House)</strong></td><td>K<span style="color:black">♠</span> K<span style="color:red">♦</span> K<span style="color:red">♥</span> 7<span style="color:black">♣</span> 7<span style="color:red">♦</span> (Tris + Coppia)</td></tr>
+                             <tr><td><strong>Colore (Flush)</strong></td><td>A<span style="color:red">♦</span> Q<span style="color:red">♦</span> 8<span style="color:red">♦</span> 4<span style="color:red">♦</span> 2<span style="color:red">♦</span> (Cinque carte dello stesso seme, non in sequenza)</td></tr> <tr><td><strong>Scala (Straight)</strong></td><td>10<span style="color:black">♣</span> 9<span style="color:red">♦</span> 8<span style="color:red">♥</span> 7<span style="color:black">♠</span> 6<span style="color:red">♥</span> (Cinque carte in sequenza di semi diversi)</td></tr>
+                             <tr><td><strong>Tris (Three of a Kind)</strong></td><td>5<span style="color:black">♣</span> 5<span style="color:red">♦</span> 5<span style="color:red">♥</span> K<span style="color:black">♠</span> 2<span style="color:red">♦</span> (Tre carte dello stesso valore)</td></tr> <tr><td><strong>Doppia Coppia (Two Pair)</strong></td><td>A<span style="color:black">♠</span> A<span style="color:red">♦</span> 8<span style="color:red">♥</span> 8<span style="color:black">♣</span> Q<span style="color:red">♦</span> (Due coppie diverse)</td></tr>
+                             <tr><td><strong>Coppia (One Pair)</strong></td><td>K<span style="color:black">♠</span> K<span style="color:red">♦</span> 9<span style="color:red">♥</span> 4<span style="color:black">♣</span> 2<span style="color:red">♦</span> (Due carte dello stesso valore)</td></tr>
+                             <tr><td><strong>Carta Alta (High Card)</strong></td><td>A<span style="color:black">♣</span> Q<span style="color:red">♦</span> 9<span style="color:red">♥</span> 5<span style="color:black">♠</span> 3<span style="color:red">♦</span> (Nessuna combinazione, vince la carta più alta)</td></tr> </tbody>
+                    </table>
+                </div>
+            </details> <details>
+                 <summary>Strategie Base</summary>
+                 <div class="info-subsection-content">
+                    <ul>
+                         <li><strong>Selezione delle Mani Iniziali:</strong> Non giocare tutte le mani. Impara quali mani iniziali (le tue due carte coperte) sono forti (es. coppie alte AA, KK, QQ; carte alte dello stesso seme AKs, AQs) e quali sono deboli.</li> <li><strong>Posizione:</strong> La tua posizione al tavolo rispetto al Bottone (Dealer) è cruciale. Parlare per ultimi (<em>late position</em>) ti dà più informazioni sulle azioni degli avversari e ti permette di giocare più mani speculative.</li> <li><strong>Quando Puntare (Bet/Raise):</strong> Punta o rilancia quando pensi di avere la mano migliore (<em>value bet</em>) per estrarre valore dagli avversari, o per farli foldare se pensi che abbiano una mano debole ma potrebbero migliorare (<em>protection bet</em>).</li>
+                         <li><strong>Quando Foldare:</strong> Lascia la mano se le tue carte sono deboli, se le puntate diventano troppo alte rispetto alla forza percepita della tua mano, o se le carte comuni non ti aiutano e gli avversari mostrano forza. Non sentirti obbligato a vedere ogni puntata.</li> <li><strong>Il Bluff:</strong> Puntare o rilanciare con una mano debole per far credere agli avversari di avere una mano forte e indurli a foldare mani migliori. Va usato con parsimonia e contro gli avversari giusti. Un <em>semi-bluff</em> è puntare con una mano che non è ancora forte ma ha buone possibilità di migliorare (es. un progetto di colore o scala).</li> </ul>
+                </div>
+            </details>
+
+            <details>
+                  <summary>Glossario di Termini Poker</summary> <div class="info-subsection-content">
+                     <ul>
+                        <li><strong>All-in:</strong> Puntare tutte le proprie chips disponibili in una sola volta.</li>
+                         <li><strong>Blind:</strong> Puntata obbligatoria (Piccolo Buio/Small Blind, Grande Buio/Big Blind) messa da due giocatori prima della distribuzione delle carte.</li> <li><strong>Board:</strong> Le carte comuni scoperte sul tavolo (Flop + Turn + River).</li>
+                        <li><strong>Burn Card:</strong> Una carta scartata coperta dal mazziere prima di distribuire Flop, Turn e River, per prevenire imbrogli.</li> <li><strong>Button (Bottone):</strong> Disco che indica il mazziere teorico della mano (si sposta in senso orario a ogni mano).</li>
+                        <li><strong>Call:</strong> Eguagliare l'importo dell'ultima puntata o rilancio.</li>
+                        <li><strong>Check:</strong> Passare l'azione al giocatore successivo senza puntare (possibile solo se nessuno ha puntato prima in quel giro).</li> <li><strong>Community Cards:</strong> Le carte scoperte sul tavolo utilizzabili da tutti i giocatori (Flop, Turn, River).</li>
+                        <li><strong>Flop:</strong> Le prime tre carte comuni.</li>
+                         <li><strong>Fold:</strong> Abbandonare la mano, rinunciando a qualsiasi possibilità di vincere il piatto corrente.</li> <li><strong>Hole Cards:</strong> Le carte private coperte distribuite a ogni giocatore.</li>
+                        <li><strong>Pot:</strong> L'ammontare totale delle chips puntate in una mano.</li>
+                         <li><strong>Raise:</strong> Aumentare l'importo dell'ultima puntata.</li> <li><strong>River:</strong> La quinta e ultima carta comune.</li>
+                        <li><strong>Showdown:</strong> La fase finale della mano (dopo l'ultimo giro di puntate) in cui i giocatori rimasti mostrano le carte per determinare il vincitore.</li>
+                         <li><strong>Turn:</strong> La quarta carta comune.</li> </ul>
+                 </div>
+            </details>
+
+        </div> </details>
+
+    <details id="blackjack-info" class="info-section">
+         <summary>Blackjack - Clicca per Dettagli</summary>
+         <div class="info-content-wrapper"> <details>
+                 <summary>Introduzione al Blackjack</summary>
+                 <div class="info-subsection-content">
+                    <p>Il Blackjack, noto anche come "Ventuno", è uno dei giochi da casinò più popolari al mondo. Le sue origini risalgono probabilmente al gioco francese "Vingt-et-Un" del XVII secolo. A differenza di molti giochi di pura fortuna, il Blackjack combina elementi di casualità con decisioni strategiche del giocatore, rendendolo particolarmente affascinante.</p> <p>Una curiosità: il nome "Blackjack" deriva da una vecchia regola promozionale in alcuni casinò americani che offrivano un bonus speciale se la mano di un giocatore consisteva nell'Asso di Picche e un Jack nero (di Fiori o Picche).</p>
+                </div>
+            </details> <details>
+                 <summary>Regole Dettagliate</summary>
+                 <div class="info-subsection-content">
+                    <p>L'obiettivo del Blackjack è battere il banco (<em>Dealer</em>) ottenendo un punteggio il più vicino possibile a 21, senza superarlo (<em>sballare</em> o <em>bust</em>). Se il tuo punteggio supera 21, perdi automaticamente la mano.</p> <strong>Punteggi delle Carte:</strong>
+                    <ul>
+                        <li>Carte dal 2 al 10: Valgono il loro valore nominale.</li>
+                         <li>Figure (Jack, Queen, King): Valgono 10 punti ciascuna.</li> <li>Asso (Ace): Vale 1 o 11 punti, a scelta del giocatore (o del banco), in modo da ottenere il punteggio migliore senza sballare. Una mano con un Asso contato come 11 è chiamata "Soft Hand", mentre una senza Assi o con un Asso contato come 1 è una "Hard Hand".</li> </ul>
+                    <strong>Svolgimento del Gioco:</strong>
+                    <ol>
+                         <li>Il giocatore piazza la sua puntata.</li> <li>Il banco distribuisce due carte scoperte al giocatore e due carte a sé stesso (una scoperta e una coperta, nella variante più comune).</li>
+                        <li><strong>Blackjack Naturale:</strong> Se le prime due carte del giocatore totalizzano 21 (un Asso + una carta da 10 punti), si ha un "Blackjack Naturale". Di solito paga di più (es. 3:2) e vince immediatamente, a meno che anche il banco non abbia Blackjack (in tal caso è un pareggio, <em>Push</em>).</li> <li><strong>Turno del Giocatore:</strong> Se non ha Blackjack, il giocatore decide come agire sulla propria mano: Hit (Carta), Stand (Stare), Double Down (Raddoppia), Split (Dividi - se applicabile).</li>
+                        <li><strong>Turno del Banco:</strong> Il banco scopre la sua carta e segue regole fisse (solitamente chiede carta fino a 16 e sta con 17 o più).</li> <li><strong>Esito:</strong> Si confrontano i punteggi (senza sballare). Chi ha il punteggio più alto vince. Pareggio è un Push.</li> </ol>
+                </div>
+            </details>
+
+            <details>
+                 <summary>Strategie Base</summary>
+                 <div class="info-subsection-content"> <p>La "Strategia Base" del Blackjack è un insieme di decisioni matematicamente ottimali per ogni possibile combinazione di mano del giocatore e carta scoperta del banco. Seguirla riduce al minimo il vantaggio del casinò.</p> <ul>
+                        <li><strong>Hard Hands (senza Asso o Asso=1):</strong> Stai sempre con 17+. Chiedi con 11-. Con 12-16: Stai se banco ha 2-6, Chiedi se banco ha 7-A (con eccezioni).</li> <li><strong>Soft Hands (con Asso=11):</strong> Stai con Soft 19+. Raddoppia spesso con Soft 13-18 vs banco 2-6. Chiedi con Soft 17- vs banco alto.</li> <li><strong>Coppie (Split):</strong> Dividi sempre Assi e 8. Non dividere mai 5 e 10. Altre coppie dipendono dalla carta del banco.</li>
+                        <li><strong>Double Down:</strong> Raddoppia con 11 (vs 2-10), 10 (vs 2-9), 9 (vs 3-6). Anche su alcune Soft Hands.</li> </ul>
+                    <p><em>Nota: Esistono tabelle dettagliate della Strategia Base facilmente reperibili online.</em></p>
+                 </div>
+            </details>
+
+            <details>
+                  <summary>Glossario di Termini Blackjack</summary> <div class="info-subsection-content">
+                     <ul>
+                        <li><strong>Blackjack:</strong> Mano iniziale di Asso + carta da 10 punti (10, J, Q, K).</li>
+                         <li><strong>Bust (Sballare):</strong> Superare 21.</li> <li><strong>Dealer (Banco):</strong> Il mazziere.</li>
+                        <li><strong>Double Down (Raddoppia):</strong> Raddoppiare puntata, ricevere solo 1 carta.</li>
+                         <li><strong>Hard Hand:</strong> Mano senza Assi o con Asso=1.</li> <li><strong>Hit (Carta):</strong> Chiedere un'altra carta.</li>
+                        <li><strong>Insurance (Assicurazione):</strong> Puntata secondaria (sconsigliata) vs Asso del banco.</li>
+                        <li><strong>Push (Pareggio):</strong> Stesso punteggio del banco. Puntata restituita.</li> <li><strong>Soft Hand:</strong> Mano con Asso contato come 11.</li>
+                        <li><strong>Split (Dividi):</strong> Dividere coppia iniziale in due mani.</li>
+                        <li><strong>Stand (Stare):</strong> Non chiedere altre carte.</li>
+                         <li><strong>Surrender (Resa):</strong> (Raro) Abbandonare metà puntata dopo le prime carte.</li> </ul>
+                 </div>
+            </details>
+
+         </div> </details>
+
+     <details id="scacchi-info" class="info-section">
+        <summary>Scacchi - Clicca per Dettagli</summary>
+        <div class="info-content-wrapper">
+
+            <details>
+                <summary>Introduzione agli Scacchi</summary>
+                <div class="info-subsection-content">
+                    <p>Gli scacchi sono un gioco di strategia da tavolo per due giocatori. È uno dei giochi più popolari al mondo.</p>
+                    <p><em>(Inserisci qui altre curiosità e storia degli scacchi...)</em></p>
+                </div>
+            </details>
+
+            <details>
+                <summary>Regole degli Scacchi</summary>
+                 <div class="info-subsection-content">
+                     <p>L'obiettivo del gioco è dare scacco matto al re avversario. Ecco una panoramica delle regole principali:</p>
+                    <ul>
+                        <li><strong>Movimento dei Pezzi:</strong> Ogni pezzo (Re, Donna, Torre, Alfiere, Cavallo, Pedone) si muove in modo specifico.</li>
+                        <li><strong>Cattura:</strong> I pezzi catturano occupando la casa del pezzo avversario.</li>
+                        <li><strong>Condizioni Speciali:</strong> Arrocco, Promozione del Pedone, En Passant.</li>
+                        <li><strong>Scacco e Scacco Matto:</strong> Quando il Re è sotto attacco (Scacco) e non può sfuggire alla cattura (Scacco Matto).</li>
+                        <li><strong>Patta:</strong> Condizioni in cui la partita termina in pareggio (Stallo, Re contro Re, Materiale insufficiente, 50 mosse, Tripla ripetizione).</li>
+                    </ul>
+                     <p><em>(Inserisci qui le regole dettagliate dei movimenti, catture, condizioni speciali, ecc...)</em></p>
+                </div>
+            </details>
+
+             <details>
+                <summary>Strategie Base</summary>
+                <div class="info-subsection-content">
+                    <ul>
+                        <li><strong>Controllo del Centro:</strong> Occupare le case centrali della scacchiera (d4, e4, d5, e5) è fondamentale.</li>
+                        <li><strong>Sviluppo dei Pezzi:</strong> Muovere i pezzi minori (Cavalli e Alfieri) verso il centro nelle prime mosse.</li>
+                        <li><strong>Sicurezza del Re:</strong> Mettere il Re al sicuro, spesso tramite l'arrocco.</li>
+                        <li><strong>Valore dei Pezzi:</strong> Comprendere il valore relativo dei pezzi (Donna=9, Torre=5, Alfiere/Cavallo=3, Pedone=1).</li>
+                        <li><strong>Struttura Pedonale:</strong> Creare una buona struttura di pedoni ed evitare debolezze.</li>
+                    </ul>
+                     <p><em>(Inserisci qui dettagli su aperture comuni, mediogioco, finali, tattiche come forchette, inchiodature, ecc...)</em></p>
+                </div>
+            </details>
+
+            <details>
+                  <summary>Glossario di Termini Scacchi</summary>
+                 <div class="info-subsection-content">
+                     <ul>
+                        <li><strong>Apertura:</strong> Le prime mosse di una partita.</li>
+                        <li><strong>Arrocco:</strong> Mossa speciale che coinvolge Re e Torre.</li>
+                        <li><strong>Centro:</strong> Le quattro case centrali della scacchiera.</li>
+                        <li><strong>En Passant:</strong> Cattura speciale del pedone.</li>
+                        <li><strong>Finale:</strong> La fase conclusiva della partita.</li>
+                        <li><strong>Gambetto:</strong> Offrire un pedone in apertura per ottenere un vantaggio posizionale.</li>
+                        <li><strong>Mediogioco:</strong> La fase della partita dopo l'apertura.</li>
+                        <li><strong>Patta:</strong> Pareggio.</li>
+                        <li><strong>Promozione:</strong> Quando un pedone raggiunge l'ultima traversa e si trasforma in un altro pezzo.</li>
+                        <li><strong>Scacco:</strong> Attacco diretto al Re avversario.</li>
+                        <li><strong>Scacco Matto:</strong> Scacco a cui il Re non può sfuggire, determinando la fine della partita.</li>
+                        <li><strong>Sviluppo:</strong> Muovere i pezzi dalle loro case iniziali a posizioni più attive.</li>
+                        <li><strong>Tattica:</strong> Sequenza di mosse forzate per ottenere un vantaggio immediato.</li>
+                     </ul>
+                     <p><em>(Inserisci qui altri termini rilevanti...)</em></p>
+                 </div>
+            </details>
+
+        </div> </details>
+
+
+    <section id="faq-section">
+        <h3>Domande Frequenti (FAQ)</h3>
+
+        <details>
+            <summary>FAQ - Poker</summary>
+             <div class="faq-content">
+                <p><strong>Cos'è il buy-in?</strong><br>
+                È la somma di denaro o chips virtuali richiesta per partecipare a una partita o a un torneo di Poker.</p>
+                 <p><strong>Come si vince al Poker Texas Hold'em?</strong><br> Ci sono due modi principali per vincere una mano: 1) Avere la migliore combinazione di 5 carte allo showdown (quando le carte vengono mostrate dopo l'ultimo giro di puntate). 2) Indurre tutti gli altri giocatori ad abbandonare la mano (Fold) prima dello showdown tramite le proprie puntate.</p> <p><strong>Cosa significa "posizione" al tavolo da Poker?</strong><br>
+                 La posizione si riferisce a dove sei seduto rispetto al Bottone (Dealer). Essere in "late position" (parlare per ultimi) è vantaggioso perché puoi vedere le azioni degli altri prima di decidere cosa fare.</p> </div>
+        </details>
+
+        <details>
+            <summary>FAQ - Blackjack</summary>
+            <div class="faq-content">
+                 <p><strong>Cosa succede se sia io che il banco facciamo Blackjack?</strong><br> È un pareggio (Push). La tua puntata ti viene restituita.</p> <p><strong>Posso dividere (Split) due carte che valgono 10, come un Re e una Donna?</strong><br>
+                 Sì, tecnicamente hanno lo stesso valore (10), quindi molte regole permettono di splittarle. Tuttavia, è strategicamente sconsigliato dividere una mano che vale già 20, un punteggio molto forte.</p> <p><strong>Perché il banco si ferma sempre a 17 o più?</strong><br>
+                 Sono le regole fisse del gioco per il banco. Questo dà un elemento di prevedibilità al suo gioco e permette ai giocatori di elaborare strategie basate sulla probabilità che il banco sballi o raggiunga un certo punteggio.</p> </div>
+        </details>
+
+        <details>
+            <summary>FAQ - Scacchi</summary>
+            <div class="faq-content">
+                 <p><strong>Qual è il pezzo più forte?</strong><br>
+                 La Donna (Regina) è considerata il pezzo più forte, combinando il movimento della Torre e dell'Alfiere.</p>
+                 <p><strong>L'arrocco è obbligatorio?</strong><br>
+                 No, l'arrocco è una mossa opzionale che può essere fatta solo una volta per partita, se le condizioni lo permettono.</p>
+                 <p><strong>Si può muovere il Re in una casa sotto attacco?</strong><br>
+                  No, è una mossa illegale muovere il proprio Re in una casa controllata da un pezzo avversario.</p>
+                 <p><em>(Inserisci qui altre domande frequenti sugli scacchi...)</em></p>
+            </div>
+        </details>
+
+         <details>
+             <summary>FAQ - Generali del Sito</summary>
+              <div class="faq-content">
+                 <p><strong>Devo scaricare qualcosa per giocare?</strong><br> No, i giochi sono disponibili direttamente nel browser, senza bisogno di download.</p> <p><strong>Posso giocare con soldi veri?</strong><br>
+                  No, IPPO'S CASINÒ offre solo giochi gratuiti con chips virtuali per puro divertimento e pratica.</p>
+                   <p><strong>Come viene garantita la casualità delle carte?</strong><br> Utilizziamo un generatore di numeri casuali (RNG - Random Number Generator) standard per assicurare che la distribuzione delle carte sia equa e imprevedibile, come in un mazzo reale mescolato.</p> </div>
+         </details>
+    </section>
+
+    <audio id="backgroundMusic" loop>
+        <source src="https://www.bensound.com/bensound-music/bensound-jazzyfrenchy.mp3" type="audio/mpeg"> Il tuo browser non supporta l'audio. </audio>
 
     <script>
-        const settingsModal = document.getElementById('settingsModal');
-        const music = document.getElementById('backgroundMusic');
+        const settingsModal = document.getElementById('settingsModal'); /* [cite: 305] */
+        const music = document.getElementById('backgroundMusic'); /* [cite: 306] */
         const musicToggle = document.getElementById('musicToggle');
         const themeToggle = document.getElementById('themeToggle');
-        const body = document.body;
+        const body = document.body; /* [cite: 306] */
+        // Elementi Intro
+        const introButton = document.getElementById('intro-toggle-button'); /* [cite: 307] */
+        const introText = document.getElementById('intro-text'); /* [cite: 307] */
 
-        // Funzione per aprire/chiudere il modal delle impostazioni
-        function toggleSettings() {
-            const isOpen = settingsModal.style.display === 'block';
-            settingsModal.style.display = isOpen ? 'none' : 'block';
-            // Opzionale: Aggiungi/rimuovi classe per animazione uscita
+        function toggleSettings() { /* [cite: 308] */
+            const isOpen = settingsModal.style.display === 'block'; /* [cite: 308] */
+            settingsModal.style.display = isOpen ? 'none' : 'block'; /* [cite: 309] */
         }
 
-        // Funzione per attivare/disattivare la musica
         function toggleMusic() {
             if (musicToggle.checked) {
-                music.muted = false; // Riattiva audio
-                // Prova a far partire la musica se non sta già suonando
-                if (music.paused) {
-                    music.play().catch(error => console.log("Riproduzione musica bloccata dal browser:", error));
-                }
+                // Verifica se l'audio context è sospeso (interazione necessaria)
+                if (music.paused && music.readyState >= 2) { // readyState >= 2 (HAVE_CURRENT_DATA) o superiore
+                     music.muted = false; /* [cite: 310] */
+                     music.play().catch(error => console.log("Riproduzione musica bloccata:", error)); /* [cite: 310] */
+                } else { /* [cite: 311] */
+                    music.muted = false; /* [cite: 311] */
+                    // Prova comunque a smutare
+                } /* [cite: 312] */
             } else {
-                music.pause(); // Mette in pausa
-                // music.currentTime = 0; // Opzionale: riavvolge
-                music.muted = true; // Muta per sicurezza
+                music.pause(); /* [cite: 312] */
+                music.muted = true; /* [cite: 313] */
             }
-            // Salva preferenza musica (opzionale)
-             localStorage.setItem('musicEnabled', musicToggle.checked);
+             localStorage.setItem('musicEnabled', musicToggle.checked); /* [cite: 313, 314] */
         }
 
-        // Funzione per cambiare tema (chiaro/scuro)
-        function toggleTheme() {
-            // Se il toggle è NON selezionato -> tema scuro
-            // Se il toggle è selezionato -> tema chiaro (default)
-            const useDarkTheme = !themeToggle.checked;
-            body.classList.toggle('dark-theme', useDarkTheme);
 
-            // Salva la preferenza nel localStorage
+        function toggleTheme() {
+            const useDarkTheme = !themeToggle.checked; /* [cite: 314] */
+            body.classList.toggle('dark-theme', useDarkTheme); /* [cite: 315] */
             localStorage.setItem('theme', useDarkTheme ? 'dark' : 'light');
         }
 
-        // All'avvio della pagina
+         function toggleIntroText() {
+             if (introText) {
+                 const isVisible = introText.classList.toggle('visible'); /* [cite: 315] */
+                 // Cambia testo/icona bottone
+                 if (isVisible) { /* [cite: 316] */
+                     introButton.innerHTML = '<i class="fas fa-times-circle"></i> Nascondi'; /* [cite: 316] */
+                     // Testo più corto
+                 } else { /* [cite: 317] */
+                     introButton.innerHTML = '<i class="fas fa-info-circle"></i> Benvenuto!'; /* [cite: 317] */
+                 } /* [cite: 318] */
+             }
+         }
+
         document.addEventListener('DOMContentLoaded', () => {
-            // --- Applicazione Tema Salvato ---
-            const savedTheme = localStorage.getItem('theme') || 'light'; // Default chiaro
+            // Applicazione Tema Salvato
+            const savedTheme = localStorage.getItem('theme') || 'light';
             const useDarkTheme = savedTheme === 'dark';
             body.classList.toggle('dark-theme', useDarkTheme);
-            // Imposta lo stato del toggle INVERSO rispetto al tema
-            // Se è scuro (useDarkTheme=true), il toggle (tema chiaro) deve essere deselezionato
-            themeToggle.checked = !useDarkTheme;
+             if(themeToggle) themeToggle.checked = !useDarkTheme; /* [cite: 319] */
 
 
-            // --- Impostazione Musica Salvata ---
+            // Impostazione Musica Salvata e Gestione Autoplay
             const savedMusicPref = localStorage.getItem('musicEnabled');
-             // Default a true (musica attiva) se non c'è preferenza salvata
             const musicEnabled = savedMusicPref === null ? true : (savedMusicPref === 'true');
-            musicToggle.checked = musicEnabled;
+            if(musicToggle) musicToggle.checked = musicEnabled;
 
-            // Imposta stato iniziale musica (spesso l'autoplay è bloccato all'inizio)
-             music.muted = !musicEnabled; // Inizia muto se disabilitato
-             if (musicEnabled) {
-                // Tenta la riproduzione solo se abilitata.
-                // L'utente potrebbe dover interagire comunque (es. cliccando sul toggle)
-                 music.play().catch(e => {
-                     console.log("Autoplay iniziale musica bloccato.");
-                     // Potresti mostrare un messaggio o un'icona "audio disattivato"
-                 });
+            if (music) {
+                 music.muted = !musicEnabled; // Inizia muto se disabilitato o se l'autoplay fallisce [cite: 320] */
+
+                if (musicEnabled) {
+                    // Tenta l'autoplay, ma preparati al fallimento
+                     let playPromise = music.play();
+                     if (playPromise !== undefined) { /* [cite: 321] */
+                         playPromise.then(_ => {
+                             // Autoplay riuscito!
+                             // Assicurati non sia muto [cite: 322] */
+                             music.muted = false; /* [cite: 322] */
+                             musicToggle.checked = true; // Sincronizza toggle [cite: 323] */
+                         }).catch(error => {
+                            // Autoplay fallito. Lascia muto e toggle disattivato (o come preferisci)
+                            console.log("Autoplay musica bloccato."); /* [cite: 323, 324] */
+                            music.muted = true;
+                            musicToggle.checked = false; // Sincronizza toggle allo stato reale
+                            // Potresti aggiungere un listener per il primo click per avviare la musica [cite: 324, 325] */
+                            document.body.addEventListener('click', playMusicOnInteraction, { once: true });
+                         }); /* [cite: 325, 326] */
+                     }
+                }
              }
 
 
-            // --- Chiusura Modal Cliccando Fuori ---
+            // Chiusura Modal Cliccando Fuori
             window.addEventListener('click', function(event) {
                 const settingsButton = document.querySelector('.settings-button');
-                // Se il modal è visibile E il click NON è sul modal O sui suoi figli
-                // E il click NON è sul pulsante di apertura
-                if (settingsModal.style.display === 'block' &&
+                if (settingsModal && settingsModal.style.display === 'block' && /* [cite: 326] */
                     !settingsModal.contains(event.target) &&
-                    !settingsButton.contains(event.target)) {
-                    settingsModal.style.display = 'none';
+                    settingsButton && !settingsButton.contains(event.target)) { /* [cite: 327] */
+                    // Aggiunta verifica se il click è sul bottone intro, per non chiudere il modale in quel caso
+                     if (!introButton || !introButton.contains(event.target)) { /* [cite: 328] */
+                       settingsModal.style.display = 'none';
+                    }
                 }
+                 // Chiudi testo intro se visibile e clicchi fuori
+                 if (introText && introText.classList.contains('visible') && /* [cite: 329] */
+                     !introText.contains(event.target) &&
+                     introButton && !introButton.contains(event.target)) {
+                      toggleIntroText(); // Usa la funzione per resettare anche il bottone [cite: 329, 330] */
+                 }
             });
 
-             // --- Aggiunta classe per effetto hover sull'icona settings ---
-            // Questo è gestito da CSS ma potresti voler aggiungere JS per compatibilità o effetti più complessi
-            const settingsIcon = document.querySelector('.settings-button i');
-            if(settingsIcon) {
-                 settingsButton.addEventListener('mouseenter', () => settingsIcon.classList.add('fa-spin'));
-                 settingsButton.addEventListener('mouseleave', () => settingsIcon.classList.remove('fa-spin'));
-            }
+            // Listener al bottone intro [cite: 330, 331] */
+             if (introButton) {
+                 introButton.addEventListener('click', (event) => {
+                      event.stopPropagation(); // Impedisce al click di chiudere subito il testo intro
+                      toggleIntroText();
+                 }); /* [cite: 332] */
+             } /* [cite: 333] */
+
+             // Funzione per avviare musica alla prima interazione se l'autoplay è fallito
+             function playMusicOnInteraction() {
+                 if (music && music.paused && localStorage.getItem('musicEnabled') !== 'false') { // Controlla anche la preferenza
+                     music.muted = false; /* [cite: 333] */
+                     music.play().then(() => { /* [cite: 334] */
+                        musicToggle.checked = true; // Aggiorna toggle se parte
+                     }).catch(e => console.log("Errore riproduzione dopo interazione:", e)); /* [cite: 334] */
+                 } /* [cite: 335] */
+             }
+
 
         });
 
-    </script>
-</body>
-</html>
+    </script> </body>
+</html> 
