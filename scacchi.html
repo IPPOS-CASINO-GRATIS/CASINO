@@ -23,6 +23,47 @@
             --current-dark-square-bg: #2e7d32; /* [cite: 1] */
             --current-board-border-color: #fbc02d; /* [cite: 1] */
 
+/* Stile per il bottone "Cambia Gioco" in alto a sinistra */
+#change-game-button-chess {
+    /* Posizionamento in alto a sinistra */
+    position: absolute;
+    top: 15px;
+    left: 15px;
+    z-index: 10;
+
+    /* Stili presi dagli altri bottoni per coerenza */
+    padding: 8px 15px;                     /* */
+    border: 1px solid var(--panel-border-color); /* */
+    border-radius: 4px;                    /* */
+    background-color: var(--button-bg);    /* */
+    color: var(--button-text-color);       /* */
+    font-size: 0.95em;                     /* */
+    cursor: pointer;                       /* */
+    transition: background-color 0.2s ease, box-shadow 0.2s ease; /* */
+    margin: 0; /* Rimuove margine extra se non necessario in posizione assoluta */
+}
+
+/* Stile Hover (come gli altri bottoni) */
+#change-game-button-chess:hover {
+    background-color: var(--button-hover-bg); /* */
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1); /* */
+}
+
+/* Stile Disabled (se necessario, opzionale) */
+#change-game-button-chess:disabled {
+    cursor: not-allowed;                   /* */
+    opacity: 0.6;
+    background-color: #aaa;                /* */
+    border-color: #999;                    /* */
+    color: #555;                           /* */
+}
+body.theme-dark #change-game-button-chess:disabled {
+     background-color: #555;                /* */
+     border-color: #666;                    /* */
+     color: #999;                           /* */
+}
+
+
             /* Colori UI Tema Chiaro */
             --selected-square-bg: rgba(255, 235, 59, 0.7); /* [cite: 2] */
             --possible-move-dot-color: rgba(255, 255, 255, 0.4); /* [cite: 3] */
@@ -522,6 +563,10 @@
     </button>
 
     <div id="setup-screen">
+
+<button id="change-game-button-chess"
+        onclick="changeGame()">Cambia Gioco</button>
+
         <h2>Imposta la Partita</h2>
         <div>
             <label for="setup-game-mode">Modalità:</label> <select id="setup-game-mode">
@@ -3558,6 +3603,14 @@
                 document.body.innerHTML = `<div style="padding: 20px; color: red; font-weight: bold;">Errore Critico Inizializzazione. Ricarica la pagina. Dettagli nella console (F12).</div>`;
             }
         }
+
+function changeGame() {
+        console.log("Tentativo di reindirizzamento a 'index.html'");
+        // Assicurati che 'index.html' sia il nome corretto e il percorso giusto.
+        // Se si trova nella stessa cartella, questo dovrebbe funzionare:
+        window.location.href = 'index.html';
+        // Se si trova in una cartella diversa, adegua il percorso, es: '../schermata iniziale.html' o '/path/to/schermata iniziale.html'
+    }
 
         // Avvia l'applicazione quando il DOM è pronto
         initializeApp();
