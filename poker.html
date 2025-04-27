@@ -1,4 +1,3 @@
-Poker ultimo:
 <!DOCTYPE html>
 <html lang="it">
 <head>
@@ -139,6 +138,8 @@ Poker ultimo:
 </head>
 <body data-theme="light">
 <div class="game-container">
+
+<button id="change-game-button" style="position: absolute; top: 15px; left: 15px; z-index: 10;">Cambia Gioco</button>
 
     <div id="game-mode-selection">
         <h2>Poker 1v1</h2>
@@ -1408,7 +1409,14 @@ window.onload = () => {
 
 function showRules() { alert("Regole Base Texas Hold'em (1v1 Semplificato):\n\n1. Blinds: Il giocatore col bottone (D) paga lo Small Blind (SB, $"+smallBlindAmt+"), l'altro il Big Blind (BB, $"+bigBlindAmt+"). In 1v1, il Dealer è SB e agisce per primo pre-flop, ma per secondo post-flop.\n2. Pre-Flop: Ricevi 2 carte private. Giro di puntate iniziando dal SB.\n3. Flop: 3 carte comuni scoperte. Giro di puntate iniziando dal SB (Dealer).\n4. Turn: 1 carta comune scoperta. Giro di puntate.\n5. River: 1 carta comune scoperta. Ultimo giro di puntate.\n6. Showdown: Se più giocatori rimangono dopo il River, si mostrano le carte. Vince la miglior mano di 5 carte (usando qualsiasi combinazione delle 2 private + 5 comuni).\n\nAzioni:\n- Fold: Abbandoni la mano.\n- Check: Passi il turno (solo se non ci sono puntate da chiamare).\n- Call: Pareggi la puntata attuale.\n- Bet: Fai la prima puntata del giro (se nessuno ha ancora puntato).\n- Raise: Aumenti la puntata attuale (se qualcuno ha già puntato).\n- All-in: Punti tutte le tue fiches rimanenti."); }
 
-// --- FINE CODICE JAVASCRIPT ---
+function changeGame() {
+        console.log("Tentativo di reindirizzamento a 'index.html'");
+        // Assicurati che 'index.html' sia il nome corretto e il percorso giusto.
+        // Se si trova nella stessa cartella, questo dovrebbe funzionare:
+        window.location.href = 'index.html';
+        // Se si trova in una cartella diversa, adegua il percorso, es: '../schermata iniziale.html' o '/path/to/schermata iniziale.html'
+    }
+
 </script>
 
 </body>
