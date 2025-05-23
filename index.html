@@ -1,0 +1,1762 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IPPO’S CASINÒ - L'Emozione del Gioco</title>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-J1YN9CKJS2"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-J1YN9CKJS2');
+    </script>
+    <meta name="google-adsense-account" content="ca-pub-9456850571765688">
+    <script src="https://www.paypal.com/sdk/js?client-id=AU2ed-MwamUR0Upt37s9x2KnTJqqnbzmI3kVV1d2n8d79RPulkRKDzae5drMAH3JkPaLLQDiNV-eyFO4&currency=EUR"></script>
+
+    <script type="module">
+      // Importa le funzioni necessarie dal SDK di Firebase
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+      import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+      import { getFirestore } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+      // Configurazione Firebase (USA LA TUA CONFIGURAZIONE REALE)
+      const firebaseConfig = {
+        apiKey: "AIzaSyCU5qdpokOFHYw7_MkKA0IJMYvJRwXSSlE", // USA LA TUA CHIAVE REALE
+        authDomain: "ippos-casino-premium.firebaseapp.com",
+        projectId: "ippos-casino-premium",
+        storageBucket: "ippos-casino-premium.appspot.com",
+        messagingSenderId: "691446568112",
+        appId: "1:691446568112:web:8d63d548226abde7aa1775",
+        measurementId: "G-B5S9W3WGBW" // opzionale
+      };
+
+      // Inizializza Firebase
+      try {
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);      // Istanza Autenticazione
+        const db = getFirestore(app);     // Istanza Firestore Database
+        console.log("Firebase Initialized successfully (Auth & Firestore ready)");
+
+        // Rendi disponibili auth, db e onAuthStateChanged globalmente per gli altri script
+        window.firebaseInstances = { auth, db };
+        window.onAuthStateChanged = onAuthStateChanged; // Rendi disponibile la funzione per il listener globale
+
+      } catch (error) {
+          console.error("Firebase Initialization Failed:", error);
+          alert("Errore critico: impossibile caricare le funzionalità dell'account.");
+          // Gestisci il fallimento (es. nascondi bottone impostazioni)
+          document.addEventListener('DOMContentLoaded', () => {
+              const settingsBtn = document.getElementById('settingsBtn');
+              if(settingsBtn) settingsBtn.style.display = 'none';
+          });
+      }
+    </script>
+
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <style>
+        /* Reset Base */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* Variabili Colore */
+        :root {
+            --primary-color: #ffcc00; /* Oro */
+            --secondary-color: #c0392b; /* Rosso Scuro (per Premium/Bloccato/Logout) */
+            --vip-color: #e74c3c; /* Colore per status VIP */
+            --background-light: #005f3c; /* Verde Scuro */
+            --background-light-gradient: radial-gradient(circle at top left, #007b50, #004d31);
+            --background-dark: #1a1a1a; /* Sfondo scuro più profondo */
+            --text-light: #ffffff; /* Bianco */
+            --text-dark: #222222; /* Nero per testo su sfondi chiari */
+            --card-bg-light: rgba(0, 0, 0, 0.2);
+            --card-bg-dark: rgba(50, 50, 50, 0.7);
+            --shadow-light: rgba(0, 0, 0, 0.3);
+            --shadow-dark: rgba(0, 0, 0, 0.6);
+            --section-bg-light: rgba(255, 255, 255, 0.05);
+            --section-bg-dark: rgba(40, 40, 40, 0.8);
+            --faq-bg-light: rgba(0, 0, 0, 0.1);
+            --faq-bg-dark: rgba(20, 20, 20, 0.9);
+            --intro-btn-bg-light: rgba(0, 0, 0, 0.4); /* Sfondo bottone intro chiaro */
+            --intro-btn-bg-dark: rgba(50, 50, 50, 0.7); /* Sfondo bottone intro scuro */
+            --intro-text-bg-light: #fff8e1;
+            --intro-text-color-light: #3e2723;
+            --intro-text-bg-dark: #333;
+            --intro-text-color-dark: #eee;
+            --details-bg-light: rgba(255, 255, 255, 0.05); /* Sfondo details chiaro */
+            --details-open-bg-light: rgba(255, 255, 255, 0.08); /* Sfondo details aperti chiaro */
+            --details-bg-dark: rgba(50, 50, 50, 0.5); /* Sfondo details scuro */
+            --details-open-bg-dark: rgba(60, 60, 60, 0.7); /* Sfondo details aperti scuro */
+            --modal-bg: rgba(30, 30, 30, 0.97); /* Sfondo modali (comune) */
+            --premium-button-bg: #c0392b; /* Colore bottone Premium/VIP */
+            --premium-button-text: #ffffff;
+            --free-button-bg: #27ae60; /* Non usato direttamente, ma come riferimento */
+            --free-button-text: #ffffff;
+            --error-color: #ff6b6b; /* Colore per errori auth */
+        }
+
+        /* Stile Base Body */
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--background-light);
+            background-image: var(--background-light-gradient);
+            color: var(--text-light);
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+            transition: background-color 0.5s ease, color 0.5s ease, background-image 0.5s ease;
+            display: flex;
+            flex-direction: column;
+        }
+        body.dark-theme {
+            background-color: var(--background-dark);
+            background-image: none;
+            color: var(--text-light);
+        }
+
+        /* Bottone Istruzioni (Toggle Intro) */
+        #intro-toggle-button {
+            position: absolute; /* O fixed */
+            top: 15px;
+            left: 15px;
+            z-index: 1001;
+            background-color: var(--intro-btn-bg-light);
+            border: 1px solid var(--primary-color);
+            color: var(--primary-color);
+            padding: 8px 12px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: background-color 0.3s, color 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 2px 5px var(--shadow-light);
+        }
+        #intro-toggle-button:hover {
+            background-color: var(--primary-color);
+            color: var(--text-dark);
+        }
+        body.dark-theme #intro-toggle-button {
+            background-color: var(--intro-btn-bg-dark);
+            box-shadow: 0 2px 5px var(--shadow-dark);
+        }
+
+        /* Pulsanti Alto a Destra (Settings, Premium, VIP) */
+        .top-buttons {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            z-index: 1001;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        /* Stile comune per i bottoni circolari */
+        .settings-button, #premium-button, #vip-indicator {
+            background-color: rgba(0, 0, 0, 0.5);
+            color: var(--primary-color);
+            border: 1px solid var(--primary-color);
+            border-radius: 50%;
+            width: 45px;
+            height: 45px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.3s, box-shadow 0.3s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 2px 8px var(--shadow-light);
+            padding: 0;
+            text-decoration: none;
+        }
+        .settings-button:hover, #premium-button:hover {
+            background-color: rgba(0, 0, 0, 0.7);
+            transform: scale(1.1);
+            box-shadow: 0 4px 12px var(--shadow-dark);
+        }
+        body.dark-theme .settings-button,
+        body.dark-theme #premium-button,
+        body.dark-theme #vip-indicator {
+          box-shadow: 0 2px 8px var(--shadow-dark);
+        }
+
+        /* Stile specifico Pulsante Premium (Diventa VIP - stella/corona) */
+        #premium-button { /* Questo è il bottone "corona" in alto a destra */
+            color: var(--premium-button-text);
+            background-color: var(--premium-button-bg);
+            border-color: var(--premium-button-bg);
+            font-size: 1.1rem; /* Adatta per corona */
+        }
+        #premium-button:hover {
+            background-color: var(--vip-color); /* Usa vip-color su hover */
+            border-color: var(--vip-color);
+        }
+
+        /* Stile Indicatore VIP (quando premium è attivo) */
+        #vip-indicator {
+            background-color: var(--vip-color);
+            color: var(--text-light);
+            border-color: var(--vip-color);
+            font-size: 0.9rem; /* Più piccolo */
+            font-weight: bold;
+            cursor: default; /* Non cliccabile */
+            display: none; /* Nascosto di default, gestito da JS/CSS */
+            padding: 0 5px; /* Padding orizzontale per testo VIP */
+            width: auto; /* Larghezza automatica */
+            border-radius: 5px; /* Meno arrotondato */
+        }
+        /* Logica visibilità Premium/VIP (gestita da JS + classe CSS 'premium-active' su body) */
+        body.premium-active #premium-button { /* Nasconde "Diventa VIP" (corona) se già VIP */
+            display: none;
+        }
+        body.premium-active #vip-indicator { /* Mostra indicatore "VIP" se già VIP */
+            display: flex;
+        }
+
+        /* Modal (Stile Generico) */
+        .modal {
+            display: none; /* Nascosto di default */
+            position: fixed;
+            z-index: 1050;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(4px);
+            animation: fadeInModalBg 0.3s ease-out;
+        }
+        @keyframes fadeInModalBg { from { opacity: 0; } to { opacity: 1; } }
+
+        .modal-content {
+            position: relative;
+            background-color: var(--modal-bg);
+            margin: 10% auto;
+            padding: 30px 40px;
+            border: 1px solid var(--primary-color);
+            border-radius: 15px;
+            width: 80%;
+            max-width: 650px; /* Default max-width */
+            box-shadow: 0 5px 25px var(--shadow-dark);
+            color: var(--text-light);
+            animation: fadeInModalContent 0.4s ease-out;
+        }
+        @keyframes fadeInModalContent {
+            from { opacity: 0; transform: translateY(-20px) scale(0.95); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .modal-close-button {
+            color: #aaa;
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            font-size: 28px;
+            font-weight: bold;
+            transition: color 0.3s;
+            cursor: pointer;
+            line-height: 1;
+        }
+        .modal-close-button:hover,
+        .modal-close-button:focus {
+            color: var(--primary-color);
+            text-decoration: none;
+        }
+
+        /* --- Modal Impostazioni Specifico --- */
+        #settingsModal .modal-content {
+            max-width: 380px; /* Larghezza adatta per impostazioni+auth */
+            margin: 8% auto; /* Leggermente più su */
+        }
+        #settingsModal h3 { /* Titolo "Impostazioni" */
+            font-family: 'Playfair Display', serif;
+            color: var(--primary-color);
+            margin-bottom: 25px;
+            text-align: center;
+            font-size: 1.6rem;
+            border-bottom: 1px solid rgba(255, 204, 0, 0.3);
+            padding-bottom: 12px;
+        }
+        #settingsModal .setting-item { /* Contenitore per Tema e Musica */
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 15px;
+        }
+        #settingsModal .setting-item label { /* Label per Tema e Musica */
+            color: #eee;
+            font-size: 1rem;
+            flex-grow: 1;
+            text-align: left;
+        }
+        /* Stile Toggle Switch */
+        #settingsModal input[type="checkbox"] {
+            opacity: 0; width: 0; height: 0; position: absolute;
+        }
+        .toggle-switch {
+            position: relative; display: inline-block;
+            width: 44px; height: 24px; flex-shrink: 0;
+        }
+        .toggle-switch-label {
+            position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #555; border-radius: 12px; transition: background-color 0.4s;
+        }
+        .toggle-switch-label::before {
+            content: ''; position: absolute; height: 18px; width: 18px;
+            left: 3px; bottom: 3px; background-color: white; border-radius: 50%;
+            transition: transform 0.4s;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+        }
+        #settingsModal input[type="checkbox"]:checked + .toggle-switch .toggle-switch-label {
+            background-color: var(--primary-color);
+        }
+        #settingsModal input[type="checkbox"]:checked + .toggle-switch .toggle-switch-label::before {
+            transform: translateX(20px);
+        }
+
+        /* --- STILI Sezione Autenticazione (dentro #settingsModal) --- */
+        #auth-section {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 204, 0, 0.2);
+        }
+        #auth-section h4 { /* Titolo "Account Utente" */
+            color: var(--primary-color); margin-bottom: 15px; text-align: center;
+            font-size: 1.3rem; font-family: 'Playfair Display', serif;
+        }
+        #auth-form label {
+            display: block; margin-bottom: 5px; color: #ccc; font-size: 0.9rem; text-align: left;
+        }
+        #auth-form input[type="email"],
+        #auth-form input[type="password"] {
+            width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #555;
+            background-color: rgba(0, 0, 0, 0.3); color: var(--text-light); border-radius: 5px; font-size: 1rem;
+        }
+        #auth-form input:focus {
+            outline: none; border-color: var(--primary-color); box-shadow: 0 0 5px rgba(255, 204, 0, 0.5);
+        }
+        #auth-buttons {
+            display: flex; justify-content: center; gap: 10px;
+        }
+        #auth-buttons button {
+            background-color: var(--primary-color); color: var(--text-dark); border: none;
+            padding: 10px 15px; border-radius: 5px; cursor: pointer; font-weight: bold;
+            transition: background-color 0.3s, transform 0.2s; font-size: 0.9rem;
+        }
+        #auth-buttons button:hover {
+            background-color: #e6b800; transform: scale(1.05);
+        }
+        #logout-section button {
+            background-color: var(--secondary-color); /* Rosso per logout */
+            color: var(--text-light); border: none;
+            padding: 10px 20px; border-radius: 5px;
+            cursor: pointer; font-weight: bold; transition: background-color 0.3s;
+            width: 100%; margin-top: 10px; font-size: 0.95rem;
+        }
+        #logout-section button:hover { background-color: #a53125; }
+        #auth-error {
+            color: var(--error-color); font-size: 0.85rem; text-align: center;
+            margin-top: 15px; min-height: 20px; font-weight: bold;
+        }
+        #user-info {
+            color: #ccc; font-weight: bold; margin-bottom: 15px; margin-top: 0;
+            text-align: center; font-size: 0.95rem; min-height: 20px;
+        }
+        /* Logica Visibilità Auth (gestita da JS + classe 'user-logged-in' su #auth-section) */
+        #auth-section #auth-form, #auth-section #auth-buttons, #auth-section h4 {
+            display: block; /* Visibili di default (stato non loggato) */
+        }
+        #auth-section #logout-section, #auth-section #user-info {
+            display: none; /* Nascosti di default */
+        }
+        #auth-section.user-logged-in #auth-form,
+        #auth-section.user-logged-in #auth-buttons,
+        #auth-section.user-logged-in h4 {
+            display: none; /* Nascosti se loggato */
+        }
+        #auth-section.user-logged-in #logout-section,
+        #auth-section.user-logged-in #user-info {
+            display: block; /* Visibili se loggato */
+        }
+        /* --- Fine Stili Auth --- */
+
+        /* --- Stili Modal Premium (Diventa VIP) --- */
+        #premiumModal .modal-content { max-width: 750px; }
+        #premiumModal h2 {
+            font-family: 'Playfair Display', serif; color: var(--primary-color);
+            text-align: center; font-size: 2rem; margin-bottom: 25px;
+            text-shadow: 0 0 5px rgba(255, 204, 0, 0.5);
+        }
+        #premiumModal h3 {
+            color: var(--primary-color); font-family: 'Playfair Display', serif;
+            border-bottom: 1px solid rgba(255, 204, 0, 0.2); padding-bottom: 8px;
+            margin-top: 30px; margin-bottom: 15px; font-size: 1.4rem;
+        }
+        #premiumModal p, #premiumModal ul {
+            color: #ccc; line-height: 1.7; margin-bottom: 15px; font-size: 1rem;
+        }
+        #premiumModal ul { list-style: none; padding-left: 0; }
+        #premiumModal li {
+            margin-bottom: 10px; padding-left: 30px; /* Spazio per icona */ position: relative;
+        }
+        #premiumModal li i {
+            color: var(--primary-color); position: absolute; left: 0; top: 4px; /* Allineamento icona */
+            font-size: 1.1rem;
+            width: 20px; text-align: center;
+        }
+        #premiumModal strong { color: var(--text-light); font-weight: bold; }
+
+        .premium-buttons-container { /* Contenitore per bottone attivazione e PayPal */
+            display: flex; flex-direction: column; align-items: center;
+            gap: 20px; margin-top: 30px;
+        }
+        .premium-button { /* Stile bottone attivazione nel modal */
+            background-color: var(--premium-button-bg); color: var(--premium-button-text);
+            padding: 12px 25px; border: none; border-radius: 8px; font-size: 1rem;
+            font-weight: bold; cursor: pointer; transition: background-color 0.3s, transform 0.2s;
+            text-decoration: none; display: inline-flex; align-items: center; gap: 8px;
+            min-width: 200px; justify-content: center;
+        }
+        .premium-button:hover {
+            background-color: var(--vip-color); transform: translateY(-2px);
+        }
+        .premium-button i { font-size: 1.1rem; }
+
+        #paypal-button-container {
+            display: none; /* Nascosto inizialmente, mostrato da JS */
+            margin-top: 10px; /* Spazio dal bottone "Diventa VIP" se era visibile */
+            width: 100%;
+            max-width: 350px; /* O la larghezza desiderata per i bottoni PayPal */
+            min-height: 40px; /* Per evitare collasso se il rendering di PayPal è lento */
+        }
+        /* Nascondi #activatePremiumBtn se #paypal-button-container è visibile */
+        #premiumModal.paypal-visible #activatePremiumBtn {
+            display: none;
+        }
+        /* Nascondi #paypal-button-container se l'utente è VIP e il modal è aperto */
+        body.premium-active #premiumModal #paypal-button-container {
+            display: none;
+        }
+        body.premium-active #premiumModal #activatePremiumBtn { /* Nascondi anche il bottone di attivazione se utente è già VIP */
+             display: none !important; /* Usa important se necessario per sovrascrivere altri stili display */
+        }
+        /* Mostra un messaggio se l'utente è già VIP nel modal */
+        body.premium-active #premiumModal .already-vip-message {
+            display: block;
+            text-align: center;
+            color: var(--primary-color);
+            font-size: 1.1rem;
+            margin-top: 20px;
+        }
+        .already-vip-message {
+            display: none; /* Nascosto di default */
+        }
+
+
+        #premium-activation-error { /* Messaggio errore attivazione */
+             color: var(--error-color); font-size: 0.85rem; text-align: center;
+             margin-top: 15px; min-height: 1.2em; /* Riserva spazio */
+        }
+         #premiumModal .modal-content p.disclaimer { /* Stile disclaimer */
+              font-size: 0.8rem; text-align: center; margin-top: 10px; color: #aaa; font-style: italic;
+         }
+
+
+        /* --- Contenuto Principale (Logo, Intro, Scroll, Card) --- */
+        .container {
+            flex-grow: 1; display: flex; flex-direction: column;
+            justify-content: center; align-items: center; text-align: center;
+            padding: 90px 20px 40px; position: relative; width: 100%;
+            max-width: 1200px; margin: 0 auto;
+        }
+
+        /* Logo */
+        .logo {
+            font-family: 'Playfair Display', serif; font-size: clamp(2.5rem, 8vw, 5rem); color: var(--primary-color);
+            text-shadow: 0 0 8px rgba(255, 204, 0, 0.8), 0 0 15px rgba(255, 153, 0, 0.7), 0 0 25px rgba(255, 102, 0, 0.5);
+            margin-bottom: 15px; animation: pulseGlow 2.5s ease-in-out infinite alternate;
+            letter-spacing: 2px;
+        }
+        @keyframes pulseGlow {
+            from { text-shadow: 0 0 8px rgba(255, 204, 0, 0.7), 0 0 15px rgba(255, 153, 0, 0.6), 0 0 25px rgba(255, 102, 0, 0.4); }
+            to { text-shadow: 0 0 12px rgba(255, 204, 0, 0.9), 0 0 22px rgba(255, 153, 0, 0.8), 0 0 35px rgba(255, 102, 0, 0.6); }
+        }
+
+        /* Testo Intro Nascosto */
+        #intro-text {
+            display: none; padding: 20px; border-radius: 10px;
+            margin: 20px auto 30px auto; max-width: 700px; text-align: center; /* Centro testo */
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1); line-height: 1.6;
+            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+            background-color: var(--intro-text-bg-light); color: var(--intro-text-color-light);
+            border: 1px solid var(--primary-color);
+        }
+        #intro-text.visible { display: block; animation: fadeIn 0.5s ease; }
+        body.dark-theme #intro-text { background-color: var(--intro-text-bg-dark); color: var(--intro-text-color-dark); border-color: #555; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        /* Testo Scorrevo le */
+        .scroll-text-wrapper {
+            width: 100%; max-width: 700px; margin: 0 auto 40px auto;
+            padding: 10px 0; background: rgba(0, 0, 0, 0.2); border-radius: 5px;
+            overflow: hidden; position: relative;
+        }
+        .scroll-text {
+            display: inline-block; white-space: nowrap; padding-left: 100%;
+            animation: scroll-left 20s linear infinite; font-size: clamp(0.9rem, 2.5vw, 1.1rem);
+            color: rgba(255, 255, 255, 0.85);
+        }
+        @keyframes scroll-left {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-100%); }
+        }
+        .scroll-text-wrapper:hover .scroll-text { animation-play-state: paused; }
+
+        /* Selezione Giochi (Card) */
+        .game-selection {
+            margin-top: 30px; display: flex; flex-wrap: wrap; justify-content: center;
+            gap: 30px; perspective: 1000px; padding: 0 15px; width: 100%;
+        }
+
+        /* Stile Card Gioco */
+        .game-card {
+            background-color: var(--card-bg-light); color: var(--text-light);
+            text-decoration: none; border-radius: 15px; overflow: hidden;
+            width: 280px; box-shadow: 0 8px 25px var(--shadow-light);
+            transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1), box-shadow 0.4s cubic-bezier(0.25, 0.8, 0.25, 1), background-color 0.4s ease;
+            display: flex; flex-direction: column; cursor: pointer;
+            border: 1px solid rgba(255, 204, 0, 0.2); position: relative;
+            animation: fadeInUp 0.5s ease-out forwards; opacity: 0;
+        }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+        /* Delay animazione */
+        .game-card:nth-child(1) { animation-delay: 0.1s; }
+        .game-card:nth-child(2) { animation-delay: 0.2s; }
+        .game-card:nth-child(3) { animation-delay: 0.3s; }
+        .game-card:nth-child(4) { animation-delay: 0.4s; }
+        .game-card:nth-child(5) { animation-delay: 0.5s; } /* Delay per Blackjack Pro */
+
+        body.dark-theme .game-card {
+            background-color: var(--card-bg-dark);
+            box-shadow: 0 8px 25px var(--shadow-dark); border-color: rgba(255, 255, 255, 0.1);
+        }
+        .game-card:hover {
+            transform: translateY(-10px) rotateX(5deg) scale(1.03);
+            box-shadow: 0 15px 35px var(--shadow-light);
+        }
+        body.dark-theme .game-card:hover { box-shadow: 0 15px 35px var(--shadow-dark); }
+
+        /* Immagine/Icona Card */
+        .game-card-image {
+            height: 180px; overflow: hidden; background-color: rgba(0,0,0,0.3);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 3rem; color: rgba(255,255,255,0.2);
+        }
+        .game-card-image img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.4s ease; }
+        .game-card:hover .game-card-image img { transform: scale(1.1); }
+
+        /* Contenuto Testuale Card */
+        .game-card-content {
+            padding: 20px; text-align: center; flex-grow: 1;
+            display: flex; flex-direction: column; justify-content: space-between;
+        }
+        .game-card-title {
+            font-family: 'Playfair Display', serif; color: var(--primary-color);
+            font-size: 1.6rem; margin-bottom: 12px; font-weight: 700; line-height: 1.2;
+        }
+        .game-card p.game-description {
+            font-size: 0.9rem; margin-bottom: 15px; line-height: 1.5; color: #ddd; flex-grow: 1;
+        }
+        body.dark-theme .game-card p.game-description { color: #ccc; }
+
+        /* Bottone Card */
+        .card-button {
+            display: inline-block; background-color: var(--primary-color); color: var(--text-dark);
+            padding: 10px 20px; border-radius: 5px; text-decoration: none; font-weight: bold;
+            transition: background-color 0.3s, transform 0.2s; margin-top: auto;
+            border: none; cursor: pointer; font-size: 0.95rem;
+        }
+        .card-button:hover { background-color: #e6b800; transform: scale(1.05); }
+
+        /* Bottone Premium nella Card (Esclusiva VIP / Lucchetto) */
+        .card-button.premium {
+            background-color: var(--premium-button-bg); color: var(--premium-button-text);
+            cursor: pointer; /* Apre modal premium */
+        }
+        .card-button.premium:hover { background-color: #a53125; transform: none; }
+        .card-button.premium i { margin-left: 8px; }
+
+        /* Bottone Coming Soon */
+        .card-button.coming-soon {
+            cursor: default; background-color: #555; color: #aaa; display: inline-block;
+        }
+        .card-button.coming-soon:hover { background-color: #555; transform: none; }
+
+        /* Overlay Premium (su card bloccate) */
+        .premium-overlay {
+            position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            background-color: rgba(0, 0, 0, 0.6); display: flex; flex-direction: column;
+            justify-content: center; align-items: center; color: var(--primary-color);
+            opacity: 0; transition: opacity 0.4s ease; pointer-events: none;
+            border-radius: 15px; z-index: 2;
+        }
+        /* Mostra overlay se la card ha classe 'locked' */
+        .game-card.locked .premium-overlay { opacity: 1; }
+        /* Stile overlay per Coming Soon */
+        .game-card.coming-soon-card .premium-overlay {
+            background-color: rgba(0, 0, 0, 0.7); opacity: 1; pointer-events: none;
+        }
+        .premium-overlay i { font-size: 3rem; margin-bottom: 10px; }
+        .premium-overlay span { font-weight: bold; font-size: 1.1rem; }
+
+        /* Logica Visibilità Bottoni Card (Gestita da JS + classi CSS) */
+        /* Nasconde "Gioca Ora" standard e mostra "Esclusiva VIP" se la card è locked */
+        .game-card.locked .standard-play-button { display: none; }
+        .game-card:not(.locked) .premium-info-button { display: none; }
+        /* Se l'utente è VIP (.premium-active sul body), nascondi bottone premium e mostra standard */
+        body.premium-active .game-card.locked .premium-info-button { display: none; }
+        body.premium-active .game-card.locked .standard-play-button { display: inline-block; }
+         /* Nasconde entrambi i bottoni normali se coming-soon */
+        .game-card.coming-soon-card .standard-play-button,
+        .game-card.coming-soon-card .premium-info-button { display: none; }
+         /* Mostra bottone coming-soon solo su card coming-soon */
+         .game-card:not(.coming-soon-card) .card-button.coming-soon { display: none; }
+
+
+        /* --- Sezione Info / Istruzioni / FAQ --- */
+        .additional-info {
+            margin-top: 60px; padding: 40px 20px; background-color: var(--section-bg-light);
+            border-radius: 10px; width: 100%; max-width: 900px; box-shadow: 0 5px 15px var(--shadow-light);
+        }
+        body.dark-theme .additional-info { background-color: var(--section-bg-dark); box-shadow: 0 5px 15px var(--shadow-dark); }
+        .additional-info > h2 { /* Titolo principale (ISTRUZIONI GIOCO & FAQ) */
+            font-family: 'Playfair Display', serif; color: var(--primary-color); text-align: center;
+            margin-bottom: 30px; font-size: 2rem;
+        }
+
+        /* Stile <details> principale (per ogni gioco/sezione) */
+        .additional-info > details.info-section {
+            background-color: var(--details-bg-light); margin-bottom: 20px; border-radius: 8px;
+            border: 1px solid rgba(255, 204, 0, 0.1); transition: background-color 0.3s ease; overflow: hidden;
+        }
+        body.dark-theme .additional-info > details.info-section { background-color: var(--details-bg-dark); border-color: rgba(255, 255, 255, 0.08); }
+        .additional-info > details.info-section[open] { background-color: var(--details-open-bg-light); }
+        body.dark-theme .additional-info > details.info-section[open] { background-color: var(--details-open-bg-dark); }
+
+        /* Stile <summary> principale (Titolo cliccabile) */
+        .additional-info > details.info-section > summary {
+            padding: 18px 25px; font-weight: 700; cursor: pointer; color: var(--primary-color);
+            font-family: 'Playfair Display', serif; font-size: 1.4rem; position: relative;
+            list-style: none; /* Rimuove freccia default */ transition: background-color 0.2s ease;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .additional-info > details.info-section > summary::-webkit-details-marker,
+        .additional-info > details.info-section > summary::marker { display: none; }
+        .additional-info > details.info-section > summary::after { /* Icona +/- */
+            content: '+'; font-size: 1.6rem; color: var(--primary-color); transition: transform 0.3s ease;
+            font-family: 'Roboto', sans-serif; font-weight: normal; margin-left: 15px;
+        }
+        .additional-info > details.info-section[open] > summary::after { content: '−'; transform: rotate(180deg); }
+        .additional-info > details.info-section > summary:hover { background-color: rgba(255, 204, 0, 0.1); }
+        body.dark-theme .additional-info > details.info-section > summary:hover { background-color: rgba(255, 204, 0, 0.15); }
+
+        /* Contenitore contenuto interno <details> principale */
+        .info-content-wrapper {
+            padding: 10px 25px 25px 25px; border-top: 1px solid rgba(255, 204, 0, 0.15);
+            background-color: rgba(0,0,0, 0.1);
+        }
+        body.dark-theme .info-content-wrapper { border-top-color: rgba(255, 255, 255, 0.1); background-color: rgba(0,0,0, 0.2); }
+
+        /* Stile <details> annidati (Intro, Regole, etc.) */
+        .info-content-wrapper details {
+            background-color: transparent; margin-bottom: 10px; border: none;
+            border-bottom: 1px dashed rgba(255, 255, 255, 0.1); padding-bottom: 10px;
+        }
+        .info-content-wrapper details:last-child { border-bottom: none; }
+        .info-content-wrapper summary { /* Titoli annidati */
+            padding: 10px 0; font-weight: bold; cursor: pointer; color: var(--text-light);
+            font-size: 1.1rem; list-style: inside; transition: color 0.2s ease;
+        }
+        .info-content-wrapper summary:hover { color: var(--primary-color); }
+        .info-content-wrapper details[open] > summary { color: var(--primary-color); }
+        .info-content-wrapper summary::marker,
+        .info-content-wrapper summary::-webkit-details-marker { color: var(--primary-color); margin-right: 5px; }
+
+        /* Contenuto <details> annidati */
+        .info-subsection-content {
+            padding: 10px 0 10px 25px; color: #ccc; line-height: 1.6; font-size: 0.95rem;
+        }
+        body.dark-theme .info-subsection-content { color: #bbb; }
+        .info-subsection-content p, .info-subsection-content ul, .info-subsection-content ol { margin-bottom: 12px; }
+        .info-subsection-content ul, .info-subsection-content ol { padding-left: 20px; }
+        .info-subsection-content strong { color: var(--text-light); font-weight: bold; }
+        .info-subsection-content em { font-style: italic; color: #eee; }
+
+        /* Tabella Mani Poker */
+        .poker-hands-table {
+            width: 100%; margin-top: 15px; border-collapse: collapse; font-size: 0.9rem;
+        }
+        .poker-hands-table th, .poker-hands-table td { border: 1px solid rgba(255, 255, 255, 0.15); padding: 8px 12px; text-align: left; }
+        .poker-hands-table th { background-color: rgba(255, 204, 0, 0.1); color: var(--primary-color); font-weight: bold; }
+        .poker-hands-table td { background-color: rgba(0, 0, 0, 0.1); }
+        body.dark-theme .poker-hands-table td { background-color: rgba(255, 255, 255, 0.03); }
+
+        /* --- Sezione FAQ (Stile simile a Info) --- */
+        #faq-section {
+            margin-top: 40px; padding-top: 30px; border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        #faq-section h3 {
+            font-family: 'Playfair Display', serif; color: var(--primary-color); text-align: center;
+            margin-bottom: 25px; font-size: 1.8rem;
+        }
+        #faq-section details {
+            background-color: var(--faq-bg-light); margin-bottom: 10px; border-radius: 5px;
+            border: 1px solid rgba(255, 204, 0, 0.1); overflow: hidden;
+        }
+        body.dark-theme #faq-section details { background-color: var(--faq-bg-dark); border-color: rgba(255, 255, 255, 0.08); }
+        #faq-section summary {
+            padding: 12px 18px; font-weight: bold; cursor: pointer; color: var(--text-light);
+            position: relative; list-style: none; font-size: 1.05rem; transition: background-color 0.2s ease;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        #faq-section summary:hover { background-color: rgba(255, 255, 255, 0.05); }
+        body.dark-theme #faq-section summary:hover { background-color: rgba(255, 255, 255, 0.03); }
+        #faq-section summary::-webkit-details-marker, #faq-section summary::marker { display: none; }
+        #faq-section summary::after {
+            content: '+'; font-size: 1.4rem; color: var(--primary-color); transition: transform 0.3s ease;
+            margin-left: 10px; font-family: 'Roboto', sans-serif; font-weight: normal;
+        }
+        #faq-section details[open] summary::after { content: '−'; transform: rotate(180deg); }
+        .faq-content {
+            padding: 15px 18px 18px 18px; color: #ccc; line-height: 1.6;
+            border-top: 1px solid rgba(255, 204, 0, 0.1); font-size: 0.95rem;
+        }
+        body.dark-theme .faq-content { color: #bbb; border-top-color: rgba(255, 255, 255, 0.08); }
+        .faq-content p { margin-bottom: 10px; }
+        .faq-content strong { color: #eee; }
+
+
+        /* Footer */
+        footer {
+            text-align: center; padding: 25px 20px; margin-top: 40px;
+            color: rgba(255, 255, 255, 0.7); font-size: 0.9rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        body.dark-theme footer { color: rgba(255, 255, 255, 0.5); border-top-color: rgba(255, 255, 255, 0.05); }
+        footer a { color: var(--primary-color); text-decoration: none; transition: color 0.3s; }
+        footer a:hover { color: #fff; }
+
+        /* Audio */
+        #background-music { display: none; }
+
+        /* Media Queries per Responsiveness */
+        @media (max-width: 768px) {
+            .logo { font-size: clamp(2rem, 10vw, 3.5rem); }
+            .top-buttons { top: 10px; right: 10px; gap: 8px; }
+            .settings-button, #premium-button, #vip-indicator { width: 40px; height: 40px; font-size: 1rem; }
+            #vip-indicator { font-size: 0.8rem; }
+            #intro-toggle-button { top: 12px; left: 10px; padding: 6px 10px; font-size: 0.8rem; }
+            .container { padding-top: 70px; padding-bottom: 30px; }
+            .game-card { width: 90%; max-width: 300px; }
+            .additional-info { padding: 30px 15px; }
+            .additional-info > h2 { font-size: 1.8rem; }
+            .additional-info > details.info-section > summary { font-size: 1.2rem; padding: 15px 20px; }
+            .info-content-wrapper { padding: 10px 20px 20px 20px; }
+            #settingsModal .modal-content, #premiumModal .modal-content { width: 90%; margin: 8% auto; padding: 25px; }
+            #premiumModal h2 { font-size: 1.8rem; } #premiumModal h3 { font-size: 1.3rem; }
+            .scroll-text-wrapper { max-width: 95%; }
+            #intro-text { max-width: 90%; }
+        }
+        @media (max-width: 480px) {
+            .logo { font-size: clamp(1.8rem, 12vw, 3rem); }
+            .top-buttons { gap: 5px; }
+            .settings-button, #premium-button, #vip-indicator { width: 35px; height: 35px; font-size: 0.9rem; }
+            #vip-indicator { font-size: 0.7rem; }
+            #intro-toggle-button { font-size: 0.75rem; padding: 5px 8px; gap: 4px; }
+            .container { padding-top: 60px; }
+            footer { font-size: 0.8rem; }
+            .card-button { font-size: 0.9rem; padding: 8px 15px; }
+            #settingsModal .modal-content { padding: 20px; }
+            #settingsModal h3 { font-size: 1.4rem; margin-bottom: 20px; }
+            #auth-buttons button { font-size: 0.85rem; padding: 8px 12px; }
+            #logout-section button { font-size: 0.9rem; }
+            .additional-info > details.info-section > summary { font-size: 1.1rem; }
+        }
+        
+
+    </style>
+
+</head>
+<body class="">
+
+    <button id="intro-toggle-button" aria-expanded="false" aria-controls="intro-text">
+        <i class="fas fa-info-circle"></i> Istruzioni
+    </button>
+
+    <div class="top-buttons">
+        <button id="premium-button" aria-label="Diventa Premium">
+             <i class="fas fa-crown"></i>
+        </button>
+        <div id="vip-indicator" aria-label="Stato VIP Attivo">VIP</div>
+        <button class="settings-button" id="settingsBtn" aria-label="Impostazioni">
+            <i class="fas fa-cog"></i>
+        </button>
+    </div>
+
+    <div id="settingsModal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close-button" id="closeSettingsBtn" title="Chiudi Impostazioni">&times;</span>
+            <h3>Impostazioni</h3>
+
+            <div class="setting-item">
+                <label for="darkModeToggle">Modalità Scura</label>
+                <input type="checkbox" id="darkModeToggle" aria-label="Attiva modalità scura">
+                <div class="toggle-switch" aria-hidden="true">
+                     <label class="toggle-switch-label" for="darkModeToggle"></label>
+                </div>
+            </div>
+
+            <div class="setting-item">
+                <label for="musicToggle">Musica Sottofondo</label>
+                <input type="checkbox" id="musicToggle" checked aria-label="Attiva musica di sottofondo">
+                <div class="toggle-switch" aria-hidden="true">
+                    <label class="toggle-switch-label" for="musicToggle"></label>
+                </div>
+            </div>
+
+            <div id="auth-section">
+                 <div id="user-info"></div>
+                 <h4>Account Utente</h4>
+                 <form id="auth-form" novalidate>
+                    <label for="email">Email:</label>
+                    <input type="email" id="email" name="email" required autocomplete="email">
+                    <label for="password">Password (min. 6 caratteri):</label>
+                    <input type="password" id="password" name="password" required minlength="6" autocomplete="current-password">
+                 </form>
+                 <div id="auth-error"></div>
+                 <div id="auth-buttons">
+                    <button type="button" id="loginBtn">Accedi</button>
+                    <button type="button" id="registerBtn">Registrati</button>
+                 </div>
+                 <div id="logout-section">
+                    <button type="button" id="logoutBtn">Logout</button>
+                 </div>
+            </div>
+       </div>
+    </div>
+
+    <div id="premiumModal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close-button" id="closePremiumBtn" title="Chiudi Finestra Premium">&times;</span>
+            <h2><i class="fas fa-crown" style="margin-right: 10px; color: var(--primary-color);"></i>Accesso VIP Esclusivo</h2>
+            <p>Sblocca l'esperienza completa di <strong>IPPO'S CASINÒ</strong> con il nostro accesso VIP!</p>
+
+            <div class="already-vip-message">
+                Sei già un membro VIP! Goditi tutti i vantaggi esclusivi.
+            </div>
+
+            <h3>Vantaggi VIP:</h3>
+            <ul>
+                <li><i class="fas fa-dice"></i>Accesso illimitato a tutti i giochi, inclusi Blackjack Pro e futuri giochi Premium.</li>
+                <li><i class="fas fa-star"></i>Nessuna pubblicità o interruzione (simulato).</li>
+                <li><i class="fas fa-gift"></i>Bonus esclusivi e promozioni speciali (simulato, in futuro!).</li>
+                <li><i class="fas fa-headset"></i>Supporto prioritario (simulato).</li>
+            </ul>
+
+            <p>Unisciti ora per un'esperienza di gioco senza limiti e ricca di privilegi!</p>
+
+            <div class="premium-buttons-container">
+                 <button class="premium-button" id="activatePremiumBtn">
+                     <i class="fas fa-rocket"></i> Diventa VIP Ora!
+                 </button>
+                 <div id="paypal-button-container">
+                     </div>
+            </div>
+            <div id="premium-activation-error" style="min-height: 1.2em;"></div>
+            <p class="disclaimer">
+                 <em>L'accesso VIP ha un costo una tantum di 1.99€. Devi essere <strong>loggato</strong> per attivare lo stato VIP.</em>
+            </p>
+        </div>
+    </div>
+
+    <div class="container">
+        <h1 class="logo">IPPO’S CASINÒ</h1>
+
+        <div id="intro-text" role="region" aria-labelledby="intro-toggle-button">
+            Benvenuto a IPPO'S CASINÒ! La tua destinazione definitiva per l'emozione del gioco online gratuito.
+            Scegli il tuo gioco preferito qui sotto e inizia subito a divertirti. Ricorda: gioca responsabilmente!
+            Se hai bisogno di aiuto o vuoi gestire il tuo account, usa le Impostazioni (<i class="fas fa-cog"></i>). Buona fortuna!
+        </div>
+
+        <div class="scroll-text-wrapper" aria-hidden="true">
+            <div class="scroll-text">
+                Benvenuto nel regno del divertimento! ♠️ Metti alla prova la tua fortuna al Blackjack, sfida il banco a Poker o dimostra il tuo ingegno sulla scacchiera. ♟️ Ogni mossa, una scarica di adrenalina! ♦️ Unisciti ai nostri tavoli e vivi l’emozione del gioco! ♣️ Diventa VIP per accedere a tutti i giochi! +++
+            </div>
+        </div>
+
+        <div class="game-selection">
+            <a href="poker.html" class="game-card"> <div class="game-card-image"><i class="fas fa-dice"></i></div>
+                <div class="game-card-content">
+                     <div>
+                        <h3 class="game-card-title">Poker</h3>
+                         <p class="game-description">Metti alla prova il tuo sangue freddo, bluffa con stile e conquista il piatto. Il grande classico del tavolo verde!</p>
+                     </div>
+                    <span class="card-button standard-play-button">Gioca Ora <i class="fas fa-arrow-right"></i></span>
+                </div>
+            </a>
+
+            <a href="blackjack-base.html" class="game-card">
+                <div class="game-card-image"><i class="fas fa-hand-paper"></i></div>
+                <div class="game-card-content">
+                     <div>
+                        <h3 class="game-card-title">Blackjack</h3>
+                        <p class="game-description">Obiettivo 21! Sfida il banco in questo classico intramontabile. Strategia e un pizzico di fortuna.</p>
+                    </div>
+                    <span class="card-button standard-play-button">Gioca Ora <i class="fas fa-arrow-right"></i></span>
+                </div>
+            </a>
+
+            <a href="blackjack-premium.html" class="game-card locked" id="blackjack-pro-card">
+                 <div class="premium-overlay">
+                     <i class="fas fa-lock"></i>
+                     <span>VIP</span>
+                 </div>
+                <div class="game-card-image"><i class="fas fa-crown"></i></div>
+                <div class="game-card-content">
+                     <div>
+                        <h3 class="game-card-title">Blackjack Pro</h3>
+                        <p class="game-description">La versione esclusiva per i nostri VIP. Sfida il banco con regole avanzate e limiti più alti.</p>
+                     </div>
+                    <span class="card-button standard-play-button">Gioca Ora <i class="fas fa-arrow-right"></i></span>
+                    <span class="card-button premium premium-info-button">Esclusiva VIP <i class="fas fa-lock"></i></span>
+                </div>
+            </a>
+
+            <a href="scacchi.html" class="game-card">
+                <div class="game-card-image"><i class="fas fa-chess-knight"></i></div>
+                <div class="game-card-content">
+                    <div>
+                        <h3 class="game-card-title">Scacchi</h3>
+                        <p class="game-description">Metti alla prova la tua mente strategica contro il computer o un amico. Scacco matto!</p>
+                    </div>
+                     <span class="card-button standard-play-button">Gioca Ora <i class="fas fa-arrow-right"></i></span>
+                </div>
+            </a>
+
+            <div class="game-card coming-soon-card">
+                 <div class="premium-overlay">
+                     <i class="fas fa-hourglass-half"></i>
+                     <span>In Arrivo</span>
+                 </div>
+                <div class="game-card-image"><i class="fas fa-question"></i></div>
+                <div class="game-card-content">
+                    <div>
+                        <h3 class="game-card-title">Nuovo Gioco</h3>
+                        <p class="game-description">Qualcosa di eccitante sta arrivando. Resta sintonizzato per scoprire le novità!</p>
+                    </div>
+                    <span class="card-button coming-soon">Prossimamente...</span>
+                </div>
+            </div>
+        </div>
+
+        <section class="additional-info">
+            <h2>ISTRUZIONI GIOCO & FAQ</h2>
+            <details id="poker-info" class="info-section">
+                <summary>Poker (Texas Hold'em) - Clicca per Dettagli</summary>
+                <div class="info-content-wrapper">
+                    <details>
+                        <summary>Introduzione al Poker</summary>
+                        <div class="info-subsection-content">
+                            <p>Il Poker è uno dei giochi di carte più iconici e diffusi al mondo, noto per la sua combinazione di abilità, strategia e un pizzico di fortuna. Le sue origini sono dibattute, ma forme simili si giocavano già secoli fa in Europa e Persia. La versione moderna, in particolare il <strong>Texas Hold'em</strong>, ha guadagnato immensa popolarità grazie ai tornei trasmessi in TV e alla sua presenza online.</p>
+                            <p>È famoso perché non si basa solo sulla fortuna delle carte ricevute, ma richiede capacità di lettura degli avversari, gestione del rischio (<em>bankroll management</em>), calcolo delle probabilità e controllo emotivo. Vincere a Poker significa spesso prendere le decisioni giuste nel lungo periodo, anche se singole mani possono essere imprevedibili.</p>
+                        </div>
+                    </details>
+                    <details>
+                        <summary>Regole del Poker (Texas Hold'em Semplificato)</summary>
+                        <div class="info-subsection-content">
+                            <p>Nel Texas Hold'em, l'obiettivo è formare la migliore mano possibile di 5 carte, utilizzando una qualsiasi combinazione delle proprie <strong>due carte private</strong> (<em>hole cards</em>) e delle <strong>cinque carte comuni</strong> scoperte sul tavolo.</p>
+                            <ul>
+                                <li><strong>Blinds:</strong> Prima della distribuzione, due giocatori pagano le puntate obbligatorie (Piccolo Buio e Grande Buio) per creare un piatto iniziale.</li>
+                                <li><strong>Pre-Flop:</strong> Ogni giocatore riceve due carte coperte. Segue un giro di puntate iniziando dal giocatore alla sinistra del Grande Buio. Si può scegliere di vedere (<em>Call</em>), rilanciare (<em>Raise</em>) o lasciare la mano (<em>Fold</em>).</li>
+                                <li><strong>Flop:</strong> Se almeno due giocatori restano in gioco, vengono scoperte tre carte comuni sul tavolo. Segue un altro giro di puntate, iniziando dal giocatore alla sinistra del Bottone (Dealer). Ora si può anche fare <em>Check</em> (passare l'azione) se nessuno ha puntato prima.</li>
+                                <li><strong>Turn:</strong> Viene scoperta una quarta carta comune. Segue un altro giro di puntate.</li>
+                                <li><strong>River:</strong> Viene scoperta la quinta e ultima carta comune. Segue l'ultimo giro di puntate.</li>
+                                <li><strong>Showdown:</strong> Se dopo l'ultimo giro di puntate rimangono almeno due giocatori, questi mostrano le loro carte. Vince chi ha la combinazione di 5 carte di valore più alto. Se un giocatore rimane solo perché tutti gli altri hanno foldato, vince il piatto senza dover mostrare le carte.</li>
+                            </ul>
+                        </div>
+                    </details>
+                    <details>
+                         <summary>Valori delle Mani (Dal più alto al più basso)</summary>
+                         <div class="info-subsection-content">
+                            <p>La forza delle mani nel Poker determina il vincitore allo showdown. Ecco la classifica standard:</p>
+                            <table class="poker-hands-table">
+                                 <thead> <tr><th>Mano</th><th>Descrizione Esempio</th></tr> </thead>
+                                 <tbody>
+                                     <tr><td><strong>Scala Reale (Royal Flush)</strong></td><td>A<span style="color:red">♥</span> K<span style="color:red">♥</span> Q<span style="color:red">♥</span> J<span style="color:red">♥</span> 10<span style="color:red">♥</span> (Asso-Dieci dello stesso seme)</td></tr>
+                                     <tr><td><strong>Scala Colore (Straight Flush)</strong></td><td>9<span style="color:black">♠</span> 8<span style="color:black">♠</span> 7<span style="color:black">♠</span> 6<span style="color:black">♠</span> 5<span style="color:black">♠</span> (Cinque carte in sequenza dello stesso seme)</td></tr>
+                                     <tr><td><strong>Poker (Four of a Kind)</strong></td><td>J<span style="color:black">♣</span> J<span style="color:red">♦</span> J<span style="color:red">♥</span> J<span style="color:black">♠</span> 3<span style="color:red">♥</span> (Quattro carte dello stesso valore)</td></tr>
+                                     <tr><td><strong>Full (Full House)</strong></td><td>K<span style="color:black">♠</span> K<span style="color:red">♦</span> K<span style="color:red">♥</span> 7<span style="color:black">♣</span> 7<span style="color:red">♦</span> (Tris + Coppia)</td></tr>
+                                     <tr><td><strong>Colore (Flush)</strong></td><td>A<span style="color:red">♦</span> Q<span style="color:red">♦</span> 8<span style="color:red">♦</span> 4<span style="color:red">♦</span> 2<span style="color:red">♦</span> (Cinque carte dello stesso seme, non in sequenza)</td></tr>
+                                     <tr><td><strong>Scala (Straight)</strong></td><td>10<span style="color:black">♣</span> 9<span style="color:red">♦</span> 8<span style="color:red">♥</span> 7<span style="color:black">♠</span> 6<span style="color:red">♥</span> (Cinque carte in sequenza di semi diversi)</td></tr>
+                                     <tr><td><strong>Tris (Three of a Kind)</strong></td><td>5<span style="color:black">♣</span> 5<span style="color:red">♦</span> 5<span style="color:red">♥</span> K<span style="color:black">♠</span> 2<span style="color:red">♦</span> (Tre carte dello stesso valore)</td></tr>
+                                     <tr><td><strong>Doppia Coppia (Two Pair)</strong></td><td>A<span style="color:black">♠</span> A<span style="color:red">♦</span> 8<span style="color:red">♥</span> 8<span style="color:black">♣</span> Q<span style="color:red">♦</span> (Due coppie diverse)</td></tr>
+                                     <tr><td><strong>Coppia (One Pair)</strong></td><td>K<span style="color:black">♠</span> K<span style="color:red">♦</span> 9<span style="color:red">♥</span> 4<span style="color:black">♣</span> 2<span style="color:red">♦</span> (Due carte dello stesso valore)</td></tr>
+                                     <tr><td><strong>Carta Alta (High Card)</strong></td><td>A<span style="color:black">♣</span> Q<span style="color:red">♦</span> 9<span style="color:red">♥</span> 5<span style="color:black">♠</span> 3<span style="color:red">♦</span> (Nessuna combinazione, vince la carta più alta)</td></tr>
+                                 </tbody>
+                            </table>
+                        </div>
+                    </details>
+                    <details>
+                         <summary>Strategie Base</summary>
+                         <div class="info-subsection-content">
+                            <ul>
+                                 <li><strong>Selezione delle Mani Iniziali:</strong> Non giocare tutte le mani. Impara quali mani iniziali sono forti e quali deboli.</li>
+                                 <li><strong>Posizione:</strong> La tua posizione rispetto al Bottone è cruciale. Parlare per ultimi è vantaggioso.</li>
+                                 <li><strong>Quando Puntare (Bet/Raise):</strong> Punta o rilancia per valore (<em>value bet</em>) o per protezione (<em>protection bet</em>).</li>
+                                 <li><strong>Quando Foldare:</strong> Lascia la mano se è debole o le puntate sono troppo alte.</li>
+                                 <li><strong>Il Bluff:</strong> Puntare con una mano debole per far foldare mani migliori. Usare con parsimonia. Un <em>semi-bluff</em> è puntare con un progetto.</li>
+                            </ul>
+                        </div>
+                    </details>
+                    <details>
+                        <summary>Glossario di Termini Poker</summary>
+                        <div class="info-subsection-content">
+                            <ul>
+                                <li><strong>All-in:</strong> Puntare tutte le proprie chips.</li>
+                                <li><strong>Blind:</strong> Puntata obbligatoria iniziale.</li>
+                                <li><strong>Board:</strong> Le carte comuni sul tavolo.</li>
+                                <li><strong>Burn Card:</strong> Carta scartata dal mazziere.</li>
+                                <li><strong>Button (Bottone):</strong> Disco che indica il mazziere teorico.</li>
+                                <li><strong>Call:</strong> Eguagliare l'ultima puntata.</li>
+                                <li><strong>Check:</strong> Passare l'azione senza puntare.</li>
+                                <li><strong>Community Cards:</strong> Le carte comuni (Flop, Turn, River).</li>
+                                <li><strong>Flop:</strong> Le prime tre carte comuni.</li>
+                                <li><strong>Fold:</strong> Abbandonare la mano.</li>
+                                <li><strong>Hole Cards:</strong> Le carte private coperte.</li>
+                                <li><strong>Pot:</strong> L'ammontare totale delle chips puntate.</li>
+                                <li><strong>Raise:</strong> Aumentare l'importo dell'ultima puntata.</li>
+                                <li><strong>River:</strong> La quinta e ultima carta comune.</li>
+                                <li><strong>Showdown:</strong> Fase finale in cui si mostrano le carte.</li>
+                                <li><strong>Turn:</strong> La quarta carta comune.</li>
+                            </ul>
+                        </div>
+                    </details>
+                </div>
+            </details>
+
+            <details id="blackjack-info" class="info-section">
+                 <summary>Blackjack - Clicca per Dettagli</summary>
+                 <div class="info-content-wrapper">
+                     <details>
+                         <summary>Introduzione al Blackjack</summary>
+                         <div class="info-subsection-content">
+                             <p>Il Blackjack, noto anche come "Ventuno", è uno dei giochi da casinò più popolari. Le sue origini risalgono probabilmente al gioco francese "Vingt-et-Un" del XVII secolo. Combina casualità e decisioni strategiche.</p>
+                            <p>Il nome "Blackjack" deriva da un bonus storico per una mano con Asso di Picche e un Jack nero (anche se oggi il bonus si applica a qualsiasi Asso + carta da 10 punti).</p>
+                        </div>
+                     </details>
+                    <details>
+                         <summary>Regole Dettagliate</summary>
+                         <div class="info-subsection-content">
+                             <p>L'obiettivo è battere il banco (<em>Dealer</em>) ottenendo un punteggio più vicino possibile a 21 senza superarlo (<em>sballare</em> o <em>bust</em>), o avendo un punteggio inferiore a 22 quando il banco sballa.</p>
+                            <strong>Punteggi delle Carte:</strong>
+                            <ul>
+                                <li>Carte dal 2 al 10: Valgono il loro valore nominale.</li>
+                                <li>Figure (Jack, Donna, Re): Valgono 10 punti ciascuna.</li>
+                                <li>Asso (A): Vale 1 o 11 punti, a scelta del giocatore (o automaticamente per non sballare). Una mano contenente un Asso contato come 11 è detta "Soft Hand", altrimenti è una "Hard Hand".</li>
+                            </ul>
+                            <strong>Svolgimento del Gioco (Versione Base):</strong>
+                            <ol>
+                                <li>I giocatori effettuano le loro puntate.</li>
+                                <li>Il mazziere distribuisce due carte scoperte a ciascun giocatore e due a sé stesso (una scoperta e una coperta).</li>
+                                <li><strong>Blackjack Naturale:</strong> Se un giocatore riceve Asso + carta da 10 (totale 21) con le prime due carte, ha un "Blackjack" e di solito vince immediatamente (pagato 3:2), a meno che anche il banco non abbia Blackjack (in tal caso è un pareggio, <em>Push</em>).</li>
+                                <li><strong>Turno del Giocatore:</strong> Se non c'è Blackjack, ogni giocatore, a turno, decide la propria azione:
+                                    <ul>
+                                        <li><strong>Hit (Carta):</strong> Chiedere un'altra carta. Si può chiedere carta finché non si decide di stare o si sballa.</li>
+                                        <li><strong>Stand (Stare):</strong> Non chiedere altre carte e passare il turno.</li>
+                                        <li><strong>Double Down (Raddoppia):</strong> Raddoppiare la puntata iniziale ricevendo una sola carta aggiuntiva, dopodiché il turno finisce. Solitamente permesso solo con le prime due carte.</li>
+                                        <li><strong>Split (Dividi):</strong> Se le prime due carte hanno lo stesso valore (es. due 8, o un Re e una Donna), si possono dividere in due mani separate, piazzando una puntata uguale all'originale sulla nuova mano. Si riceve poi una carta per ogni mano e si continua a giocare separatamente (le regole per Hit/Stand/Double dopo lo split possono variare). Non si può fare Blackjack dopo uno split di Assi.</li>
+                                        <li><strong>Surrender (Resa):</strong> (Non sempre disponibile) Rinunciare alla mano perdendo metà della puntata iniziale.</li>
+                                    </ul>
+                                </li>
+                                <li><strong>Turno del Banco:</strong> Una volta che tutti i giocatori hanno completato il loro turno, il banco scopre la sua carta coperta. Il banco deve seguire regole fisse: solitamente deve chiedere carta (Hit) finché il suo punteggio non raggiunge 17 o più, dopodiché deve stare (Stand). Su un "Soft 17" (Asso+6), alcune regole impongono al banco di chiedere carta, altre di stare.</li>
+                                <li><strong>Esito:</strong>
+                                    <ul>
+                                        <li>Se il banco sballa (supera 21), tutti i giocatori rimasti in gioco vincono.</li>
+                                        <li>Se il banco non sballa, si confronta il suo punteggio con quello di ciascun giocatore: chi ha il punteggio più alto (senza superare 21) vince.</li>
+                                        <li>In caso di parità di punteggio tra giocatore e banco, è un pareggio (<em>Push</em>) e la puntata viene restituita al giocatore.</li>
+                                    </ul>
+                                </li>
+                            </ol>
+                        </div>
+                    </details>
+                    <details>
+                         <summary>Strategie Base</summary>
+                         <div class="info-subsection-content">
+                            <p>La "Strategia Base" è un insieme di decisioni matematicamente ottimali per ogni possibile combinazione di mano del giocatore e carta scoperta del banco, progettata per minimizzare il vantaggio del casinò nel lungo periodo. Non garantisce vincite, ma ottimizza le probabilità.</p>
+                            <p>Esistono tabelle dettagliate della Strategia Base facilmente reperibili online, che indicano se fare Hit, Stand, Double o Split in ogni situazione. Ecco alcuni principi generali:</p>
+                            <ul>
+                                <li><strong>Hard Hands (senza Assi o Asso=1):</strong> Stai sempre con 17 o più. Chiedi sempre carta con 11 o meno. Con 12-16, la decisione (Hit o Stand) dipende fortemente dalla carta scoperta del banco (generalmente stai se il banco ha 2-6, chiedi se ha 7-Asso).</li>
+                                <li><strong>Soft Hands (con Asso=11):</strong> Tendono ad essere giocate in modo più aggressivo (Hit o Double Down) perché non si può sballare con una sola carta aggiuntiva. Stai con Soft 19 (A+8) o più. Raddoppia spesso con Soft 13-18 contro carte basse del banco.</li>
+                                <li><strong>Coppie (Split):</strong> Dividi sempre Assi e 8. Non dividere mai 5 e 10 (inclusi J,Q,K). La divisione di altre coppie (2,3,4,6,7,9) dipende dalla carta scoperta del banco.</li>
+                                <li><strong>Double Down:</strong> È vantaggioso raddoppiare con 11 (quasi sempre), 10 (a meno che il banco non mostri 10 o Asso), e 9 (contro carte basse del banco 3-6). Anche alcune Soft Hands sono buone candidate al raddoppio.</li>
+                            </ul>
+                            <p><em>Nota: Consultare una tabella completa della Strategia Base specifica per le regole applicate (es. numero di mazzi, regole su Soft 17 del banco, Double dopo Split) è fondamentale per giocare in modo ottimale.</em></p>
+                        </div>
+                    </details>
+                    <details>
+                          <summary>Glossario di Termini Blackjack</summary>
+                          <div class="info-subsection-content">
+                            <ul>
+                                <li><strong>Blackjack:</strong> Mano iniziale formata da un Asso e una carta che vale 10 punti.</li>
+                                <li><strong>Bust (Sballare):</strong> Superare il punteggio di 21.</li>
+                                <li><strong>Dealer (Banco/Mazziere):</strong> La persona che rappresenta il casinò e gestisce il gioco.</li>
+                                <li><strong>Double Down (Raddoppia):</strong> Raddoppiare la puntata originale e ricevere una sola carta aggiuntiva.</li>
+                                <li><strong>Hard Hand:</strong> Mano senza Assi, o con un Asso che può essere contato solo come 1 per non sballare.</li>
+                                <li><strong>Hit (Carta):</strong> Chiedere un'altra carta al mazziere.</li>
+                                <li><strong>Insurance (Assicurazione):</strong> Puntata secondaria (solitamente sconsigliata) che si può fare quando la carta scoperta del banco è un Asso, scommettendo che il banco abbia Blackjack.</li>
+                                <li><strong>Push (Pareggio):</strong> Si verifica quando il giocatore e il banco hanno lo stesso punteggio (senza sballare). La puntata viene restituita.</li>
+                                <li><strong>Soft Hand:</strong> Mano che contiene un Asso contato come 11.</li>
+                                <li><strong>Split (Dividi):</strong> Opzione disponibile quando le prime due carte del giocatore hanno lo stesso valore, permettendo di separarle in due mani distinte.</li>
+                                <li><strong>Stand (Stare/Restare):</strong> Decidere di non prendere altre carte.</li>
+                                <li><strong>Surrender (Resa):</strong> Opzione (non sempre disponibile) per abbandonare la mano prima di giocare, perdendo metà della puntata.</li>
+                            </ul>
+                        </div>
+                    </details>
+                 </div>
+            </details>
+
+            <details id="scacchi-info" class="info-section">
+                <summary>Scacchi - Clicca per Dettagli</summary>
+                <div class="info-content-wrapper">
+                    <details>
+                        <summary>Introduzione agli Scacchi</summary>
+                        <div class="info-subsection-content">
+                            <p>Gli scacchi sono un gioco di strategia da tavolo astratto per due giocatori, giocato su una scacchiera quadrata di 64 case (8x8) alternate chiare e scure. È uno dei giochi più antichi e popolari al mondo, considerato uno sport mentale.</p>
+                            <p>Si ritiene che sia originario dell'India intorno al VI secolo d.C. (come "Chaturanga"), per poi diffondersi in Persia, nel mondo arabo e infine in Europa, dove ha assunto la forma moderna intorno al XV secolo. A differenza di molti giochi, gli scacchi sono un gioco di informazione perfetta e senza elementi di casualità; la vittoria dipende interamente dall'abilità tattica e strategica dei giocatori.</p>
+                        </div>
+                    </details>
+                    <details>
+                        <summary>Regole degli Scacchi (Base)</summary>
+                        <div class="info-subsection-content">
+                             <p>L'obiettivo del gioco è dare <strong>scacco matto</strong> al Re avversario. Questo accade quando il Re è sotto attacco diretto (in "scacco") e non esiste alcuna mossa legale per sottrarlo all'attacco.</p>
+                             <strong>I Pezzi e il Loro Movimento:</strong>
+                            <ul>
+                                <li><strong>Re (K):</strong> Si muove di una casa in qualsiasi direzione (orizzontale, verticale, diagonale).</li>
+                                <li><strong>Donna (Q):</strong> Il pezzo più potente. Si muove di un numero qualsiasi di case libere in qualsiasi direzione (orizzontale, verticale, diagonale).</li>
+                                <li><strong>Torre (R):</strong> Si muove di un numero qualsiasi di case libere in orizzontale o verticale.</li>
+                                <li><strong>Alfiere (B):</strong> Si muove di un numero qualsiasi di case libere in diagonale. Ogni Alfiere rimane sempre su case dello stesso colore (chiaro o scuro).</li>
+                                <li><strong>Cavallo (N):</strong> Si muove a "L": due case in una direzione (orizzontale o verticale) e poi una casa perpendicolarmente. È l'unico pezzo che può "saltare" sopra altri pezzi.</li>
+                                <li><strong>Pedone (P):</strong> Si muove in avanti di una casa, ma cattura diagonalmente in avanti di una casa. Alla sua prima mossa, un pedone può scegliere di avanzare di una o due case.</li>
+                            </ul>
+                             <strong>Regole Speciali:</strong>
+                             <ul>
+                                <li><strong>Cattura:</strong> Un pezzo cattura un pezzo avversario muovendosi sulla casa occupata da quest'ultimo (eccetto il pedone, che cattura diagonalmente). Il pezzo catturato viene rimosso dalla scacchiera.</li>
+                                <li><strong>Scacco:</strong> Quando un Re è attaccato da un pezzo avversario. Il giocatore sotto scacco deve obbligatoriamente rimuovere la minaccia (muovendo il Re, catturando il pezzo attaccante o interponendo un altro pezzo).</li>
+                                <li><strong>Scacco Matto:</strong> Se un Re è sotto scacco e non c'è alcuna mossa legale per eliminare la minaccia, è scacco matto e la partita finisce.</li>
+                                <li><strong>Arrocco:</strong> Mossa speciale che coinvolge il Re e una delle Torri. Permette di muovere il Re di due case verso la Torre e posizionare la Torre nella casa scavalcata dal Re, tutto in una sola mossa. Ci sono condizioni specifiche per poter arroccare (nessuno dei due pezzi deve essersi mosso prima, non ci devono essere pezzi tra loro, il Re non deve essere sotto scacco né attraversare o finire su una casa sotto attacco).</li>
+                                <li><strong>Promozione del Pedone:</strong> Quando un pedone raggiunge l'ultima traversa (l'ottava per il Bianco, la prima per il Nero), deve essere immediatamente sostituito (promosso) con un altro pezzo dello stesso colore (Donna, Torre, Alfiere o Cavallo), a scelta del giocatore.</li>
+                                <li><strong>Presa "En Passant" (Al Varco):</strong> Una cattura speciale del pedone. Se un pedone avanza di due case dalla sua posizione iniziale e finisce su una casa adiacente a un pedone avversario sulla stessa traversa, il pedone avversario può catturarlo come se si fosse mosso di una sola casa, ma solo nella mossa immediatamente successiva.</li>
+                                <li><strong>Patta (Pareggio):</strong> La partita finisce in parità in diverse situazioni: Stallo (il giocatore di turno non è sotto scacco ma non ha mosse legali), accordo tra i giocatori, Re contro Re, materiale insufficiente per dare matto (es. Re+Alfiere vs Re), regola delle 50 mosse (50 mosse consecutive senza catture o mosse di pedone), tripla ripetizione della stessa posizione con lo stesso giocatore di turno.</li>
+                            </ul>
+                        </div>
+                    </details>
+                    <details>
+                        <summary>Strategie Base</summary>
+                        <div class="info-subsection-content">
+                            <p>Gli scacchi richiedono pianificazione strategica e calcolo tattico. Ecco alcuni principi fondamentali:</p>
+                            <ul>
+                                <li><strong>Controllo del Centro:</strong> Le case centrali (d4, e4, d5, e5) sono importanti perché i pezzi posizionati lì controllano più case e hanno maggiore mobilità. Cercare di controllare il centro con i pedoni e i pezzi leggeri (Cavalli e Alfieri) è un obiettivo comune in apertura.</li>
+                                <li><strong>Sviluppo dei Pezzi:</strong> In apertura, è cruciale muovere i pezzi minori (Cavalli e Alfieri) dalle loro case iniziali verso posizioni attive, preferibilmente verso il centro. Evitare di muovere lo stesso pezzo più volte inutilmente.</li>
+                                <li><strong>Sicurezza del Re:</strong> Mettere il Re al sicuro è prioritario. L'arrocco è il modo più comune per farlo, spostando il Re lontano dal centro e attivando una Torre.</li>
+                                <li><strong>Valore Relativo dei Pezzi:</strong> Comprendere il valore approssimativo dei pezzi aiuta nelle decisioni di scambio: Donna ≈ 9 punti, Torre ≈ 5, Alfiere ≈ 3, Cavallo ≈ 3, Pedone = 1. Il Re ha valore infinito perché la sua perdita significa la fine della partita.</li>
+                                <li><strong>Struttura Pedonale:</strong> La disposizione dei pedoni influenza la strategia. Evitare debolezze come pedoni isolati (senza pedoni amici su colonne adiacenti), pedoni doppiati (sulla stessa colonna) o pedoni arretrati. Cercare di creare catene di pedoni e pedoni passati (che non possono essere bloccati o catturati da pedoni avversari nel loro cammino verso la promozione).</li>
+                                <li><strong>Tattica:</strong> Riconoscere e utilizzare combinazioni tattiche come forchette (un pezzo attacca due pezzi avversari contemporaneamente), inchiodature (un pezzo non può muoversi perché scoprirebbe un attacco a un pezzo più importante dietro di esso), attacchi di scoperta (muovere un pezzo rivela un attacco da un altro pezzo dietro di esso), sacrifici (cedere materiale per ottenere un vantaggio posizionale o un attacco decisivo).</li>
+                            </ul>
+                            <p>Imparare aperture comuni, comprendere i principi dei finali (quando ci sono pochi pezzi sulla scacchiera) e praticare risolvendo problemi tattici sono modi efficaci per migliorare.</p>
+                        </div>
+                    </details>
+                    <details>
+                          <summary>Glossario di Termini Scacchi</summary>
+                          <div class="info-subsection-content">
+                             <ul>
+                                <li><strong>Apertura:</strong> Le prime mosse di una partita (solitamente le prime 10-15 mosse).</li>
+                                <li><strong>Arrocco (Castling):</strong> Mossa speciale che coinvolge il Re e una Torre.</li>
+                                <li><strong>Centro:</strong> Le quattro case centrali della scacchiera (d4, e4, d5, e5).</li>
+                                <li><strong>En Passant (Al Varco):</strong> Cattura speciale di un pedone da parte di un altro pedone.</li>
+                                <li><strong>Finale (Endgame):</strong> La fase conclusiva della partita, quando rimangono pochi pezzi sulla scacchiera.</li>
+                                <li><strong>Gambetto (Gambit):</strong> Un'apertura in cui un giocatore offre un sacrificio (di solito un pedone) per ottenere un vantaggio nello sviluppo o nel controllo del centro.</li>
+                                <li><strong>Inchiodatura (Pin):</strong> Quando un pezzo attaccante impedisce a un pezzo avversario di muoversi, perché dietro di esso si trova un pezzo di valore superiore (spesso il Re).</li>
+                                <li><strong>Mediogioco (Middlegame):</strong> La fase della partita tra l'apertura e il finale, caratterizzata da manovre strategiche e tattiche complesse.</li>
+                                <li><strong>Patta (Draw):</strong> Un risultato di parità.</li>
+                                <li><strong>Pezzo Minore (Minor Piece):</strong> Alfiere o Cavallo.</li>
+                                <li><strong>Pezzo Pesante (Major Piece):</strong> Donna o Torre.</li>
+                                <li><strong>Promozione (Promotion):</strong> Quando un pedone raggiunge l'ultima traversa e viene trasformato in un altro pezzo.</li>
+                                <li><strong>Scacco (Check):</strong> Un attacco diretto al Re avversario.</li>
+                                <li><strong>Scacco Matto (Checkmate):</strong> Uno scacco a cui il Re avversario non può sfuggire, determinando la fine della partita.</li>
+                                <li><strong>Stallo (Stalemate):</strong> Una situazione in cui il giocatore di turno non è sotto scacco, ma non ha alcuna mossa legale da fare. Risulta in una patta.</li>
+                                <li><strong>Sviluppo (Development):</strong> Il processo di muovere i pezzi dalle loro case iniziali a posizioni più attive durante l'apertura.</li>
+                                <li><strong>Tattica (Tactics):</strong> Una sequenza di mosse, spesso forzate, che porta a un guadagno materiale immediato, allo scacco matto o a un vantaggio significativo.</li>
+                             </ul>
+                         </div>
+                    </details>
+                </div>
+            </details>
+
+            <section id="faq-section">
+                <h3>Domande Frequenti (FAQ)</h3>
+                <details>
+                    <summary>FAQ - Poker</summary>
+                     <div class="faq-content">
+                        <p><strong>Cos'è il buy-in?</strong><br> È la somma di chips (virtuali in questo caso) richiesta per sedersi a un tavolo da gioco o partecipare a un torneo.</p>
+                        <p><strong>Come si vince una mano di Poker Texas Hold'em?</strong><br> 1) Mostrando la mano di 5 carte di valore più alto allo showdown (quando si arriva alla fine delle puntate sul river). 2) Facendo foldare (abbandonare la mano) tutti gli altri avversari prima dello showdown.</p>
+                        <p><strong>Cosa significa "essere in posizione"?</strong><br> Nel poker, "posizione" si riferisce all'ordine in cui i giocatori agiscono durante un giro di puntate. Essere "in posizione" (agire per ultimi) è generalmente vantaggioso perché si hanno più informazioni sulle azioni degli avversari prima di dover prendere la propria decisione.</p>
+                    </div>
+                </details>
+                <details>
+                    <summary>FAQ - Blackjack</summary>
+                    <div class="faq-content">
+                         <p><strong>Cosa succede se sia io che il banco facciamo Blackjack (21 con le prime due carte)?</strong><br> È un pareggio (Push). La tua puntata ti viene restituita, non vinci né perdi.</p>
+                         <p><strong>Posso dividere (Split) un Re e una Donna?</strong><br> Sì, perché entrambi valgono 10 punti. Tuttavia, dividere una mano che vale 20 è quasi sempre una cattiva strategia, poiché 20 è un punteggio molto forte.</p>
+                         <p><strong>Perché il banco deve chiedere carta fino a 16 e stare con 17 o più?</strong><br> Sono regole fisse imposte dal casinò. Questo rende il gioco del banco prevedibile e permette ai giocatori di sviluppare una strategia matematica (la Strategia Base) basata sulle probabilità.</p>
+                    </div>
+                </details>
+                <details>
+                    <summary>FAQ - Scacchi</summary>
+                     <div class="faq-content">
+                         <p><strong>Qual è il pezzo più forte negli scacchi?</strong><br> La Donna (Regina), poiché combina il movimento della Torre e dell'Alfiere.</p>
+                         <p><strong>L'arrocco è obbligatorio?</strong><br> No, l'arrocco è una mossa opzionale. Può essere eseguito solo una volta per partita, per ciascun giocatore, e solo se sono soddisfatte tutte le condizioni necessarie.</p>
+                         <p><strong>Si può muovere il Re in una casa attaccata da un pezzo avversario?</strong><br> No, muovere il proprio Re in una casa dove sarebbe sotto scacco è una mossa illegale.</p>
+                         <p><strong>Come può finire una partita a scacchi?</strong><br> Principalmente con: <strong>Scacco Matto</strong> (un giocatore vince), <strong>Resa</strong> (un giocatore abbandona), o <strong>Patta</strong> (pareggio, che può avvenire per Stallo, accordo tra i giocatori, materiale insufficiente per dare matto, regola delle 50 mosse, o tripla ripetizione di posizione).</p>
+                    </div>
+                </details>
+                <details>
+                       <summary>FAQ - Generali del Sito</summary>
+                      <div class="faq-content">
+                        <p><strong>Devo scaricare qualcosa per giocare?</strong><br> No, tutti i giochi presenti su IPPO'S CASINÒ sono progettati per essere giocati direttamente nel tuo browser web, senza bisogno di download o installazioni.</p>
+                        <p><strong>Posso giocare con soldi veri?</strong><br> Assolutamente no. IPPO'S CASINÒ è un sito di simulazione e intrattenimento. Si utilizzano solo chips virtuali senza alcun valore reale. Non è possibile depositare, scommettere o vincere denaro reale.</p>
+                        <p><strong>Come funziona lo stato VIP con PayPal?</strong><br>Per diventare VIP, devi prima essere loggato. Poi, clicca sul bottone "Diventa VIP Ora!". Questo mostrerà i bottoni PayPal. Una volta completato il pagamento di 1.99€ tramite PayPal, il tuo stato VIP verrà attivato automaticamente, salvato nel tuo browser (localStorage) e associato al tuo account. I contenuti VIP, come Blackjack Pro, saranno sbloccati e il bottone PayPal/Diventa VIP non sarà più mostrato se sei già VIP.</p>
+                        <p><strong>Come viene garantita la casualità delle carte/risultati?</strong><br> Per i giochi che richiedono casualità (come Poker e Blackjack), utilizziamo un algoritmo Generatore di Numeri Casuali (RNG - Random Number Generator) basato su funzioni standard JavaScript (<code>Math.random()</code>) per simulare la mescolatura delle carte e garantire l'imprevedibilità dei risultati, nei limiti di una simulazione web.</p>
+                        <p><strong>Come funziona lo stato VIP? (Precedente)</strong><br> Lo stato VIP è una funzionalità simulata che sblocca l'accesso a giochi contrassegnati come "Pro" o "Premium" (es. Blackjack Pro). Per attivarlo, devi prima registrarti/accedere tramite le Impostazioni (<i class="fas fa-cog"></i>), poi aprire il pannello VIP (tramite il pulsante <i class="fas fa-crown"></i> in alto o su una card bloccata) e cliccare su "Diventa VIP Ora". Non richiede pagamenti reali.</p>
+                      </div>
+                </details>
+            </section>
+        </section>
+    </div>
+
+    <audio id="background-music" loop>
+        <source src="sound/casino-ambient.mp3" type="audio/mpeg">
+        Il tuo browser non supporta l'elemento audio.
+    </audio>
+
+    <footer>
+        <p>&copy; <span id="current-year"></span> IPPO’S CASINÒ. Tutti i diritti riservati. Gioco vietato ai minori. Gioca responsabilmente.</p>
+        <p><a href="#privacy">Informativa sulla Privacy</a> | <a href="#terms">Termini di Servizio</a></p>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- Elementi DOM (UI Base) ---
+            const body = document.body;
+            const settingsBtn = document.getElementById('settingsBtn');
+            const settingsModal = document.getElementById('settingsModal');
+            const closeSettingsBtn = document.getElementById('closeSettingsBtn');
+            const darkModeToggle = document.getElementById('darkModeToggle');
+            const musicToggle = document.getElementById('musicToggle');
+            const music = document.getElementById('background-music');
+            const premiumBtn = document.getElementById('premium-button'); // Bottone corona/stella alto dx
+            const premiumModal = document.getElementById('premiumModal');
+            const closePremiumBtn = document.getElementById('closePremiumBtn');
+            const introButton = document.getElementById('intro-toggle-button');
+            const introText = document.getElementById('intro-text');
+            const currentYearSpan = document.getElementById('current-year');
+            const gameCards = document.querySelectorAll('.game-card');
+
+            // --- Anno Corrente Footer ---
+            if (currentYearSpan) {
+                currentYearSpan.textContent = new Date().getFullYear();
+            }
+
+            // --- Gestione Tema Scuro ---
+            const prefersDarkScheme = window.matchMedia("(prefers-color-scheme: dark)");
+            function applyTheme(theme) {
+                if (theme === 'dark') {
+                    body.classList.add('dark-theme');
+                    if (darkModeToggle) darkModeToggle.checked = true;
+                } else {
+                    body.classList.remove('dark-theme');
+                    if (darkModeToggle) darkModeToggle.checked = false;
+                }
+                localStorage.setItem('theme', theme);
+            }
+            window.applyTheme = applyTheme;
+
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme) {
+                applyTheme(savedTheme);
+            } else if (prefersDarkScheme.matches) {
+                applyTheme('dark');
+            } else {
+                applyTheme('light');
+            }
+
+            if (darkModeToggle) {
+                darkModeToggle.addEventListener('change', () => {
+                    const newTheme = darkModeToggle.checked ? 'dark' : 'light';
+                    applyTheme(newTheme);
+                });
+            }
+
+            // --- Gestione Musica ---
+            function toggleMusic() {
+                 try {
+                     if (!music) return;
+                     if (musicToggle && musicToggle.checked) {
+                         music.muted = false;
+                         if (music.paused) {
+                             music.play().catch(e => console.warn("Autoplay musica bloccato.", e));
+                         }
+                         localStorage.setItem('musicEnabled', 'true');
+                     } else {
+                         music.pause();
+                         localStorage.setItem('musicEnabled', 'false');
+                     }
+                 } catch (e) {
+                     console.error("Errore gestione musica:", e);
+                 }
+            }
+
+            if (localStorage.getItem('musicEnabled') === 'false') {
+                if(musicToggle) musicToggle.checked = false;
+                if(music) music.pause();
+            } else {
+                 if(musicToggle) musicToggle.checked = true;
+                 if(music) {
+                    music.play().then(() => {
+                        music.muted = false;
+                    }).catch(e => {
+                        console.info("Autoplay musica bloccato all'avvio. Richiesta interazione utente.");
+                    });
+                 }
+            }
+
+            if (musicToggle) {
+                musicToggle.addEventListener('change', toggleMusic);
+            }
+
+            function playMusicOnFirstInteraction() {
+                if (music && music.paused && musicToggle && musicToggle.checked) {
+                     music.muted = false;
+                     music.play().catch(e => console.warn("Errore riproduzione musica dopo interazione:", e));
+                     document.removeEventListener('click', playMusicOnFirstInteraction, { capture: true });
+                     document.removeEventListener('keydown', playMusicOnFirstInteraction, { capture: true });
+                }
+            }
+            document.addEventListener('click', playMusicOnFirstInteraction, { once: true, capture: true });
+            document.addEventListener('keydown', playMusicOnFirstInteraction, { once: true, capture: true });
+
+
+            // --- Gestione Modali (Apertura/Chiusura Base) ---
+             const openModal = (modalElement) => {
+                if (modalElement) {
+                    modalElement.style.display = 'block';
+                    // Se stiamo aprendo il modal premium, aggiorniamo la visibilità dei bottoni interni
+                    if (modalElement.id === 'premiumModal') {
+                        const isVip = localStorage.getItem("isVIP") === "true";
+                        const activateBtn = document.getElementById('activatePremiumBtn');
+                        const paypalContainer = document.getElementById('paypal-button-container');
+                        const alreadyVipMsg = premiumModal.querySelector('.already-vip-message');
+
+                        if (isVip) {
+                            if (activateBtn) activateBtn.style.display = 'none';
+                            if (paypalContainer) paypalContainer.style.display = 'none';
+                            if (alreadyVipMsg) alreadyVipMsg.style.display = 'block';
+                            premiumModal.classList.remove('paypal-visible');
+                        } else {
+                            if (activateBtn) activateBtn.style.display = 'inline-flex'; // o 'block' a seconda dello stile
+                            if (paypalContainer) paypalContainer.style.display = 'none'; // PayPal nascosto finché non si clicca "Diventa VIP"
+                            if (alreadyVipMsg) alreadyVipMsg.style.display = 'none';
+                        }
+                    }
+                }
+             };
+             const closeModal = (modalElement) => {
+                if (modalElement) {
+                     modalElement.style.display = 'none';
+                     if (modalElement.id === 'premiumModal') {
+                        premiumModal.classList.remove('paypal-visible');
+                        // Ripristina la visibilità del bottone di attivazione e nascondi PayPal
+                        const activateBtn = document.getElementById('activatePremiumBtn');
+                        const paypalContainer = document.getElementById('paypal-button-container');
+                        if (activateBtn && !(localStorage.getItem("isVIP") === "true")) activateBtn.style.display = 'inline-flex';
+                        if (paypalContainer) paypalContainer.style.display = 'none';
+                     }
+                }
+             };
+             window.openModal = openModal;
+             window.closeModal = closeModal;
+
+            if (settingsBtn && settingsModal) {
+                settingsBtn.addEventListener('click', () => openModal(settingsModal));
+            }
+            if (closeSettingsBtn && settingsModal) {
+                 closeSettingsBtn.addEventListener('click', () => closeModal(settingsModal));
+            }
+
+            if (premiumBtn && premiumModal) { // Bottone corona
+                premiumBtn.addEventListener('click', () => openModal(premiumModal));
+            }
+             gameCards.forEach(card => {
+                 const premiumCardButton = card.querySelector('.premium-info-button');
+                 if (card.classList.contains('locked') && premiumCardButton && premiumModal) {
+                    premiumCardButton.addEventListener('click', (e) => {
+                         e.preventDefault();
+                         openModal(premiumModal);
+                     });
+                 }
+             });
+            if (closePremiumBtn && premiumModal) {
+                 closePremiumBtn.addEventListener('click', () => closeModal(premiumModal));
+            }
+
+            window.addEventListener('click', (event) => {
+                 if (settingsModal && event.target == settingsModal) {
+                     closeModal(settingsModal);
+                 }
+                 if (premiumModal && event.target == premiumModal) {
+                     closeModal(premiumModal);
+                 }
+            });
+
+            // --- Gestione Testo Intro ---
+            function toggleIntroText() {
+                 if (introText && introButton) {
+                    const isVisible = introText.classList.toggle('visible');
+                    introButton.innerHTML = isVisible ? '<i class="fas fa-times"></i> Chiudi Info' : '<i class="fas fa-info-circle"></i> Istruzioni';
+                    introButton.setAttribute('aria-expanded', isVisible);
+                 }
+            }
+            if (introButton) {
+                 introButton.addEventListener('click', (event) => {
+                      event.stopPropagation();
+                      toggleIntroText();
+                 });
+            }
+             document.addEventListener('click', (event) => {
+                 if (introText && introText.classList.contains('visible') &&
+                     introButton && !introButton.contains(event.target) &&
+                     !introText.contains(event.target)) {
+                      toggleIntroText();
+                 }
+             });
+        });
+    </script>
+
+    <script type="module">
+        import {
+            createUserWithEmailAndPassword,
+            signInWithEmailAndPassword,
+            signOut
+        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import {
+            doc, setDoc, getDoc, updateDoc, serverTimestamp
+        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        if (!window.firebaseInstances || !window.onAuthStateChanged) {
+             console.error("Le istanze Firebase o onAuthStateChanged non sono disponibili nel modulo.");
+        } else {
+            const { auth, db } = window.firebaseInstances;
+            const onAuthStateChanged = window.onAuthStateChanged;
+
+            const authSection = document.getElementById('auth-section');
+            const emailInput = document.getElementById('email');
+            const passwordInput = document.getElementById('password');
+            const loginBtn = document.getElementById('loginBtn');
+            const registerBtn = document.getElementById('registerBtn');
+            const logoutBtn = document.getElementById('logoutBtn');
+            const userInfo = document.getElementById('user-info');
+            const authError = document.getElementById('auth-error');
+
+            const activatePremiumBtn = document.getElementById('activatePremiumBtn'); // Bottone "Diventa VIP Ora!" nel modal
+            const premiumActivationError = document.getElementById('premium-activation-error');
+            const premiumModal = document.getElementById('premiumModal');
+            const paypalButtonContainer = document.getElementById('paypal-button-container');
+            const blackjackProCard = document.getElementById('blackjack-pro-card');
+            const body = document.body;
+
+            let currentUser = null;
+            let isUserVipGlobally = false; // Sarà aggiornato da localStorage e Firestore
+
+            const clearAuthError = () => { if(authError) authError.textContent = ''; };
+            const showAuthError = (message) => {
+                if (authError) {
+                    console.error("Auth Error:", message);
+                    switch (message) {
+                        case 'Firebase: Error (auth/invalid-email).': authError.textContent = 'Formato email non valido.'; break;
+                        case 'Firebase: Error (auth/missing-password).': authError.textContent = 'Password mancante.'; break;
+                        case 'Firebase: Password should be at least 6 characters (auth/weak-password).': authError.textContent = 'La password deve avere almeno 6 caratteri.'; break;
+                        case 'Firebase: Error (auth/email-already-in-use).': authError.textContent = 'Email già registrata. Prova ad accedere.'; break;
+                        case 'Firebase: Error (auth/user-not-found).':
+                        case 'Firebase: Error (auth/wrong-password).':
+                        case 'Firebase: Error (auth/invalid-credential).': authError.textContent = 'Email o password non corretti.'; break;
+                        default: authError.textContent = 'Errore di autenticazione.';
+                    }
+                }
+            };
+            const clearPremiumActivationError = () => { if (premiumActivationError) premiumActivationError.textContent = ''; };
+            const showPremiumActivationError = (message) => { if (premiumActivationError) premiumActivationError.textContent = message; };
+
+            async function handleRegister() {
+                clearAuthError();
+                if (!auth || !db || !emailInput || !passwordInput) return showAuthError("Errore interno.");
+                const email = emailInput.value.trim(); const password = passwordInput.value;
+                if (!email || !password) return showAuthError("Inserisci email e password.");
+                if (password.length < 6) return showAuthError("Password min. 6 caratteri.");
+                if (loginBtn) loginBtn.disabled = true; if (registerBtn) registerBtn.disabled = true;
+                try {
+                    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                    const newUser = userCredential.user;
+                    const userDocRef = doc(db, "users", newUser.uid);
+                    await setDoc(userDocRef, { email: newUser.email, isVIP: false, createdAt: serverTimestamp(), vipUpdatedAt: null });
+                    if (window.closeModal && window.settingsModal) window.closeModal(window.settingsModal);
+                } catch (error) { showAuthError(error.message);
+                } finally {
+                    if (loginBtn) loginBtn.disabled = false; if (registerBtn) registerBtn.disabled = false;
+                    if(passwordInput) passwordInput.value = '';
+                }
+            }
+
+            async function handleLogin() {
+                clearAuthError();
+                if (!auth || !emailInput || !passwordInput) return showAuthError("Errore interno.");
+                const email = emailInput.value.trim(); const password = passwordInput.value;
+                if (!email || !password) return showAuthError("Inserisci email e password.");
+                if (loginBtn) loginBtn.disabled = true; if (registerBtn) registerBtn.disabled = true;
+                try {
+                    await signInWithEmailAndPassword(auth, email, password);
+                    if (window.closeModal && window.settingsModal) window.closeModal(window.settingsModal);
+                } catch (error) { showAuthError(error.message);
+                } finally {
+                    if (loginBtn) loginBtn.disabled = false; if (registerBtn) registerBtn.disabled = false;
+                    if(passwordInput) passwordInput.value = '';
+                }
+            }
+
+            async function handleLogout() {
+                clearAuthError();
+                if (!auth) return showAuthError("Errore interno.");
+                try {
+                    await signOut(auth);
+                    localStorage.removeItem("isVIP"); // Rimuovi VIP da localStorage al logout
+                    isUserVipGlobally = false;
+                    updatePremiumStatusUI(); // Aggiorna UI
+                } catch (error) { showAuthError(error.message || "Errore logout."); }
+            }
+
+            async function checkUserVIPStatusFirestore(userId) {
+                if (!db || !userId) return false;
+                const userDocRef = doc(db, "users", userId);
+                try {
+                    const docSnap = await getDoc(userDocRef);
+                    if (docSnap.exists()) {
+                        const userData = docSnap.data();
+                        return userData.isVIP || false;
+                    }
+                    return false;
+                } catch (error) {
+                    console.error(`Firestore Error: Failed to get VIP status for ${userId}.`, error);
+                    return false;
+                }
+            }
+
+            async function setUserVIPStatusInFirestore(userId) {
+                if (!db || !userId) throw new Error("User ID o DB non validi per Firestore.");
+                const userDocRef = doc(db, "users", userId);
+                try {
+                    await updateDoc(userDocRef, { isVIP: true, vipUpdatedAt: serverTimestamp() });
+                    console.log(`User ${userId} updated to VIP in Firestore.`);
+                } catch (error) {
+                    console.error(`Firestore Error: Failed to update VIP status for ${userId}.`, error);
+                    showPremiumActivationError("Errore durante l'aggiornamento dello stato VIP nel database.");
+                    throw error;
+                }
+            }
+
+            const updatePremiumStatusUI = () => {
+                if (!body) return;
+                isUserVipGlobally = localStorage.getItem("isVIP") === "true"; // Fonte primaria dopo pagamento
+
+                body.classList.toggle('premium-active', isUserVipGlobally);
+
+                const activateBtn = document.getElementById('activatePremiumBtn');
+                const paypalCont = document.getElementById('paypal-button-container');
+                const alreadyVipMsg = premiumModal ? premiumModal.querySelector('.already-vip-message') : null;
+
+                if (premiumModal && premiumModal.style.display === 'block') { // Se il modal è aperto
+                    if (isUserVipGlobally) {
+                        if (activateBtn) activateBtn.style.display = 'none';
+                        if (paypalCont) paypalCont.style.display = 'none';
+                        if (alreadyVipMsg) alreadyVipMsg.style.display = 'block';
+                        premiumModal.classList.remove('paypal-visible');
+                    } else {
+                        if (activateBtn) activateBtn.style.display = 'inline-flex';
+                        if (paypalCont) paypalCont.style.display = 'none'; // PayPal nascosto finché non si clicca
+                        if (alreadyVipMsg) alreadyVipMsg.style.display = 'none';
+                    }
+                }
+
+
+                if (blackjackProCard) {
+                    blackjackProCard.classList.toggle('locked', !isUserVipGlobally);
+                    if (!isUserVipGlobally) {
+                        blackjackProCard.onclick = (e) => {
+                            e.preventDefault();
+                            if (window.openModal && premiumModal) window.openModal(premiumModal);
+                        };
+                         blackjackProCard.href = "#"; // Rimuovi link diretto se non VIP
+                    } else {
+                        blackjackProCard.onclick = null;
+                        blackjackProCard.href = "blackjack/index.html";
+                    }
+                }
+                console.log(`UI Updated: User is ${isUserVipGlobally ? 'VIP (from localStorage)' : 'NOT VIP'}`);
+            };
+
+
+            // --- Inizializzazione PayPal Buttons ---
+            function initializePayPalButtons() {
+                if (typeof paypal === 'undefined') {
+                    showPremiumActivationError("Errore: SDK PayPal non caricato.");
+                    return;
+                }
+                 paypal.Buttons({
+                    createOrder: function(data, actions) {
+                        clearPremiumActivationError();
+                        return actions.order.create({
+                            purchase_units: [{
+                                amount: {
+                                    value: '1.99', // Importo
+                                    currency_code: 'EUR'
+                                }
+                            }]
+                        });
+                    },
+                    onApprove: async function(data, actions) {
+                        try {
+                            const details = await actions.order.capture();
+                            console.log('Transaction completed by ' + details.payer.name.given_name);
+                            alert('Grazie! Ora sei VIP. ' + details.payer.name.given_name + '! Il tuo pagamento di ' + details.purchase_units[0].amount.value + ' ' + details.purchase_units[0].amount.currency_code + ' è stato completato.');
+
+                            localStorage.setItem("isVIP", "true");
+                            isUserVipGlobally = true;
+
+                            if (currentUser && currentUser.uid) {
+                                await setUserVIPStatusInFirestore(currentUser.uid);
+                            }
+
+                            updatePremiumStatusUI();
+                            if(window.closeModal && premiumModal) window.closeModal(premiumModal);
+                            // location.reload(); // Opzionale: ricarica la pagina
+
+                        } catch (error) {
+                            console.error('PayPal onApprove error:', error);
+                            showPremiumActivationError("Si è verificato un errore durante la conferma del pagamento. Riprova.");
+                        }
+                    },
+                    onError: function(err) {
+                        console.error('PayPal Button Error:', err);
+                        showPremiumActivationError("Si è verificato un errore con PayPal. Riprova o contatta l'assistenza.");
+                        // Ri-mostra il bottone "Diventa VIP Ora!" e nascondi PayPal se c'è un errore critico
+                        if(activatePremiumBtn) activatePremiumBtn.style.display = 'inline-flex';
+                        if(paypalButtonContainer) paypalButtonContainer.style.display = 'none';
+                        if(premiumModal) premiumModal.classList.remove('paypal-visible');
+                    },
+                    onCancel: function (data) {
+                        console.log('PayPal payment cancelled:', data);
+                        showPremiumActivationError("Pagamento annullato.");
+                        // Ri-mostra il bottone "Diventa VIP Ora!" e nascondi PayPal
+                        if(activatePremiumBtn) activatePremiumBtn.style.display = 'inline-flex';
+                        if(paypalButtonContainer) paypalButtonContainer.style.display = 'none';
+                        if(premiumModal) premiumModal.classList.remove('paypal-visible');
+                    }
+                }).render('#paypal-button-container').catch(err => {
+                    console.error("Failed to render PayPal Buttons", err);
+                    showPremiumActivationError("Impossibile caricare i bottoni di pagamento. Riprova più tardi.");
+                });
+            }
+
+
+            if (auth && db) {
+                if (registerBtn) registerBtn.addEventListener('click', handleRegister);
+                if (loginBtn) loginBtn.addEventListener('click', handleLogin);
+                if (logoutBtn) logoutBtn.addEventListener('click', handleLogout);
+
+                if (activatePremiumBtn) {
+                    activatePremiumBtn.addEventListener('click', () => {
+                        clearPremiumActivationError();
+                        if (currentUser) {
+                            if (localStorage.getItem("isVIP") === "true") {
+                                showPremiumActivationError("Sei già un membro VIP!");
+                                if(window.closeModal && premiumModal) setTimeout(() => window.closeModal(premiumModal), 2000);
+                                return;
+                            }
+                            // Mostra PayPal, nascondi bottone custom
+                            activatePremiumBtn.style.display = 'none';
+                            if (paypalButtonContainer) {
+                                paypalButtonContainer.innerHTML = ''; // Pulisci prima di renderizzare di nuovo
+                                paypalButtonContainer.style.display = 'block';
+                                if (premiumModal) premiumModal.classList.add('paypal-visible');
+                                initializePayPalButtons(); // Renderizza i bottoni PayPal
+                            }
+                        } else {
+                            showPremiumActivationError("Devi prima accedere o registrarti.");
+                            if(window.closeModal && premiumModal) window.closeModal(premiumModal);
+                            if(window.openModal && window.settingsModal) window.openModal(window.settingsModal);
+                        }
+                    });
+                }
+            } else {
+                console.error("Auth/DB not available. Auth listeners not added.");
+                if (authSection) authSection.innerHTML = '<p style="color: var(--error-color); text-align: center;">Servizio account non disponibile.</p>';
+            }
+
+            onAuthStateChanged(auth, async (user) => {
+                currentUser = user;
+                clearAuthError();
+
+                let firestoreVip = false;
+                if (user) {
+                    console.log(`Auth State Change: User ${user.email} logged in.`);
+                    if (authSection) authSection.classList.add('user-logged-in');
+                    if (userInfo) userInfo.textContent = `Benvenuto, ${user.email}!`;
+                    firestoreVip = await checkUserVIPStatusFirestore(user.uid);
+                    // Se Firestore dice VIP ma localStorage no, sincronizza localStorage
+                    if (firestoreVip && localStorage.getItem("isVIP") !== "true") {
+                        localStorage.setItem("isVIP", "true");
+                    }
+                } else {
+                    console.log("Auth State Change: User logged out.");
+                    if (authSection) authSection.classList.remove('user-logged-in');
+                    if (userInfo) userInfo.textContent = '';
+                    if (emailInput) emailInput.value = '';
+                    if (passwordInput) passwordInput.value = '';
+                    // localStorage.removeItem("isVIP"); // Rimosso al logout esplicito
+                }
+                // La fonte di verità primaria per UI è localStorage, poi Firestore.
+                updatePremiumStatusUI();
+            });
+
+            // Chiamata iniziale per impostare lo stato VIP corretto all'avvio
+            updatePremiumStatusUI();
+        }
+    </script>
+
+</body>
+</html>
