@@ -1,0 +1,2421 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blackjack Premium V7 - Corretto</title>
+    <meta name="google-adsense-account" content="ca-pub-9456850571765688">
+    <meta name="description" content="Gioca a Blackjack online Pro con funzionalità avanzate! Allenati con il conteggio, statistiche, sfide giornaliere con ricompense, multi-mano (via split) e opzioni premium." />
+    <style>
+        /* --- Stili CSS (originali, non modificati se non per coerenza) --- */
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap'); /* Font Migliorato */
+
+        :root {
+            /* --- Theme Variables --- */
+            --bg-color: #1e5631; /* Sfondo verde tavolo */
+            --text-color: #ffffff;
+            --card-bg: white;
+            --card-text-black: black;
+            --card-text-red: #c0392b; /* Rosso carte più definito */
+            --button-bg: #2c3e50; /* Blu scuro coerente */
+            --button-text: #ecf0f1; /* Testo chiaro coerente */
+            --button-hover-bg: #34495e;
+            --button-active-bg: #253342;
+            --button-disabled-opacity: 0.5;
+            --highlight-color: #f1c40f; /* Giallo evidenziazione */
+            --border-color: rgba(255, 255, 255, 0.25); /* Bordo più visibile */
+            --panel-bg: rgba(0, 0, 0, 0.35); /* Sfondo pannelli semi-trasparente */
+            --accent-color: #3498db; /* Blu accento */
+            --dealer-hidden-card-bg: #8b4513; /* Dorso carta banco */
+            --font-main: 'Poppins', sans-serif; /* Font Principale */
+            --result-bg-color: rgba(0, 0, 0, 0.85); /* Sfondo risultato più scuro */
+            --result-text-color: #ffffff;
+            --result-win-glow: rgba(46, 204, 113, 0.8); /* Verde vittoria */
+            --result-lose-glow: rgba(231, 76, 60, 0.8); /* Rosso sconfitta */
+            --result-push-glow: rgba(243, 156, 18, 0.8); /* Arancio pareggio */
+            --details-summary-bg: rgba(0, 0, 0, 0.45);
+            --premium-glow: gold; /* Colore per evidenziare le feature premium */
+            --high-stakes-chip-border: #b8860b; /* Bordo fiche 1k (oro scuro) */
+            --very-high-stakes-chip-border: #00bcd4; /* Bordo fiche 2k (ciano) */
+
+            /* --- Customization Variables --- */
+            /* Optional: Uncomment to add a velvet texture background */
+            /* --table-bg-image: url('path/to/velvet-texture.png'); */
+            --table-bg-image: none;
+            --card-back-image: linear-gradient(45deg, rgba(255,255,255,0.1) 25%, transparent 25%), linear-gradient(-45deg, rgba(255,255,255,0.1) 25%, transparent 25%), linear-gradient(45deg, transparent 75%, rgba(255,255,255,0.1) 75%), linear-gradient(-45deg, transparent 75%, rgba(255,255,255,0.1) 75%);
+            --card-back-bg-color: var(--dealer-hidden-card-bg);
+            --card-back-pattern-size: 18px 18px;
+
+            /* --- Spacing Variables --- */
+            --spacing-unit: 8px;
+            --section-margin-bottom: calc(var(--spacing-unit) * 4); /* Spazio tra sezioni */
+            --element-margin-bottom: calc(var(--spacing-unit) * 2); /* Spazio tra elementi */
+            --padding-standard: calc(var(--spacing-unit) * 2);
+            --padding-large: calc(var(--spacing-unit) * 3);
+
+            /* --- Animation Variables --- */
+            --animation-factor: 1; /* Default speed */
+        }
+
+        body[data-theme="dark"] {
+            /* Dark Theme */
+            --bg-color: #2c3e50;
+            --text-color: #ecf0f1;
+            --card-bg: #34495e;
+            --card-text-black: #ecf0f1;
+            --card-text-red: #e74c3c;
+            --button-bg: #95a5a6;
+            --button-text: #2c3e50;
+            --button-hover-bg: #bdc3c7;
+            --button-active-bg: #7f8c8d;
+            --highlight-color: #f1c40f;
+            --border-color: rgba(255, 255, 255, 0.2);
+            --panel-bg: rgba(255, 255, 255, 0.1);
+            --accent-color: #5dade2;
+            --dealer-hidden-card-bg: #4e4e4e;
+            --details-summary-bg: rgba(255, 255, 255, 0.15);
+            --card-back-bg-color: var(--dealer-hidden-card-bg);
+            --table-bg-image: radial-gradient(circle at top center, #34495e 0%, var(--bg-color) 70%);
+        }
+
+        /* --- Stili Generali --- */
+        *, *::before, *::after { box-sizing: border-box; }
+
+        body {
+            background-image: var(--table-bg-image);
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-color: var(--bg-color);
+            font-family: var(--font-main);
+            text-align: center;
+            color: var(--text-color);
+            padding: var(--padding-large) var(--padding-standard);
+            margin: 0;
+            transition: background-color 0.3s, color 0.3s, background-image 0.3s;
+            min-height: 100vh;
+            font-size: 16px;
+            line-height: 1.6;
+        }
+
+        .game-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        h1 {
+            margin-bottom: var(--element-margin-bottom);
+            font-size: 2.4em;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #fff;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.5);
+        }
+        h2 {
+            margin-bottom: var(--element-margin-bottom);
+            font-size: 1.7em;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            color: var(--highlight-color);
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: var(--spacing-unit);
+        }
+         h3 {
+            margin-top: 0;
+            margin-bottom: var(--element-margin-bottom);
+            font-size: 1.3em;
+            font-weight: 600;
+            color: var(--accent-color);
+        }
+
+        /* --- Layout a Blocchi Visivi --- */
+        #player-info, #dealer-info, #betting-area, #controls-area, details {
+            background-color: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: var(--padding-large);
+            margin-bottom: var(--section-margin-bottom);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.35);
+            text-align: left;
+        }
+         #controls-area, #betting-area { text-align: center; }
+         details { padding: 0; overflow: hidden; text-align: left; }
+
+        /* --- Spacing & Display Info --- */
+         #player-balance, #bet-chips-display, #insurance-bet-display, #dealer-score, #running-count-display {
+            margin-bottom: var(--element-margin-bottom);
+            font-size: 1.1em;
+            padding: calc(var(--spacing-unit)*0.75) var(--padding-standard);
+            background-color: rgba(0,0,0,0.2);
+            border-radius: 6px;
+            display: inline-block;
+            margin-right: var(--spacing-unit);
+        }
+         #player-balance { font-weight: 700; background-color: transparent; padding-left: 0; }
+         #running-count-display { font-weight: 600; /* Visibile di default per premium */ }
+
+        /* --- Carte --- */
+        .cards {
+            margin: var(--element-margin-bottom) auto;
+            display: flex;
+            justify-content: center;
+            min-height: 115px; /* Altezza carta + margine */
+            gap: var(--spacing-unit);
+            flex-wrap: wrap;
+            perspective: 1200px;
+            padding: var(--spacing-unit) 0;
+        }
+        .card {
+            display: inline-block;
+            border: 1px solid rgba(0,0,0,0.2);
+            border-radius: 10px;
+            background: var(--card-bg);
+            width: 75px;
+            height: 110px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            margin: calc(var(--spacing-unit) / 2);
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform calc(0.7s * var(--animation-factor)) cubic-bezier(0.4, 0.0, 0.2, 1), box-shadow 0.3s ease;
+            /* transform: rotateY(180deg); */ /* Inizia nascosta */
+        }
+        .card.hidden {
+            transform: rotateY(180deg);
+        }
+        .card.revealed {
+            transform: rotateY(0deg);
+        }
+        .card:hover { box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4); }
+        .card-inner { position: relative; width: 100%; height: 100%; text-align: center; transform-style: preserve-3d; }
+        .card-face { position: absolute; width: 100%; height: 100%; -webkit-backface-visibility: hidden; backface-visibility: hidden; border-radius: 10px; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 5px; box-sizing: border-box; }
+        .card-front { background-color: var(--card-bg); background-image: linear-gradient(to bottom, rgba(255,255,255,0.05) 0%, rgba(0,0,0,0.05) 100%); color: var(--card-text-black); font-size: 28px; font-weight: 600; transform: rotateY(0deg); border: 1px solid rgba(0,0,0,0.1); }
+        .card-back { background-color: var(--card-back-bg-color); color: var(--text-color); transform: rotateY(180deg); background-image: var(--card-back-image); background-size: var(--card-back-pattern-size); background-position: center; }
+        /* Rimosso .card.flipped, ora usiamo .revealed */
+        .card-front.red { color: var(--card-text-red); }
+        .card-front.black { color: var(--card-text-black); }
+        .card .suit { font-size: 20px; font-weight: normal; line-height: 1.1; }
+
+        /* --- Pulsanti & Controlli --- */
+         #action-buttons, #betting-controls, #insurance-controls {
+            margin-top: var(--element-margin-bottom);
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: var(--element-margin-bottom);
+         }
+
+        /* Stile Base Pulsante Unificato */
+         button, .button-style {
+             padding: 12px 25px;
+             font-size: 1em;
+             font-weight: 600;
+             font-family: var(--font-main);
+             cursor: pointer;
+             border: none;
+             border-radius: 8px;
+             background-color: var(--button-bg);
+             color: var(--button-text);
+             transition: background-color 0.2s ease, opacity 0.3s ease, transform 0.15s ease, box-shadow 0.2s ease;
+             user-select: none; -webkit-user-select: none;
+             box-shadow: 0 3px 6px rgba(0, 0, 0, 0.25);
+             letter-spacing: 0.5px;
+             text-transform: none;
+             display: inline-flex;
+             align-items: center;
+             justify-content: center;
+             gap: var(--spacing-unit);
+             text-decoration: none;
+             line-height: 1.4;
+             vertical-align: middle;
+         }
+        button:hover:not(:disabled), .button-style:hover:not([aria-disabled="true"]) {
+            background-color: var(--button-hover-bg);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.35);
+        }
+        button:active:not(:disabled), .button-style:active:not([aria-disabled="true"]) {
+            background-color: var(--button-active-bg);
+            transform: translateY(0px);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.25);
+        }
+        button:disabled, .button-style[aria-disabled="true"] {
+            opacity: var(--button-disabled-opacity);
+            cursor: not-allowed;
+            box-shadow: none;
+            transform: none;
+            background-color: #555 !important;
+            color: #aaa !important;
+        }
+        button i, .button-style i { font-size: 1.1em; line-height: 1; }
+        button.hint-highlight { box-shadow: 0 0 12px 4px var(--highlight-color); border: 1px solid var(--highlight-color); transform: translateY(-1px); }
+         /* Stile per evidenziare feature premium */
+        .premium-feature-visual {
+            border-left: 5px solid var(--premium-glow);
+            padding-left: var(--padding-standard);
+            margin-left: calc(-1 * var(--padding-standard) - 5px); /* Adatta per non cambiare larghezza */
+            filter: drop-shadow(0 0 5px var(--premium-glow));
+        }
+         details.premium-feature-visual summary, .premium-feature-visual label {
+             color: var(--premium-glow);
+             font-weight: 700;
+         }
+         .premium-feature-visual .toggle-switch input:checked + .slider { background-color: var(--premium-glow); }
+         .premium-feature-visual .toggle-switch input:focus + .slider { box-shadow: 0 0 3px var(--premium-glow); }
+         /* Evidenziazione per pulsanti premium */
+         button.premium-action-visual, .button-style.premium-action-visual {
+             box-shadow: 0 0 6px 1px var(--premium-glow), 0 3px 6px rgba(0, 0, 0, 0.25);
+         }
+         button.premium-action-visual:hover:not(:disabled), .button-style.premium-action-visual:hover:not([aria-disabled="true"]) {
+             box-shadow: 0 0 10px 2px var(--premium-glow), 0 5px 10px rgba(0, 0, 0, 0.35);
+         }
+
+
+        /* --- Area Puntate & Fiches --- */
+         #betting-area h3 { margin-bottom: var(--element-margin-bottom); text-align: center; }
+         #proposed-bet-display {
+             font-size: 1.6em;
+             font-weight: 700;
+             color: var(--highlight-color);
+             min-height: 1.6em;
+             background-color: rgba(0,0,0,0.3);
+             padding: var(--spacing-unit) var(--padding-standard);
+             border-radius: 6px;
+             margin-bottom: var(--element-margin-bottom);
+             display: inline-block;
+             min-width: 120px;
+             text-align: center;
+         }
+         #clickable-chips {
+             display: flex;
+             flex-wrap: wrap;
+             justify-content: center;
+             gap: var(--element-margin-bottom);
+             margin-bottom: var(--element-margin-bottom);
+             padding: var(--spacing-unit) 0;
+         }
+         .chip-button {
+             width: 65px;
+             height: 65px;
+             cursor: pointer;
+             border-radius: 50%;
+             border: 5px solid rgba(255, 255, 255, 0.6);
+             transition: transform 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+             box-shadow: inset 0 3px 5px rgba(0, 0, 0, 0.5), 0 3px 5px rgba(0,0,0,0.3);
+             user-select: none; -webkit-user-select: none;
+             background-color: transparent;
+             display: flex; justify-content: center; align-items: center; overflow: hidden; padding: 0;
+             transform: scale(1);
+         }
+         .chip-button img { display: block; width: 100%; height: 100%; object-fit: contain; pointer-events: none; }
+         .chip-button:hover:not([disabled]) {
+             transform: scale(1.1);
+             border-color: white;
+             box-shadow: inset 0 3px 5px rgba(0, 0, 0, 0.5), 0 0 15px 4px var(--highlight-color);
+         }
+         .chip-button:active:not([disabled]) {
+             transform: scale(0.92);
+             box-shadow: inset 0 5px 7px rgba(0, 0, 0, 0.6);
+             transition-duration: 0.05s;
+         }
+         .chip-button[disabled] { opacity: 0.4; cursor: not-allowed; transform: none; border-color: rgba(255, 255, 255, 0.4); box-shadow: inset 0 3px 5px rgba(0, 0, 0, 0.5); }
+         /* Stili specifici per fiches High Stakes */
+         .chip-button.high-stakes-chip { border-color: var(--high-stakes-chip-border); }
+         .chip-button.high-stakes-chip:hover:not([disabled]) { box-shadow: inset 0 3px 5px rgba(0, 0, 0, 0.5), 0 0 15px 4px var(--premium-glow); border-color: var(--premium-glow); }
+         .chip-button.very-high-stakes-chip { border-color: var(--very-high-stakes-chip-border); }
+         .chip-button.very-high-stakes-chip:hover:not([disabled]) { box-shadow: inset 0 3px 5px rgba(0, 0, 0, 0.5), 0 0 15px 4px var(--very-high-stakes-chip-border); border-color: var(--very-high-stakes-chip-border); }
+
+        /* --- Mani Multiple (Split) --- */
+        #player-hands-container { display: flex; justify-content: center; gap: var(--padding-large); flex-wrap: wrap; margin-top: var(--element-margin-bottom); }
+        .player-hand { border: 3px solid var(--border-color); border-radius: 10px; padding: var(--padding-standard); min-width: 220px; background-color: rgba(0,0,0,0.2); position: relative; transition: border-color 0.3s, box-shadow 0.3s; box-shadow: 0 4px 8px rgba(0,0,0,0.3); text-align: center; }
+        .player-hand h3 { margin-top: 0; margin-bottom: var(--spacing-unit); font-size: 1.1em; color: var(--accent-color); text-align: center; font-weight: 700; }
+        .player-hand .cards { min-height: 110px; margin-bottom: var(--spacing-unit); }
+        .player-score, .hand-bet { font-size: 1em; margin-bottom: var(--spacing-unit); font-weight: 700; }
+        .hand-status { font-size: 1em; font-weight: 700; color: var(--highlight-color); min-height: 1.2em; text-align: center; text-transform: uppercase; letter-spacing: 1px; }
+        .player-hand.current-hand { border-color: var(--highlight-color); box-shadow: 0 0 20px rgba(241, 196, 15, 0.8); }
+
+        /* --- Messaggio Risultato --- */
+         #result-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.75); opacity: 0; visibility: hidden; z-index: 99; transition: opacity 0.4s ease-out, visibility 0s linear 0.4s; backdrop-filter: blur(4px); }
+         #result-overlay.show { opacity: 1; visibility: visible; transition-delay: 0s; cursor: pointer;}
+         #result-message { opacity: 0; visibility: hidden; transform: translate(-50%, -50%) scale(0.8); transition: opacity 0.4s ease-out 0.1s, visibility 0s linear 0.5s, transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) 0.1s; position: fixed; top: 50%; left: 50%; z-index: 100; background-color: var(--result-bg-color); color: var(--result-text-color); padding: var(--padding-large) calc(var(--padding-large) * 1.8); border-radius: 15px; font-size: 2.8em; font-weight: 700; text-align: center; white-space: pre-line; min-width: 350px; max-width: 90%; box-shadow: 0 0 30px 10px rgba(0, 0, 0, 0.7); cursor: default;}
+         #result-message.result-show { opacity: 1; visibility: visible; transform: translate(-50%, -50%) scale(1); transition: opacity 0.4s ease-out, visibility 0s linear 0s, transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+         #result-message.win { box-shadow: 0 0 35px 15px var(--result-win-glow); }
+         #result-message.lose { box-shadow: 0 0 35px 15px var(--result-lose-glow); }
+         #result-message.push { box-shadow: 0 0 35px 15px var(--result-push-glow); }
+
+        /* --- Sezioni Details (Opzioni, Stats, etc.) --- */
+        details { max-width: 700px; margin-left: auto; margin-right: auto; }
+        details summary {
+            font-weight: 700;
+            cursor: pointer;
+            padding: var(--padding-standard) var(--padding-large);
+            background-color: var(--details-summary-bg);
+            list-style: none;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid transparent;
+            transition: background-color 0.2s, border-color 0.2s;
+            font-size: 1.1em;
+        }
+        details:not([open]) summary:hover { background-color: rgba(0,0,0,0.55); }
+        details[open] summary { border-bottom-color: var(--border-color); background-color: rgba(0,0,0,0.6); }
+        details summary::-webkit-details-marker, details summary::marker { display: none; }
+        details .content-wrapper { padding: var(--padding-large); border-top: 1px solid var(--border-color); background-color: rgba(0,0,0,0.1); }
+        details h3 { margin-top: 0; margin-bottom: var(--element-margin-bottom); color: var(--accent-color); font-size: 1.2em; text-align: center; border-bottom: 1px solid var(--border-color); padding-bottom: var(--spacing-unit); font-weight: 600; }
+        details summary::after { content: '▼'; font-size: 1.2em; font-weight: normal; margin-left: var(--element-margin-bottom); transition: transform 0.2s ease-in-out; display: inline-block; }
+        details[open] summary::after { transform: rotate(180deg); }
+
+        /* Stili interni alle sezioni Details */
+        .control-item, .stat-item, .strategy-card, .challenge-item {
+            margin-bottom: var(--element-margin-bottom);
+            padding-bottom: var(--element-margin-bottom);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: var(--spacing-unit);
+        }
+        .control-item:last-child, .stat-item:last-child, .strategy-card:last-child, .challenge-item:last-child {
+            border-bottom: none;
+            margin-bottom: 0; padding-bottom: 0;
+        }
+        .control-item label, .stat-item .label, .strategy-card p, .challenge-item .description {
+            flex-basis: 60%;
+            text-align: left; font-weight: 600;
+        }
+        .control-item select, .control-item input[type="number"], .stat-item .value, .challenge-item .progress {
+            flex-basis: 35%;
+            text-align: right;
+        }
+        select, input[type="number"] {
+             padding: 8px 12px;
+             border-radius: 6px; border: 1px solid var(--border-color); background-color: rgba(255, 255, 255, 0.1); color: var(--text-color); font-family: var(--font-main); font-size: 0.95em; min-width: 80px;
+        }
+        progress { width: 100%; max-width: 150px; vertical-align: middle; } /* Limit width */
+        .challenge-item .progress { display: flex; align-items: center; justify-content: flex-end; gap: var(--spacing-unit); }
+        .challenge-item .progress span { font-size: 0.9em; }
+        .challenge-item.completed .description { text-decoration: line-through; opacity: 0.7; }
+        .challenge-item.completed .reward { font-weight: bold; color: var(--highlight-color); }
+
+        #strategy-table { width: 100%; border-collapse: collapse; margin-top: var(--element-margin-bottom); }
+        #strategy-table th, #strategy-table td { border: 1px solid var(--border-color); padding: 8px; text-align: center; font-size: 0.9em; }
+        #strategy-table th { background-color: rgba(0,0,0,0.3); font-weight: 700; }
+
+        /* --- Elementi Speciali --- */
+         .toggle-switch { position: relative; display: inline-block; width: 50px; height: 26px; vertical-align: middle; flex-shrink: 0; }
+         .toggle-switch input { opacity: 0; width: 0; height: 0; }
+         .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #555; transition: .4s; border-radius: 26px; }
+         .slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+         input:checked + .slider { background-color: var(--accent-color); }
+         input:focus + .slider { box-shadow: 0 0 3px var(--accent-color); }
+         input:checked + .slider:before { transform: translateX(24px); }
+
+         .visually-hidden { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0, 0, 0, 0); border: 0; }
+
+         .notification { position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-50px); background-color: var(--accent-color); color: white; padding: 14px 24px; border-radius: 8px; z-index: 101; opacity: 0; transition: opacity 0.5s ease-out, transform 0.5s ease-out; font-size: 1.05em; font-weight: 600; box-shadow: 0 4px 8px rgba(0,0,0,0.4); min-width: 250px; }
+         .notification.win { background-color: var(--result-win-glow); color: white;}
+         .notification.info { background-color: var(--accent-color); color: white;}
+         .notification.warn { background-color: var(--result-push-glow); color: black;}
+         .notification.error { background-color: var(--result-lose-glow); color: white;}
+         .notification.show { opacity: 1; transform: translateX(-50%) translateY(0px); }
+
+
+        /* --- Responsiveness --- */
+        @media (max-width: 992px) {
+            details { max-width: 90%; }
+            .control-item label, .stat-item .label { flex-basis: 50%; }
+            .control-item select, .control-item input, .stat-item .value { flex-basis: 45%; }
+        }
+
+        @media (max-width: 768px) {
+             body { font-size: 15px; }
+             h1 { font-size: 2em; }
+             h2 { font-size: 1.5em; }
+             .card { width: 65px; height: 95px; border-radius: 8px; }
+             .card-front { font-size: 22px; }
+             .card .suit { font-size: 16px; }
+             button, .button-style { font-size: 0.95em; padding: 10px 20px; }
+             .chip-button { width: 60px; height: 60px; border-width: 4px; }
+             #clickable-chips { gap: var(--spacing-unit); }
+             .player-hand { min-width: 190px; padding: var(--padding-standard); }
+             #player-hands-container { gap: var(--padding-standard); }
+             #result-message { font-size: 2.2em; padding: var(--padding-standard) var(--padding-large); }
+             #player-info, #dealer-info, #betting-area, #controls-area, details { padding: var(--padding-standard); }
+             details .content-wrapper { padding: var(--padding-standard); }
+             #strategy-table th, #strategy-table td { font-size: 0.8em; padding: 6px; }
+             .challenge-item { flex-direction: column; align-items: stretch; }
+             .challenge-item .description, .challenge-item .progress, .challenge-item .reward { flex-basis: auto; text-align: left; width: 100%; }
+             .challenge-item .progress { justify-content: flex-start; }
+             progress { max-width: none; width: 60%; } /* Adjust progress bar width */
+        }
+
+        @media (max-width: 480px) {
+             body { font-size: 14px; padding: var(--padding-standard) var(--spacing-unit); }
+             .game-container { padding: var(--spacing-unit); }
+             h1 { font-size: 1.6em; }
+             h2 { font-size: 1.3em; }
+             h3 { font-size: 1.1em; }
+             .cards { min-height: 90px; gap: calc(var(--spacing-unit)*0.5); }
+             .card { width: 55px; height: 80px; border-radius: 6px; margin: 2px; }
+             .card-front { font-size: 18px; }
+             .card .suit { font-size: 13px; }
+              #action-buttons, #betting-controls, #insurance-controls { gap: var(--spacing-unit); margin-top: var(--spacing-unit); }
+             button, .button-style { font-size: 0.9em; padding: 9px 16px; }
+             .chip-button { width: 50px; height: 50px; border-width: 3px; }
+             #clickable-chips { gap: var(--spacing-unit); }
+             .player-hand { min-width: 0; width: calc(100% - var(--padding-standard)); padding: var(--padding-standard); }
+             #player-hands-container { gap: var(--element-margin-bottom); }
+             .player-hand .cards { min-height: 85px; }
+             #result-message { font-size: 1.8em; padding: var(--padding-standard) var(--padding-large); min-width: 90%; }
+             details { font-size: 0.95em; max-width: 100%; border-radius: 8px; }
+             details summary { padding: var(--padding-standard); font-size: 1em; }
+             details .content-wrapper { padding: var(--padding-standard); }
+             #proposed-bet-display { font-size: 1.4em; }
+             #player-info, #dealer-info, #betting-area, #controls-area { padding: var(--padding-standard); margin-bottom: var(--element-margin-bottom); border-radius: 8px;}
+             .control-item, .stat-item { flex-direction: column; align-items: flex-start; }
+             .control-item label, .stat-item .label, .control-item select, .control-item input, .stat-item .value { flex-basis: auto; width: 100%; text-align: left; }
+             .control-item select, .control-item input { text-align: left; }
+             #strategy-table th, #strategy-table td { font-size: 0.7em; padding: 4px; }
+             progress { width: 80%; }
+        }
+    </style>
+</head>
+<body data-theme="light">
+
+<div class="game-container">
+    <h1>Blackjack Premium</h1>
+
+    <div id="notification-area"></div>
+
+    <div id="player-info">
+        <h2>Giocatore</h2>
+        <div style="margin-bottom: var(--element-margin-bottom);">
+            <span id="player-balance">Saldo: $1000</span>
+            <span id="bet-chips-display">Puntata Totale: $0</span>
+            <span id="insurance-bet-display" style="display: none;">Assicurazione: $0</span>
+            <span id="running-count-display" class="premium-feature-visual" style="display: none;">Conteggio: 0 (Vero: 0.00)</span>
+        </div>
+        <div id="player-hands-container">
+             <div class="player-hand current-hand" data-hand-index="0" style="display: none;">
+                 <h3>Mano 1</h3>
+                 <div class="cards player-cards" aria-label="Carte del giocatore - Mano 1"></div>
+                 <p class="player-score">Punteggio: 0</p>
+                 <p class="hand-bet">Puntata: $0</p>
+                 <p class="hand-status">Attiva</p>
+             </div>
+        </div>
+    </div>
+
+    <div id="dealer-info">
+        <h2>Banco</h2>
+        <div id="dealer-cards" class="cards" aria-label="Carte del banco"></div>
+        <p id="dealer-score">Punteggio: ???</p>
+    </div>
+
+    <div id="betting-area">
+        <h3>Piazza la tua Puntata</h3>
+        <div id="proposed-bet-display">$0</div>
+        <div id="clickable-chips">
+             <button class="chip-button" data-value="10" aria-label="Aggiungi $10 alla puntata">
+                 <img src="data:image/svg+xml;charset=utf-8,%3Csvg%20width='60'%20height='60'%20viewBox='0%200%20100%20100'%20xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle%20cx='50'%20cy='50'%20r='46'%20fill='%23FFFFFF'%20stroke='%23333333'%20stroke-width='3'/%3E%3Ctext%20x='50'%20y='57'%20font-family='Poppins, sans-serif'%20font-size='45'%20font-weight='bold'%20fill='%23333333'%20text-anchor='middle'%20dominant-baseline='middle'%3E10%3C/text%3E%3C/svg%3E" alt="Fiche 10" draggable="false">
+             </button>
+             <button class="chip-button" data-value="20" aria-label="Aggiungi $20 alla puntata">
+                 <img src="data:image/svg+xml;charset=utf-8,%3Csvg%20width='60'%20height='60'%20viewBox='0%200%20100%20100'%20xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle%20cx='50'%20cy='50'%20r='46'%20fill='%234a90e2'%20stroke='%23FFFFFF'%20stroke-width='3'/%3E%3Ctext%20x='50'%20y='57'%20font-family='Poppins, sans-serif'%20font-size='45'%20font-weight='bold'%20fill='%23FFFFFF'%20text-anchor='middle'%20dominant-baseline='middle'%3E20%3C/text%3E%3C/svg%3E" alt="Fiche 20" draggable="false">
+             </button>
+             <button class="chip-button" data-value="50" aria-label="Aggiungi $50 alla puntata">
+                 <img src="data:image/svg+xml;charset=utf-8,%3Csvg%20width='60'%20height='60'%20viewBox='0%200%20100%20100'%20xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle%20cx='50'%20cy='50'%20r='46'%20fill='%23d0021b'%20stroke='%23FFFFFF'%20stroke-width='3'/%3E%3Ctext%20x='50'%20y='57'%20font-family='Poppins, sans-serif'%20font-size='45'%20font-weight='bold'%20fill='%23FFFFFF'%20text-anchor='middle'%20dominant-baseline='middle'%3E50%3C/text%3E%3C/svg%3E" alt="Fiche 50" draggable="false">
+             </button>
+             <button class="chip-button" data-value="100" aria-label="Aggiungi $100 alla puntata">
+                 <img src="data:image/svg+xml;charset=utf-8,%3Csvg%20width='60'%20height='60'%20viewBox='0%200%20100%20100'%20xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle%20cx='50'%20cy='50'%20r='46'%20fill='%23000000'%20stroke='%23FFFFFF'%20stroke-width='3'/%3E%3Ctext%20x='50'%20y='57'%20font-family='Poppins, sans-serif'%20font-size='38'%20font-weight='bold'%20fill='%23FFFFFF'%20text-anchor='middle'%20dominant-baseline='middle'%3E100%3C/text%3E%3C/svg%3E" alt="Fiche 100" draggable="false">
+             </button>
+             <button class="chip-button" data-value="500" aria-label="Aggiungi $500 alla puntata">
+                 <img src="data:image/svg+xml;charset=utf-8,%3Csvg%20width='60'%20height='60'%20viewBox='0%200%20100%20100'%20xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle%20cx='50'%20cy='50'%20r='46'%20fill='%239013fe'%20stroke='%23FFFFFF'%20stroke-width='3'/%3E%3Ctext%20x='50'%20y='57'%20font-family='Poppins, sans-serif'%20font-size='38'%20font-weight='bold'%20fill='%23FFFFFF'%20text-anchor='middle'%20dominant-baseline='middle'%3E500%3C/text%3E%3C/svg%3E" alt="Fiche 500" draggable="false">
+             </button>
+             <button class="chip-button high-stakes-chip premium-action-visual" data-value="1000" aria-label="Aggiungi $1000 alla puntata">
+                 <img src="data:image/svg+xml;charset=utf-8,%3Csvg%20width='60'%20height='60'%20viewBox='0%200%20100%20100'%20xmlns='http://www.w3.org/2000/svg'%3E%3Cdefs%3E%3CradialGradient%20id='grad1k'%20cx='50%25'%20cy='50%25'%20r='50%25'%20fx='50%25'%20fy='50%25'%3E%3Cstop%20offset='0%25'%20style='stop-color:rgb(255,223,0);stop-opacity:1'/%3E%3Cstop%20offset='100%25'%20style='stop-color:rgb(184,134,11);stop-opacity:1'/%3E%3C/radialGradient%3E%3C/defs%3E%3Ccircle%20cx='50'%20cy='50'%20r='46'%20fill='url(%23grad1k)'%20stroke='%23FFFFFF'%20stroke-width='3'/%3E%3Ctext%20x='50'%20y='57'%20font-family='Poppins, sans-serif'%20font-size='32'%20font-weight='bold'%20fill='%23000000'%20text-anchor='middle'%20dominant-baseline='middle'%3E1000%3C/text%3E%3C/svg%3E" alt="Fiche 1000" draggable="false">
+             </button>
+             <button class="chip-button very-high-stakes-chip premium-action-visual" data-value="2000" aria-label="Aggiungi $2000 alla puntata">
+                 <img src="data:image/svg+xml;charset=utf-8,%3Csvg%20width='60'%20height='60'%20viewBox='0%200%20100%20100'%20xmlns='http://www.w3.org/2000/svg'%3E%3Cdefs%3E%3CradialGradient%20id='grad2k'%20cx='50%25'%20cy='50%25'%20r='50%25'%20fx='50%25'%20fy='50%25'%3E%3Cstop%20offset='0%25'%20style='stop-color:%2300bcd4;stop-opacity:1'/%3E%3Cstop%20offset='100%25'%20style='stop-color:%2300838f;stop-opacity:1'/%3E%3C/radialGradient%3E%3C/defs%3E%3Ccircle%20cx='50'%20cy='50'%20r='46'%20fill='url(%23grad2k)'%20stroke='%23FFFFFF'%20stroke-width='3'/%3E%3Ctext%20x='50'%20y='57'%20font-family='Poppins, sans-serif'%20font-size='32'%20font-weight='bold'%20fill='%23FFFFFF'%20text-anchor='middle'%20dominant-baseline='middle'%3E2000%3C/text%3E%3C/svg%3E" alt="Fiche 2000" draggable="false">
+             </button>
+        </div>
+         <div id="betting-controls">
+            <button id="deal-button" disabled>Distribuisci</button>
+            <button id="clear-bet-button" disabled>Cancella</button>
+            <button id="restore-bet-button" disabled>Ripeti Puntata</button>
+            <button id="all-in-button" class="premium-action-visual">All-In</button>
+         </div>
+    </div>
+
+     <div id="controls-area" style="display:none;">
+         <div id="action-buttons" style="display: none;">
+            <button id="hit-button">Carta</button>
+            <button id="stand-button">Stai</button>
+            <button id="double-down-button">Raddoppia</button>
+            <button id="split-button" class="premium-action-visual">Dividi</button>
+            <button id="surrender-button" class="premium-action-visual">Resa</button>
+         </div>
+
+        <div id="insurance-controls" style="display: none;">
+             <p>Il banco mostra un Asso. Vuoi l'assicurazione? (Costo: $<span id="insurance-cost">0</span>)</p>
+             <button id="accept-insurance-button">Sì</button>
+             <button id="decline-insurance-button">No</button>
+         </div>
+     </div>
+
+     <details id="settings-section">
+         <summary>Opzioni & Impostazioni</summary>
+         <div class="content-wrapper">
+             <h3>Impostazioni di Gioco</h3>
+             <div class="control-item">
+                   <label for="deck-count-select">Numero Mazzi:</label>
+                   <select id="deck-count-select">
+                       <option value="1">1</option>
+                       <option value="2">2</option>
+                       <option value="4" selected>4</option>
+                       <option value="6">6</option>
+                       <option value="8">8</option>
+                   </select>
+             </div>
+             <div class="control-item">
+                   <label for="shuffle-percentage-input">Mescola al (% carte rimaste):</label>
+                   <input type="number" id="shuffle-percentage-input" value="25" min="10" max="75" step="5">
+             </div>
+             <div class="control-item">
+                   <label for="dealer-hit-soft17-toggle">Banco chiede su Soft 17:</label>
+                   <label class="toggle-switch">
+                       <input type="checkbox" id="dealer-hit-soft17-toggle" checked>
+                       <span class="slider"></span>
+                   </label>
+             </div>
+             <div class="control-item">
+                  <label for="dark-theme-toggle">Tema Scuro:</label>
+                   <label class="toggle-switch">
+                       <input type="checkbox" id="dark-theme-toggle">
+                       <span class="slider"></span>
+                   </label>
+             </div>
+             <div class="control-item">
+                  <label for="animation-speed-select">Velocità Animazioni:</label>
+                   <select id="animation-speed-select">
+                       <option value="1">Normale</option>
+                       <option value="0.5">Veloce</option>
+                       <option value="0">Istantanea</option>
+                   </select>
+             </div>
+              <div class="control-item premium-feature-visual" id="card-counting-toggle-item">
+                   <label for="card-counting-toggle">Mostra Conteggio Carte:</label>
+                   <label class="toggle-switch">
+                       <input type="checkbox" id="card-counting-toggle">
+                       <span class="slider"></span>
+                   </label>
+             </div>
+         </div>
+     </details>
+
+     <details id="stats-section">
+        <summary>Statistiche Partita</summary>
+        <div class="content-wrapper">
+            <h3>Statistiche</h3>
+             <div class="stat-item"> <span class="label">Mani Giocate:</span> <span id="stats-hands-played" class="value">0</span> </div>
+             <div class="stat-item"> <span class="label">Mani Vinte:</span> <span id="stats-hands-won" class="value">0</span> </div>
+             <div class="stat-item"> <span class="label">Mani Perse:</span> <span id="stats-hands-lost" class="value">0</span> </div>
+             <div class="stat-item"> <span class="label">Mani Pareggiate (Push):</span> <span id="stats-hands-pushed" class="value">0</span> </div>
+             <div class="stat-item"> <span class="label">Blackjack Ottenuti:</span> <span id="stats-blackjacks" class="value">0</span> </div>
+             <div class="stat-item"> <span class="label">Percentuale Vittoria:</span> <span id="stats-win-percentage" class="value">N/A</span> </div>
+             <div class="stat-item"> <span class="label">Saldo Massimo Raggiunto:</span> <span id="stats-peak-balance" class="value">$1000</span> </div>
+             <div class="stat-item"> <span class="label">Profitto/Perdita Totale:</span> <span id="stats-total-profit" class="value">$0</span> </div>
+             <div class="stat-item"> <span class="label">Serie Vittorie Attuale:</span> <span id="stats-current-streak" class="value">0</span> </div>
+             <div class="stat-item"> <span class="label">Serie Vittorie Massima:</span> <span id="stats-max-streak" class="value">0</span> </div>
+             <div class="control-item" style="justify-content: center; border-top: 1px solid var(--border-color); padding-top: var(--element-margin-bottom);">
+                <button id="reset-stats-button">Azzera Statistiche</button>
+            </div>
+        </div>
+    </details>
+
+     <details id="strategy-section" class="premium-feature-visual">
+        <summary>Aiuto Strategia Base</summary>
+        <div class="content-wrapper">
+            <h3 class="premium-feature-visual">Strategia Base Blackjack</h3>
+            <p>Ottieni suggerimenti sulla mossa ottimale in base alle tue carte e alla carta scoperta del banco.</p>
+            <div class="control-item">
+                <label for="strategy-hint-toggle">Abilita Suggerimenti Strategia:</label>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="strategy-hint-toggle">
+                    <span class="slider"></span>
+                </label>
+            </div>
+            <p><em>Tabella Strategia (Esempio semplificato):</em></p>
+            <div style="overflow-x: auto;">
+                <table id="strategy-table">
+                    <thead> <tr> <th>Tua Mano</th> <th>Banco 2</th> <th>Banco 3</th> <th>Banco 4-6</th> <th>Banco 7-A</th> </tr> </thead>
+                    <tbody>
+                        <tr> <td>17+ Hard</td> <td>S</td> <td>S</td> <td>S</td> <td>S</td> </tr>
+                        <tr> <td>13-16 Hard</td> <td>S</td> <td>S</td> <td>S</td> <td>H</td> </tr>
+                        <tr> <td>12 Hard</td> <td>H</td> <td>H</td> <td>S</td> <td>H</td> </tr>
+                        <tr> <td>11 Hard</td> <td>D</td> <td>D</td> <td>D</td> <td>D/H</td> </tr>
+                        <tr> <td>A, 6 Soft</td> <td>H</td> <td>D/H</td> <td>D/H</td> <td>H</td> </tr>
+                        <tr> <td>A, A / 8, 8</td> <td>SP</td> <td>SP</td> <td>SP</td> <td>SP</td> </tr>
+                    </tbody>
+                </table>
+             </div>
+            <p style="font-size: 0.8em; text-align: center; margin-top: var(--spacing-unit);">H=Hit, S=Stand, D=Double, SP=Split</p>
+        </div>
+    </details>
+
+     <details id="challenges-section" class="premium-feature-visual">
+        <summary>Sfide Giornaliere</summary>
+        <div class="content-wrapper">
+            <h3 class="premium-feature-visual">Sfide Attive</h3>
+            <div id="daily-challenges-container">
+                <p>Caricamento sfide...</p>
+            </div>
+        </div>
+    </details>
+
+     <div id="result-overlay"></div>
+     <div id="result-message"></div>
+
+</div>
+
+<script>
+    // --- Elementi DOM ---
+    const playerBalanceElement = document.getElementById('player-balance');
+    const dealerCardsElement = document.getElementById('dealer-cards');
+    const dealerScoreElement = document.getElementById('dealer-score');
+    const playerHandsContainer = document.getElementById('player-hands-container');
+    const betChipsDisplayElement = document.getElementById('bet-chips-display');
+    const insuranceBetDisplayElement = document.getElementById('insurance-bet-display');
+    const proposedBetDisplayElement = document.getElementById('proposed-bet-display');
+    const clickableChipsContainer = document.getElementById('clickable-chips');
+    const chipButtons = clickableChipsContainer.querySelectorAll('.chip-button');
+    const dealButton = document.getElementById('deal-button');
+    const clearBetButton = document.getElementById('clear-bet-button');
+    const allInButton = document.getElementById('all-in-button');
+    const restoreBetButton = document.getElementById('restore-bet-button');
+    const hitButton = document.getElementById('hit-button');
+    const standButton = document.getElementById('stand-button');
+    const doubleDownButton = document.getElementById('double-down-button');
+    const splitButton = document.getElementById('split-button');
+    const surrenderButton = document.getElementById('surrender-button');
+    const resultMessageElement = document.getElementById('result-message');
+    const resultOverlay = document.getElementById('result-overlay');
+    const bettingControls = document.getElementById('betting-controls');
+    const controlsArea = document.getElementById('controls-area'); // Container generale controlli
+    const actionButtonsContainer = document.getElementById('action-buttons');
+    const insuranceControlsContainer = document.getElementById('insurance-controls');
+    const acceptInsuranceButton = document.getElementById('accept-insurance-button');
+    const declineInsuranceButton = document.getElementById('decline-insurance-button');
+    const notificationArea = document.getElementById('notification-area');
+
+    // Elementi nelle sezioni <details>
+    const settingsSection = document.getElementById('settings-section');
+    const statsSection = document.getElementById('stats-section');
+    const strategySection = document.getElementById('strategy-section');
+    const challengesSection = document.getElementById('challenges-section'); // Padre delle sfide
+
+    // Controlli Settings
+    const deckCountSelect = document.getElementById('deck-count-select');
+    const shufflePercentageInput = document.getElementById('shuffle-percentage-input');
+    const dealerHitSoft17Toggle = document.getElementById('dealer-hit-soft17-toggle');
+    const darkThemeToggle = document.getElementById('dark-theme-toggle');
+    const animationSpeedSelect = document.getElementById('animation-speed-select');
+    const cardCountingToggle = document.getElementById('card-counting-toggle');
+
+    // Elementi Stats
+    const statsHandsElement = document.getElementById('stats-hands-played');
+    const statsWinsElement = document.getElementById('stats-hands-won');
+    const statsLossesElement = document.getElementById('stats-hands-lost');
+    const statsPushesElement = document.getElementById('stats-hands-pushed');
+    const statsBjsElement = document.getElementById('stats-blackjacks');
+    const statsWinRateElement = document.getElementById('stats-win-percentage');
+    const statsPeakBalanceElement = document.getElementById('stats-peak-balance');
+    const statsTotalProfitElement = document.getElementById('stats-total-profit');
+    const statsCurrentStreakElement = document.getElementById('stats-current-streak');
+    const statsMaxStreakElement = document.getElementById('stats-max-streak');
+    const resetStatsButton = document.getElementById('reset-stats-button');
+
+    // Elementi Strategy
+    const strategyHintToggle = document.getElementById('strategy-hint-toggle');
+
+    // Elementi Challenges - Contenitore dinamico CORRETTO
+    const challengesContainer = document.getElementById('daily-challenges-container');
+
+    // Elemento Conteggio Carte
+    const runningCountDisplayElement = document.getElementById('running-count-display');
+
+    // --- Variabili Stato Gioco ---
+    let deck = [];
+    let dealerHand = [];
+    let playerHands = []; // Array di oggetti { hand: [], bet: number, score: number, status: string, element: HTMLElement }
+    let currentPlayerHandIndex = 0;
+    let playerBalance = 1000;
+    let currentTotalBet = 0;
+    let currentProposedBet = 0;
+    let insuranceBet = 0;
+    let lastBet = 0; // Memorizza l'ultima puntata confermata per il tasto "Ripeti"
+    let gameOver = true; // Indica se il round è finito (e si può puntare)
+    let insuranceOffered = false;
+    let resultTimeoutId = null; // Per cancellare il timeout del messaggio risultato
+    let consecutiveWins = 0; // Per tracciare la streak di vittorie corrente
+    let handsPlayedThisSession = 0; // Mani giocate dall'ultimo caricamento
+
+    // Stato Contatore Hi-Lo
+    let runningCount = 0;
+    let deckCount = 4; // Default, verrà sovrascritto dalle impostazioni
+    let cardsDealt = 0;
+    let shufflePercentage = 0.25; // Default, verrà sovrascritto dalle impostazioni
+
+    // Stato Statistiche
+    let stats = {
+        hands: 0,
+        wins: 0,
+        losses: 0,
+        pushes: 0,
+        blackjacks: 0,
+        peakBalance: 1000,
+        maxStreak: 0,
+        lastHandResult: '', // Per tracciare la sfida BJ streak
+        bjStreak: 0        // Per tracciare la sfida BJ streak
+    };
+
+    // --------------------------------------------------
+    // --- SEZIONE SFIDE GIORNALIERE DINAMICHE ---
+    // --------------------------------------------------
+
+    const isVip = true; // Flag VIP (simulato)
+    const DAILY_CHALLENGES_DATA_KEY = 'blackjackPremium_dailyChallengesData_v3'; // Incrementato per reset
+
+    const normalChallengePool = [
+        { id: 'win_5_hands', description: 'Vinci 5 mani', target: 5, rewardType: '$', rewardValue: 50 },
+        { id: 'get_3_bjs', description: 'Ottieni 3 Blackjack', target: 3, rewardType: '$', rewardValue: 100 },
+        { id: 'double_2_success', description: 'Raddoppia con successo 2 volte', target: 2, rewardType: '$', rewardValue: 75 },
+        { id: 'play_10_hands', description: 'Gioca 10 mani', target: 10, rewardType: '$', rewardValue: 25 },
+        { id: 'win_bet_over_100', description: 'Vinci una mano con puntata > $100', target: 1, rewardType: '$', rewardValue: 40 },
+    ];
+    const vipChallengePool = [
+        { id: 'vip_streak_5', description: 'Vinci 5 mani di fila (VIP)', target: 5, rewardType: '$', rewardValue: 150, trackStreak: true }, // Aggiunto flag per streak
+        { id: 'vip_split_win_2', description: 'Vinci 2 mani dopo uno split (VIP)', target: 2, rewardType: '$', rewardValue: 200 },
+        { id: 'vip_bj_streak_2', description: 'Ottieni 2 Blackjack di fila (VIP)', target: 2, rewardType: 'Theme', rewardValue: 'Gold VIP', trackStreak: true }, // Aggiunto flag
+        { id: 'vip_win_over_500', description: 'Vinci una mano con puntata > $500 (VIP)', target: 1, rewardType: '$', rewardValue: 250 },
+    ];
+    const NUM_NORMAL_CHALLENGES = 2;
+    const NUM_VIP_CHALLENGES = 1;
+
+    let activeChallenges = { date: null, challenges: [] }; // Oggetto sfide attive
+
+    function loadOrGenerateChallenges() {
+        const todayStr = new Date().toISOString().split('T')[0];
+        let challengesData = null;
+        try {
+            const savedData = localStorage.getItem(DAILY_CHALLENGES_DATA_KEY);
+            if (savedData) {
+                challengesData = JSON.parse(savedData);
+                if (challengesData.date !== todayStr) {
+                    console.log("Sfide giornaliere scadute. Generazione nuove sfide.");
+                    challengesData = null; // Forza rigenerazione
+                } else {
+                    console.log("Caricate sfide giornaliere da localStorage per oggi.");
+                }
+            }
+        } catch (e) {
+            console.error("Errore nel caricamento delle sfide da localStorage:", e);
+            challengesData = null;
+        }
+
+        if (!challengesData) {
+            challengesData = generateNewDailyChallenges(isVip);
+            saveChallengesToStorage(challengesData);
+        }
+
+        activeChallenges = challengesData;
+        // Assicurati che tutte le sfide abbiano le proprietà necessarie (retrocompatibilità)
+        activeChallenges.challenges.forEach(c => {
+            if (c.current === undefined) c.current = 0;
+            if (c.completed === undefined) c.completed = false;
+        });
+
+        displayChallenges(); // Mostra le sfide caricate/generate
+    }
+
+    function generateNewDailyChallenges(generateVip) {
+        const todayStr = new Date().toISOString().split('T')[0];
+        const selectedChallenges = [];
+        const usedNormalIndices = new Set();
+        const usedVipIndices = new Set();
+
+        console.log(`Generazione di ${NUM_NORMAL_CHALLENGES} sfide normali` + (generateVip ? ` e ${NUM_VIP_CHALLENGES} VIP.` : '.'));
+
+        // Seleziona sfide normali
+        while (selectedChallenges.filter(c => !c.isVip).length < NUM_NORMAL_CHALLENGES && usedNormalIndices.size < normalChallengePool.length) {
+            const randomIndex = Math.floor(Math.random() * normalChallengePool.length);
+            if (!usedNormalIndices.has(randomIndex)) {
+                const challenge = { ...normalChallengePool[randomIndex] }; // Clona
+                challenge.current = 0;
+                challenge.completed = false;
+                challenge.isVip = false;
+                selectedChallenges.push(challenge);
+                usedNormalIndices.add(randomIndex);
+            }
+        }
+
+        // Seleziona sfide VIP
+        if (generateVip) {
+            while (selectedChallenges.filter(c => c.isVip).length < NUM_VIP_CHALLENGES && usedVipIndices.size < vipChallengePool.length) {
+                const randomIndex = Math.floor(Math.random() * vipChallengePool.length);
+                if (!usedVipIndices.has(randomIndex)) {
+                    const challenge = { ...vipChallengePool[randomIndex] }; // Clona
+                    challenge.current = 0;
+                    challenge.completed = false;
+                    challenge.isVip = true;
+                    selectedChallenges.push(challenge);
+                    usedVipIndices.add(randomIndex);
+                }
+            }
+        }
+
+        return {
+            date: todayStr,
+            challenges: selectedChallenges
+        };
+    }
+
+    function saveChallengesToStorage(challengesData) {
+        try {
+            localStorage.setItem(DAILY_CHALLENGES_DATA_KEY, JSON.stringify(challengesData));
+            // console.log("Sfide giornaliere salvate in localStorage."); // Log opzionale
+        } catch (e) {
+            console.error("Errore nel salvataggio delle sfide in localStorage:", e);
+            showNotification("Errore nel salvare le sfide!", "error");
+        }
+    }
+
+    function displayChallenges() {
+        if (!challengesContainer) {
+            console.error("Contenitore sfide '#daily-challenges-container' non trovato!");
+            return;
+        }
+        challengesContainer.innerHTML = ''; // Svuota
+
+        if (!activeChallenges || !activeChallenges.challenges || activeChallenges.challenges.length === 0) {
+            challengesContainer.innerHTML = '<p>Nessuna sfida attiva per oggi.</p>';
+            return;
+        }
+
+        activeChallenges.challenges.forEach(challenge => {
+            const challengeItem = document.createElement('div');
+            challengeItem.classList.add('challenge-item');
+            challengeItem.dataset.challengeId = challenge.id;
+
+            if (challenge.isVip) {
+                challengeItem.classList.add('premium-feature-visual');
+                // challengeItem.classList.add('vip-challenge'); // Classe opzionale per stili VIP specifici
+            }
+            if (challenge.completed) {
+                challengeItem.classList.add('completed');
+            }
+
+            // Descrizione
+            const descriptionSpan = document.createElement('span');
+            descriptionSpan.classList.add('description');
+            descriptionSpan.textContent = challenge.description;
+            challengeItem.appendChild(descriptionSpan);
+
+            // Progresso (barra + testo)
+            const progressSpan = document.createElement('span');
+            progressSpan.classList.add('progress');
+
+            const progressBar = document.createElement('progress');
+            progressBar.value = challenge.current;
+            progressBar.max = challenge.target;
+            progressSpan.appendChild(progressBar);
+
+            const progressTextSpan = document.createElement('span'); // Span per il testo
+            progressTextSpan.textContent = ` ${challenge.current}/${challenge.target}`;
+            progressSpan.appendChild(progressTextSpan);
+
+            challengeItem.appendChild(progressSpan);
+
+            // Ricompensa
+            const rewardSpan = document.createElement('span');
+            rewardSpan.classList.add('reward');
+            let rewardText = 'Ricompensa: ';
+            if (challenge.rewardType === '$') {
+                rewardText += `+$${challenge.rewardValue}`;
+            } else {
+                rewardText += `${challenge.rewardValue}`; // Es. "Tema Esclusivo"
+            }
+            rewardSpan.textContent = rewardText;
+            challengeItem.appendChild(rewardSpan);
+
+            challengesContainer.appendChild(challengeItem);
+        });
+    }
+
+    /**
+     * Aggiorna il progresso di una specifica sfida.
+     * @param {string} challengeId - L'ID unico della sfida da aggiornare (es. 'win_5_hands').
+     * @param {number} [value=1] - Se absoluteValue è false, è l'incremento. Se true, è il valore assoluto da impostare.
+     * @param {boolean} [absoluteValue=false] - Se true, 'value' è il valore assoluto.
+     */
+    function updateChallengeProgress(challengeId, value = 1, absoluteValue = false) {
+        if (!activeChallenges || !activeChallenges.challenges) return;
+
+        const challenge = activeChallenges.challenges.find(c => c.id === challengeId);
+        if (!challenge || challenge.completed) return; // Non aggiornare se non trovata o già completata
+
+        let previousValue = challenge.current;
+        let newValue;
+
+        if (absoluteValue) {
+            newValue = Math.max(0, Math.min(value, challenge.target));
+        } else {
+            // Se è una sfida di tipo streak e l'incremento è <= 0, azzera
+            if (challenge.trackStreak && value <= 0) {
+                newValue = 0;
+            } else {
+                newValue = challenge.current + value;
+            }
+        }
+
+        // Assicura che current non superi target e non sia < 0
+        challenge.current = Math.max(0, Math.min(newValue, challenge.target));
+
+        // Controlla completamento SOLO se il valore è cambiato o è stato raggiunto il target
+        if (challenge.current !== previousValue || challenge.current === challenge.target) {
+            if (challenge.current >= challenge.target) {
+                if (!challenge.completed) { // Completa solo se non lo era già
+                    challenge.completed = true;
+                    console.log(`Sfida '${challenge.id}' completata!`);
+                    awardChallengeReward(challenge); // Passa l'intero oggetto sfida
+                }
+            } else {
+                // Se scende sotto il target (es. streak interrotta), non è più completata
+                // Ma non resettare completed qui, solo il valore corrente
+            }
+
+            saveChallengesToStorage(activeChallenges); // Salva lo stato aggiornato
+            displayChallenges(); // Ridisegna le sfide per mostrare il progresso
+        }
+    }
+
+
+    function awardChallengeReward(challenge) {
+        if (!challenge) return;
+
+        let notificationMessage = `Sfida completata: "${challenge.description}"! `;
+
+        if (challenge.rewardType === '$') {
+            playerBalance += challenge.rewardValue;
+            notificationMessage += `+$${challenge.rewardValue} aggiunti!`;
+            updateBalanceDisplay(); // Aggiorna subito il saldo visibile
+            saveGameState(); // Salva il nuovo bilancio
+        } else if (challenge.rewardType === 'Theme') {
+            notificationMessage += `Ricompensa "${challenge.rewardValue}" sbloccata!`;
+            // Logica per sbloccare il tema (es. salvarlo in localStorage)
+            console.log(`Ricompensa Tema: ${challenge.rewardValue} sbloccata (simulato).`);
+            // applyTheme(challenge.rewardValue); // Funzione ipotetica
+        } else {
+            notificationMessage += `Ricompensa: ${challenge.rewardValue}!`;
+        }
+
+        showNotification(notificationMessage, "win");
+        // Lo stato delle sfide è già salvato da updateChallengeProgress
+    }
+
+    // --- FINE SEZIONE SFIDE GIORNALIERE ---
+    // -------------------------------------
+
+
+    // --- Chiavi localStorage ---
+    const STORAGE_PREFIX = 'blackjackPremiumV7_';
+    const BALANCE_KEY = STORAGE_PREFIX + 'balance';
+    const STATS_KEY = STORAGE_PREFIX + 'stats';
+    const SETTINGS_KEY = STORAGE_PREFIX + 'settings';
+    const LAST_BET_KEY = STORAGE_PREFIX + 'lastBet';
+    // DAILY_CHALLENGES_DATA_KEY definito sopra
+
+    // --- Dati Carte ---
+    const suits = ['hearts', 'diamonds', 'clubs', 'spades'];
+    const values = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
+    const suitSymbols = { hearts: '♥', diamonds: '♦', clubs: '♣', spades: '♠' };
+    const cardPointValues = { '2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, '8': 8, '9': 9, '10': 10, 'J': 10, 'Q': 10, 'K': 10, 'A': 11 };
+    const hiLoValues = { '2': 1, '3': 1, '4': 1, '5': 1, '6': 1, '7': 0, '8': 0, '9': 0, '10': -1, 'J': -1, 'Q': -1, 'K': -1, 'A': -1 };
+
+    // --- Funzioni LocalStorage ---
+    function saveGameState() {
+        try {
+            localStorage.setItem(BALANCE_KEY, playerBalance);
+            localStorage.setItem(STATS_KEY, JSON.stringify(stats));
+            localStorage.setItem(LAST_BET_KEY, lastBet);
+
+            const settings = {
+                theme: document.body.getAttribute('data-theme') || 'light',
+                deckCount: deckCountSelect?.value || '4',
+                shufflePercentage: shufflePercentageInput?.value || '25',
+                dealerHitSoft17: dealerHitSoft17Toggle?.checked ?? true,
+                animationSpeed: animationSpeedSelect?.value || '1',
+                cardCountingEnabled: cardCountingToggle?.checked ?? false,
+                strategyHintsEnabled: strategyHintToggle?.checked ?? false,
+                // Salva stato apertura sezioni <details>
+                settingsOpen: settingsSection?.open ?? false,
+                statsOpen: statsSection?.open ?? true, // Default aperto
+                strategyOpen: strategySection?.open ?? false,
+                challengesOpen: challengesSection?.open ?? false
+            };
+            localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+
+            // Non salvare/caricare le sfide qui, lo fanno loadOrGenerateChallenges/saveChallengesToStorage
+
+        } catch (e) {
+            console.error("Failed to save game state:", e);
+            showNotification("Errore nel salvataggio dello stato!", "error");
+        }
+    }
+
+    function loadGameState() {
+        try {
+            const savedBalance = localStorage.getItem(BALANCE_KEY);
+            const savedStats = localStorage.getItem(STATS_KEY);
+            const savedLastBet = localStorage.getItem(LAST_BET_KEY);
+
+            playerBalance = parseFloat(savedBalance) || 1000;
+            const defaultStats = { hands: 0, wins: 0, losses: 0, pushes: 0, blackjacks: 0, peakBalance: playerBalance, maxStreak: 0, lastHandResult: '', bjStreak: 0 };
+            stats = savedStats ? { ...defaultStats, ...JSON.parse(savedStats) } : defaultStats;
+            // Assicura che peakBalance sia almeno il saldo attuale
+            if (!stats.peakBalance || stats.peakBalance < playerBalance) {
+                 stats.peakBalance = playerBalance;
+            }
+
+            lastBet = parseInt(savedLastBet, 10) || 0;
+
+            const savedSettings = localStorage.getItem(SETTINGS_KEY);
+            if (savedSettings) {
+                const settings = JSON.parse(savedSettings);
+                // Applica le impostazioni ai controlli (verranno ri-applicate da applySettings)
+                if(deckCountSelect) deckCountSelect.value = settings.deckCount || '4';
+                if(shufflePercentageInput) shufflePercentageInput.value = settings.shufflePercentage || '25';
+                if(dealerHitSoft17Toggle) dealerHitSoft17Toggle.checked = settings.dealerHitSoft17 ?? true;
+                if(animationSpeedSelect) animationSpeedSelect.value = settings.animationSpeed || '1';
+                if(cardCountingToggle) cardCountingToggle.checked = settings.cardCountingEnabled ?? false;
+                if(strategyHintToggle) strategyHintToggle.checked = settings.strategyHintsEnabled ?? false;
+            }
+
+            // Non caricare sfide qui, lo fa loadOrGenerateChallenges
+
+            console.log("Game state loaded (balance, stats, settings, last bet).");
+
+        } catch (e) {
+            console.error("Failed to load game state:", e);
+            playerBalance = 1000;
+            stats = { hands: 0, wins: 0, losses: 0, pushes: 0, blackjacks: 0, peakBalance: 1000, maxStreak: 0, lastHandResult: '', bjStreak: 0 };
+            lastBet = 0;
+            // Non resettare le sfide qui, loadOrGenerateChallenges gestirà la situazione
+            showNotification("Errore nel caricamento dello stato. Ripristinati valori default.", "error");
+        }
+    }
+
+    function applySettings() {
+         const savedSettings = localStorage.getItem(SETTINGS_KEY);
+         let theme = 'light';
+         let settingsOpen = false, statsOpen = true, strategyOpen = false, challengesOpen = false;
+
+         if (savedSettings) {
+            try {
+                 const settings = JSON.parse(savedSettings);
+                 theme = settings.theme || 'light';
+                 // Applica stato open/closed alle sezioni <details>
+                 settingsOpen = settings.settingsOpen ?? false;
+                 statsOpen = settings.statsOpen ?? true;
+                 strategyOpen = settings.strategyOpen ?? false;
+                 challengesOpen = settings.challengesOpen ?? false;
+
+                 // Imposta i valori dei controlli dalle impostazioni salvate
+                 if(deckCountSelect) deckCountSelect.value = settings.deckCount || '4';
+                 if(shufflePercentageInput) shufflePercentageInput.value = settings.shufflePercentage || '25';
+                 if(dealerHitSoft17Toggle) dealerHitSoft17Toggle.checked = settings.dealerHitSoft17 ?? true;
+                 if(animationSpeedSelect) animationSpeedSelect.value = settings.animationSpeed || '1';
+                 if(cardCountingToggle) cardCountingToggle.checked = settings.cardCountingEnabled ?? false;
+                 if(strategyHintToggle) strategyHintToggle.checked = settings.strategyHintsEnabled ?? false;
+
+            } catch (e) {
+                 console.error("Failed to parse settings for applying:", e);
+            }
+         }
+
+         // Applica tema e stato <details>
+         document.body.setAttribute('data-theme', theme);
+         if(darkThemeToggle) darkThemeToggle.checked = theme === 'dark';
+         if(settingsSection) settingsSection.open = settingsOpen;
+         if(statsSection) statsSection.open = statsOpen;
+         if(strategySection) strategySection.open = strategyOpen;
+         if(challengesSection) challengesSection.open = challengesOpen;
+
+
+         // Applica velocità animazione
+         const speedFactor = parseFloat(animationSpeedSelect?.value || '1');
+         document.documentElement.style.setProperty('--animation-factor', speedFactor.toString());
+
+         // Aggiorna variabili globali dalle impostazioni
+         deckCount = parseInt(deckCountSelect?.value || '4', 10);
+         shufflePercentage = parseInt(shufflePercentageInput?.value || '25', 10) / 100;
+
+         // Mostra/Nascondi conteggio carte
+         toggleCardCountingDisplay(cardCountingToggle?.checked ?? false);
+     }
+
+    // --- Funzioni Carte e Mazzo ---
+    function createDeck() {
+        const newDeck = [];
+        for (let i = 0; i < deckCount; i++) {
+            for (const suit of suits) {
+                for (const value of values) {
+                    newDeck.push({ suit, value });
+                }
+            }
+        }
+        return newDeck;
+    }
+
+    function shuffleDeck(deckToShuffle) {
+        for (let i = deckToShuffle.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [deckToShuffle[i], deckToShuffle[j]] = [deckToShuffle[j], deckToShuffle[i]]; // Swap
+        }
+        runningCount = 0; // Resetta conteggio dopo il mescolamento
+        cardsDealt = 0;
+        updateRunningCountDisplay();
+        console.log(`Deck shuffled (${deckToShuffle.length} cards). Running count reset.`);
+    }
+
+    function getCardValue(card) {
+        return cardPointValues[card.value] || 0;
+    }
+
+    function getHandScore(hand) {
+        let score = 0;
+        let aceCount = 0;
+        for (const card of hand) {
+            const value = getCardValue(card);
+            score += value;
+            if (card.value === 'A') {
+                aceCount++;
+            }
+        }
+        // Gestisci Assi
+        while (score > 21 && aceCount > 0) {
+            score -= 10; // Considera l'Asso come 1 invece di 11
+            aceCount--;
+        }
+        return score;
+    }
+
+    function dealCard(targetHand, elementContainer, isHidden = false) {
+        if (deck.length === 0) {
+            console.error("Deck is empty!");
+            return null; // O gestisci la fine del mazzo
+        }
+        // Controlla se mescolare prima di distribuire
+        const remainingCardsRatio = (deck.length / (deckCount * 52));
+        if (remainingCardsRatio <= shufflePercentage && deck.length > 10) { // Evita mescolamenti troppo frequenti con poche carte
+             showNotification(`Mescolamento mazzo (${Math.round(remainingCardsRatio * 100)}% rimasto)...`, "info");
+             shuffleDeck(deck);
+        }
+
+        const card = deck.pop();
+        targetHand.push(card);
+        cardsDealt++;
+        updateRunningCount(card); // Aggiorna il conteggio Hi-Lo
+        displayCard(card, elementContainer, isHidden); // Mostra la carta nell'UI
+        return card;
+    }
+
+
+    // --- Funzioni Display ---
+    function displayCard(card, elementContainer, isHidden = false) {
+        if (!elementContainer) return; // Sicurezza
+
+        const cardElement = document.createElement('div');
+        cardElement.classList.add('card');
+        // Inizialmente nascosta, poi rivelata con animazione
+        cardElement.classList.add('hidden');
+
+
+        const innerElement = document.createElement('div');
+        innerElement.classList.add('card-inner');
+
+        // Fronte della carta
+        const frontFace = document.createElement('div');
+        frontFace.classList.add('card-face', 'card-front');
+        const valueSpan = document.createElement('span');
+        valueSpan.textContent = card.value;
+        const suitSpan = document.createElement('span');
+        suitSpan.classList.add('suit');
+        suitSpan.textContent = suitSymbols[card.suit];
+        frontFace.appendChild(valueSpan);
+        frontFace.appendChild(suitSpan);
+        if (['hearts', 'diamonds'].includes(card.suit)) {
+            frontFace.classList.add('red');
+        } else {
+            frontFace.classList.add('black');
+        }
+
+        // Retro della carta
+        const backFace = document.createElement('div');
+        backFace.classList.add('card-face', 'card-back');
+        // Aggiungi logo o pattern se vuoi
+        // backFace.textContent = 'BJ';
+
+        innerElement.appendChild(frontFace);
+        innerElement.appendChild(backFace);
+        cardElement.appendChild(innerElement);
+
+        elementContainer.appendChild(cardElement);
+
+        // Forza reflow per applicare transizione
+        void cardElement.offsetWidth;
+
+        // Rivelazione animata (se non nascosta)
+        if (!isHidden) {
+             // Aggiungi un piccolo ritardo per l'animazione se necessario
+             // setTimeout(() => cardElement.classList.replace('hidden', 'revealed'), 50);
+             requestAnimationFrame(() => {
+                  cardElement.classList.replace('hidden', 'revealed');
+             });
+        } else {
+            // Se deve rimanere nascosta, lasciala con la classe 'hidden'
+        }
+    }
+
+    function updateBalanceDisplay() {
+        if (playerBalanceElement) {
+            playerBalanceElement.textContent = `Saldo: $${playerBalance.toLocaleString()}`;
+        }
+        // Aggiorna saldo massimo raggiunto nelle stats
+        if (playerBalance > stats.peakBalance) {
+            stats.peakBalance = playerBalance;
+            updateStatsDisplay(); // Aggiorna subito la visualizzazione delle stats
+        }
+    }
+
+    function updateBetDisplay() {
+        if(proposedBetDisplayElement) {
+            proposedBetDisplayElement.textContent = `$${currentProposedBet.toLocaleString()}`;
+        }
+        if(betChipsDisplayElement) {
+            betChipsDisplayElement.textContent = `Puntata Totale: $${currentTotalBet.toLocaleString()}`;
+        }
+        if(insuranceBetDisplayElement) {
+            insuranceBetDisplayElement.style.display = insuranceBet > 0 ? 'inline-block' : 'none';
+            insuranceBetDisplayElement.textContent = `Assicurazione: $${insuranceBet.toLocaleString()}`;
+        }
+
+        // Abilita/Disabilita pulsanti puntata
+        const canBet = playerBalance >= 10; // Minima puntata
+        chipButtons.forEach(btn => {
+            const value = parseInt(btn.dataset.value, 10);
+            btn.disabled = !canBet || playerBalance < value + currentProposedBet;
+        });
+        if(dealButton) dealButton.disabled = currentProposedBet === 0 || gameOver === false;
+        if(clearBetButton) clearBetButton.disabled = currentProposedBet === 0 || gameOver === false;
+        if(restoreBetButton) restoreBetButton.disabled = lastBet === 0 || currentProposedBet > 0 || playerBalance < lastBet || gameOver === false;
+        if(allInButton) allInButton.disabled = playerBalance <= 0 || currentProposedBet > 0 || gameOver === false;
+    }
+
+    function updateDealerDisplay(showHiddenCard = false) {
+        if (!dealerCardsElement || !dealerScoreElement) return;
+
+        dealerCardsElement.innerHTML = ''; // Pulisci carte vecchie
+        dealerHand.forEach((card, index) => {
+            const isHidden = index === 1 && !showHiddenCard && !gameOver;
+            displayCard(card, dealerCardsElement, isHidden);
+        });
+
+        if (showHiddenCard || gameOver || dealerHand.length < 2) {
+            dealerScoreElement.textContent = `Punteggio: ${getHandScore(dealerHand)}`;
+        } else {
+            dealerScoreElement.textContent = `Punteggio: ${getCardValue(dealerHand[0])} + ?`; // Mostra solo valore prima carta
+        }
+    }
+
+    function createPlayerHandElement(index, bet) {
+         const handWrapper = document.createElement('div');
+         handWrapper.classList.add('player-hand');
+         if (index === currentPlayerHandIndex) {
+            handWrapper.classList.add('current-hand');
+         }
+         handWrapper.dataset.handIndex = index;
+
+         const title = document.createElement('h3');
+         title.textContent = `Mano ${index + 1}`;
+         handWrapper.appendChild(title);
+
+         const cardsContainer = document.createElement('div');
+         cardsContainer.classList.add('cards', 'player-cards');
+         cardsContainer.setAttribute('aria-label', `Carte del giocatore - Mano ${index + 1}`);
+         handWrapper.appendChild(cardsContainer);
+
+         const scorePara = document.createElement('p');
+         scorePara.classList.add('player-score');
+         scorePara.textContent = 'Punteggio: 0';
+         handWrapper.appendChild(scorePara);
+
+         const betPara = document.createElement('p');
+         betPara.classList.add('hand-bet');
+         betPara.textContent = `Puntata: $${bet.toLocaleString()}`;
+         handWrapper.appendChild(betPara);
+
+         const statusPara = document.createElement('p');
+         statusPara.classList.add('hand-status');
+         statusPara.textContent = 'Attiva';
+         handWrapper.appendChild(statusPara);
+
+         return handWrapper;
+    }
+
+
+    function updatePlayerDisplay() {
+        if (!playerHandsContainer) return;
+
+        // Rimuovi solo le mani che non esistono più
+        const existingElements = Array.from(playerHandsContainer.querySelectorAll('.player-hand'));
+        existingElements.forEach(elem => {
+            const index = parseInt(elem.dataset.handIndex, 10);
+            if (!playerHands[index]) {
+                elem.remove();
+            }
+        });
+
+
+        playerHands.forEach((handData, index) => {
+            let handElement = playerHandsContainer.querySelector(`.player-hand[data-hand-index="${index}"]`);
+
+            // Se l'elemento non esiste, crealo (utile per lo split)
+            if (!handElement) {
+                 handElement = createPlayerHandElement(index, handData.bet);
+                 // Inseriscilo nella posizione corretta se possibile
+                 const nextHandElement = playerHandsContainer.querySelector(`.player-hand[data-hand-index="${index + 1}"]`);
+                 if (nextHandElement) {
+                    playerHandsContainer.insertBefore(handElement, nextHandElement);
+                 } else {
+                    playerHandsContainer.appendChild(handElement);
+                 }
+                 handData.element = handElement; // Associa l'elemento creato
+            }
+
+            // Aggiorna classe current-hand
+            if (index === currentPlayerHandIndex && handData.status === 'active' && !gameOver) {
+                 handElement.classList.add('current-hand');
+            } else {
+                 handElement.classList.remove('current-hand');
+            }
+
+            // Aggiorna carte (mostra solo quelle nuove)
+            const cardsContainer = handElement.querySelector('.player-cards');
+            const existingCards = cardsContainer.querySelectorAll('.card');
+             if (existingCards.length < handData.hand.length) {
+                  for(let i = existingCards.length; i < handData.hand.length; i++) {
+                      displayCard(handData.hand[i], cardsContainer, false);
+                  }
+             } else if (existingCards.length > handData.hand.length) {
+                 // Caso split: rimuovi la carta spostata
+                 cardsContainer.innerHTML = ''; // Più semplice ricrearle
+                 handData.hand.forEach(card => displayCard(card, cardsContainer, false));
+             }
+
+
+            // Aggiorna punteggio e stato
+            const scoreElement = handElement.querySelector('.player-score');
+            const statusElement = handElement.querySelector('.hand-status');
+            const betElement = handElement.querySelector('.hand-bet');
+
+            handData.score = getHandScore(handData.hand);
+            if (scoreElement) scoreElement.textContent = `Punteggio: ${handData.score}`;
+            if (statusElement) statusElement.textContent = handData.status;
+            if (betElement) betElement.textContent = `Puntata: $${handData.bet.toLocaleString()}`;
+
+        });
+         updateActionButtons(); // Aggiorna pulsanti in base allo stato della mano corrente
+    }
+
+
+    function updateActionButtons() {
+        if (!actionButtonsContainer || !playerHands[currentPlayerHandIndex]) {
+            // Nascondi tutto se non ci sono mani o il contenitore non esiste
+            if(actionButtonsContainer) actionButtonsContainer.style.display = 'none';
+            if(insuranceControlsContainer) insuranceControlsContainer.style.display = 'none';
+            return;
+        }
+
+        const currentHand = playerHands[currentPlayerHandIndex];
+        const canHit = currentHand.status === 'active' && currentHand.score < 21 && !gameOver && !insuranceOffered;
+        const canStand = currentHand.status === 'active' && !gameOver && !insuranceOffered;
+        const canDouble = currentHand.status === 'active' && currentHand.hand.length === 2 && playerBalance >= currentHand.bet && !gameOver && !insuranceOffered;
+        const canSplit = currentHand.status === 'active' && currentHand.hand.length === 2 && playerBalance >= currentHand.bet && getCardValue(currentHand.hand[0]) === getCardValue(currentHand.hand[1]) && !gameOver && !insuranceOffered && playerHands.length < 4; // Limite split
+        const canSurrender = currentHand.status === 'active' && currentHand.hand.length === 2 && playerHands.length === 1 && !gameOver && !insuranceOffered; // Solo sulla prima mano, prima di altre azioni
+
+        if (hitButton) hitButton.disabled = !canHit;
+        if (standButton) standButton.disabled = !canStand;
+        if (doubleDownButton) doubleDownButton.disabled = !canDouble;
+        if (splitButton) splitButton.disabled = !canSplit;
+        if (surrenderButton) surrenderButton.disabled = !canSurrender;
+
+        // Mostra/Nascondi contenitore azioni
+        actionButtonsContainer.style.display = (canHit || canStand || canDouble || canSplit || canSurrender) && !insuranceOffered ? 'flex' : 'none';
+
+        // Gestione suggerimenti strategia
+        highlightStrategyHint();
+    }
+
+    function toggleCardCountingDisplay(show) {
+        if(runningCountDisplayElement) {
+            runningCountDisplayElement.style.display = show ? 'inline-block' : 'none';
+            if (show) updateRunningCountDisplay(); // Aggiorna se visibile
+        }
+        // Potrebbe essere necessario nascondere/mostrare l'intero toggle nelle opzioni
+        const toggleItem = document.getElementById('card-counting-toggle-item');
+        if(toggleItem) {
+             // Qui potresti aggiungere logica per nascondere l'opzione per utenti non premium
+             // toggleItem.style.display = isVip ? 'flex' : 'none';
+        }
+    }
+
+    function updateRunningCountDisplay() {
+        if (runningCountDisplayElement && (cardCountingToggle?.checked ?? false)) {
+            const decksRemaining = Math.max(0.1, (deck.length / 52)); // Stima mazzi rimanenti (evita divisione per 0)
+            const trueCount = runningCount / decksRemaining;
+            runningCountDisplayElement.textContent = `Conteggio: ${runningCount} (Vero: ${trueCount.toFixed(2)})`;
+        }
+    }
+
+    function updateStatsDisplay() {
+        if (!statsHandsElement) return; // Assumi che se uno esiste, esistono tutti
+
+        const totalPlayed = stats.hands;
+        const winRate = totalPlayed > 0 ? ((stats.wins / (totalPlayed - stats.pushes)) * 100).toFixed(1) : 'N/A';
+        const profit = playerBalance - 1000; // Calcola profitto rispetto al saldo iniziale
+
+        statsHandsElement.textContent = stats.hands;
+        statsWinsElement.textContent = stats.wins;
+        statsLossesElement.textContent = stats.losses;
+        statsPushesElement.textContent = stats.pushes;
+        statsBjsElement.textContent = stats.blackjacks;
+        statsWinRateElement.textContent = `${winRate}%`;
+        statsPeakBalanceElement.textContent = `$${stats.peakBalance.toLocaleString()}`;
+        statsTotalProfitElement.textContent = `$${profit.toLocaleString()}`;
+        statsCurrentStreakElement.textContent = consecutiveWins;
+        statsMaxStreakElement.textContent = stats.maxStreak;
+    }
+
+    function updateAllDisplays() {
+         updateBalanceDisplay();
+         updateBetDisplay();
+         updateDealerDisplay(gameOver); // Mostra carta coperta solo se il gioco NON è finito
+         updatePlayerDisplay();
+         // updateActionButtons() viene chiamato da updatePlayerDisplay
+         updateStatsDisplay();
+         displayChallenges(); // Aggiorna le sfide nell'UI
+         toggleCardCountingDisplay(cardCountingToggle?.checked ?? false);
+     }
+
+
+    // --- Logica di Gioco ---
+    function resetGame(startNewRound = true) {
+        gameOver = true; // Permetti puntate
+        insuranceOffered = false;
+        insuranceBet = 0;
+        currentTotalBet = 0; // Azzera puntata totale visibile
+        currentPlayerHandIndex = 0; // Resetta indice mano attiva
+        dealerHand = [];
+        playerHands = []; // Azzera array mani giocatore
+
+        // Pulisci UI
+        if(dealerCardsElement) dealerCardsElement.innerHTML = '';
+        if(dealerScoreElement) dealerScoreElement.textContent = 'Punteggio: ???';
+        if(playerHandsContainer) playerHandsContainer.innerHTML = ''; // Rimuovi tutte le mani precedenti
+        if(bettingControls) bettingControls.style.display = 'flex'; // Mostra controlli puntata
+        if(controlsArea) controlsArea.style.display = 'none'; // Nascondi controlli azione
+        if(actionButtonsContainer) actionButtonsContainer.style.display = 'none';
+        if(insuranceControlsContainer) insuranceControlsContainer.style.display = 'none';
+        hideResult(); // Nascondi eventuale messaggio risultato precedente
+
+
+        if (startNewRound) {
+            currentProposedBet = 0; // Azzera puntata proposta solo se inizia un nuovo round
+        }
+        // Crea un nuovo mazzo solo se necessario (o all'inizio)
+        if (deck.length < (deckCount * 52 * shufflePercentage) || deck.length < 15) { // Mescola se poche carte o sotto soglia
+             deck = createDeck();
+             shuffleDeck(deck);
+        }
+
+        updateAllDisplays(); // Aggiorna UI per stato di puntata
+        console.log("Game reset. Ready for betting.");
+    }
+
+
+    function addBet(amount) {
+        if (gameOver && playerBalance >= currentProposedBet + amount) {
+            currentProposedBet += amount;
+            updateBetDisplay();
+        } else if (!gameOver) {
+            showNotification("Puoi puntare solo tra una mano e l'altra.", "warn");
+        } else {
+            showNotification("Saldo insufficiente!", "error");
+        }
+    }
+
+    function clearBet() {
+        if (gameOver) {
+            currentProposedBet = 0;
+            updateBetDisplay();
+        }
+    }
+
+    function restoreLastBet() {
+        if (gameOver && lastBet > 0 && playerBalance >= lastBet) {
+            currentProposedBet = lastBet;
+            updateBetDisplay();
+        } else if (lastBet === 0) {
+            showNotification("Nessuna puntata precedente da ripristinare.", "info");
+        } else if (playerBalance < lastBet) {
+            showNotification("Saldo insufficiente per ripristinare l'ultima puntata.", "error");
+        }
+    }
+
+    function playerAllIn() {
+        if (gameOver && playerBalance > 0) {
+            currentProposedBet = playerBalance;
+            updateBetDisplay();
+        }
+    }
+
+    function dealHand() {
+        if (currentProposedBet <= 0) {
+            showNotification("Devi piazzare una puntata prima di distribuire.", "warn");
+            return;
+        }
+        if (currentProposedBet > playerBalance) {
+            showNotification("Puntata proposta supera il saldo!", "error");
+            return;
+        }
+
+        // Conferma la puntata
+        playerBalance -= currentProposedBet;
+        currentTotalBet = currentProposedBet;
+        lastBet = currentProposedBet; // Salva come ultima puntata confermata
+        currentProposedBet = 0;     // Azzera la proposta
+
+        gameOver = false; // Inizia il round
+        insuranceOffered = false;
+        insuranceBet = 0;
+        stats.hands++;
+        handsPlayedThisSession++;
+        updateChallengeProgress('play_10_hands'); // <- AGGIORNAMENTO SFIDA
+
+        dealerHand = [];
+        playerHands = []; // Azzera l'array delle mani
+        if(playerHandsContainer) playerHandsContainer.innerHTML = ''; // Pulisci il contenitore HTML
+
+        // Crea la prima mano del giocatore
+        const firstHandElement = createPlayerHandElement(0, lastBet);
+        if(playerHandsContainer) playerHandsContainer.appendChild(firstHandElement);
+        playerHands.push({ hand: [], bet: lastBet, score: 0, status: 'active', element: firstHandElement });
+        currentPlayerHandIndex = 0;
+
+        // Nascondi controlli puntata, mostra area controlli generali (anche se i pulsanti specifici sono nascosti inizialmente)
+        if(bettingControls) bettingControls.style.display = 'none';
+        if(controlsArea) controlsArea.style.display = 'flex'; // Mostra l'area che conterrà i pulsanti azione/assicurazione
+
+        // Distribuisci carte iniziali con animazione
+        const playerCardContainer = playerHands[0].element.querySelector('.player-cards');
+
+        // Usa setTimeout per sequenziare le animazioni se --animation-factor > 0
+        const delay = parseFloat(document.documentElement.style.getPropertyValue('--animation-factor') || '1') * 400; // Ritardo base
+        let currentDelay = 0;
+
+        setTimeout(() => dealCard(playerHands[0].hand, playerCardContainer), currentDelay);
+        currentDelay += delay;
+        setTimeout(() => dealCard(dealerHand, dealerCardsElement), currentDelay);
+        currentDelay += delay;
+        setTimeout(() => dealCard(playerHands[0].hand, playerCardContainer), currentDelay);
+        currentDelay += delay;
+        setTimeout(() => dealCard(dealerHand, dealerCardsElement, true), currentDelay); // Carta coperta del banco
+        currentDelay += delay;
+
+        // Dopo l'ultima animazione, aggiorna display e controlla BJ/Assicurazione
+        setTimeout(() => {
+             updateAllDisplays(); // Aggiorna tutto dopo le animazioni base
+             checkForBlackjackAndInsurance();
+             saveGameState(); // Salva lo stato dopo la distribuzione
+             console.log("Hand dealt.");
+        }, currentDelay);
+
+    }
+
+
+    function checkForBlackjackAndInsurance() {
+        if (playerHands.length === 0) return; // Sicurezza
+
+        const playerHand = playerHands[0];
+        const playerScore = getHandScore(playerHand.hand);
+        const dealerScore = getHandScore(dealerHand);
+        const dealerShowingCard = dealerHand.length > 0 ? dealerHand[0] : null;
+        const dealerShowingAce = dealerShowingCard?.value === 'A';
+        const dealerShowingTen = dealerShowingCard && getCardValue(dealerShowingCard) === 10;
+
+        const playerHasBlackjack = playerScore === 21 && playerHand.hand.length === 2;
+        const dealerHasBlackjack = getHandScore(dealerHand.filter((_, i) => i < 2)) === 21 && dealerHand.length >= 2; // Controlla solo le prime 2 carte
+
+        stats.lastHandResult = ''; // Resetta per questo round
+
+        if (playerHasBlackjack) {
+            playerHand.status = 'blackjack';
+            stats.blackjacks++;
+            updateChallengeProgress('get_3_bjs'); // Sfida BJ normali
+
+            // Sfida VIP BJ Streak
+            const lastResultWasBJ = stats.lastHandResult === 'blackjack'; // Controlla esito mano *precedente*
+            stats.bjStreak = lastResultWasBJ ? stats.bjStreak + 1 : 1;
+            updateChallengeProgress('vip_bj_streak_2', stats.bjStreak, true); // Aggiorna con valore assoluto
+
+            if (dealerHasBlackjack) {
+                 console.log("Push - Both have Blackjack");
+                 playerHand.status = 'Pareggio (BJ)';
+                 stats.pushes++;
+                 consecutiveWins = 0; // Interrompe streak vittorie
+                 updateChallengeProgress('vip_streak_5', 0, true); // Resetta streak VIP
+                 stats.lastHandResult = 'push';
+                 updatePlayerDisplay();
+                 updateDealerDisplay(true); // Mostra la carta del banco
+                 setTimeout(() => endRound(21), 1000 * parseFloat(document.documentElement.style.getPropertyValue('--animation-factor') || '1'));
+            } else {
+                 console.log("Player Blackjack!");
+                 const payout = playerHand.bet * 1.5;
+                 playerBalance += playerHand.bet + payout;
+                 playerHand.status = `Blackjack! +$${payout.toLocaleString()}`;
+                 stats.wins++;
+                 consecutiveWins++;
+                 if(consecutiveWins > stats.maxStreak) stats.maxStreak = consecutiveWins;
+                 updateChallengeProgress('win_5_hands');
+                 updateChallengeProgress('vip_streak_5', consecutiveWins, true); // Aggiorna streak VIP
+                 if (playerHand.bet > 100) updateChallengeProgress('win_bet_over_100');
+                 if (playerHand.bet > 500) updateChallengeProgress('vip_win_over_500');
+                 stats.lastHandResult = 'blackjack'; // Salva come esito BJ
+                 updatePlayerDisplay();
+                 updateDealerDisplay(true); // Mostra la carta del banco
+                 endRound(getHandScore(dealerHand)); // Fine round con vincita BJ
+            }
+        } else {
+             // Non è BJ del giocatore, azzera la sua streak di BJ
+             stats.bjStreak = 0;
+             // Non fare updateChallengeProgress qui, altrimenti ogni mano non-BJ azzera la sfida
+
+             if (dealerShowingAce) {
+                 offerInsurance();
+             } else if (dealerShowingTen && dealerHasBlackjack) {
+                 // Se banco mostra 10 e ha BJ, il round finisce subito
+                 console.log("Dealer Blackjack. Player loses.");
+                 updateDealerDisplay(true); // Mostra il BJ del banco
+                 determineOutcome(playerHand, 21); // Determina esito (sarà Loss)
+                 updatePlayerDisplay();
+                 setTimeout(() => endRound(21), 1000 * parseFloat(document.documentElement.style.getPropertyValue('--animation-factor') || '1'));
+             } else {
+                 // Nessun BJ da nessuna parte, né assicurazione -> prosegui normalmente
+                 updateActionButtons(); // Mostra i pulsanti azione
+             }
+        }
+    }
+
+
+    function offerInsurance() {
+        const cost = playerHands[0].bet / 2;
+        if (playerBalance >= cost) {
+            insuranceOffered = true;
+            if(insuranceControlsContainer) {
+                 insuranceControlsContainer.style.display = 'flex';
+                 const costSpan = insuranceControlsContainer.querySelector('#insurance-cost');
+                 if (costSpan) costSpan.textContent = cost.toLocaleString();
+            }
+            if(actionButtonsContainer) actionButtonsContainer.style.display = 'none'; // Nascondi pulsanti azione
+            console.log("Insurance offered.");
+        } else {
+            console.log("Insurance cannot be offered (insufficient balance).");
+            proceedAfterInsurance(); // Procedi come se avesse rifiutato
+        }
+    }
+
+    function acceptInsurance() {
+        if (!insuranceOffered) return;
+        const cost = playerHands[0].bet / 2;
+        if (playerBalance >= cost) {
+            playerBalance -= cost;
+            insuranceBet = cost;
+            currentTotalBet += cost; // Aggiungi al totale puntato
+            console.log("Insurance accepted.");
+            updateBalanceDisplay();
+            updateBetDisplay();
+            proceedAfterInsurance();
+        } else {
+             showNotification("Saldo insufficiente per l'assicurazione!", "error");
+        }
+    }
+
+    function declineInsurance() {
+        if (!insuranceOffered) return;
+        console.log("Insurance declined.");
+        proceedAfterInsurance();
+    }
+
+    function proceedAfterInsurance() {
+        insuranceOffered = false;
+        if(insuranceControlsContainer) insuranceControlsContainer.style.display = 'none';
+
+        // Controlla se il banco ha Blackjack ORA
+        const dealerHasBlackjack = getHandScore(dealerHand.filter((_,i)=>i<2)) === 21; // Controlla prime 2 carte
+        updateDealerDisplay(true); // Mostra la carta coperta
+
+        if (dealerHasBlackjack) {
+            console.log("Dealer Blackjack!");
+            if (insuranceBet > 0) {
+                const payout = insuranceBet * 2;
+                playerBalance += payout; // Vinta assicurazione
+                showNotification(`Dealer ha Blackjack! Assicurazione vinta +$${payout.toLocaleString()}`, "win");
+            } else {
+                showNotification("Dealer ha Blackjack!", "lose");
+            }
+            determineOutcome(playerHands[0], 21); // Determina esito mano principale (sarà Loss)
+            updatePlayerDisplay();
+            endRound(21);
+        } else {
+            console.log("Dealer does not have Blackjack.");
+            if (insuranceBet > 0) {
+                showNotification("Dealer non ha Blackjack. Assicurazione persa.", "info");
+                // L'assicurazione è già stata scalata dal saldo
+            }
+            // Il gioco continua normalmente
+            updateActionButtons(); // Riattiva pulsanti azione
+        }
+    }
+
+    function playerHit() {
+         if (gameOver || insuranceOffered || !playerHands[currentPlayerHandIndex] || playerHands[currentPlayerHandIndex].status !== 'active') return;
+
+         const currentHandData = playerHands[currentPlayerHandIndex];
+         const handElement = currentHandData.element.querySelector('.player-cards');
+         dealCard(currentHandData.hand, handElement);
+         currentHandData.score = getHandScore(currentHandData.hand);
+         updatePlayerDisplay(); // Aggiorna punteggio e carte
+
+         if (currentHandData.score > 21) {
+             currentHandData.status = 'Sballato';
+             console.log(`Hand ${currentPlayerHandIndex + 1} busted.`);
+             determineOutcome(currentHandData, 0); // Marca come persa nelle stats
+             moveToNextHandOrDealer();
+         } else if (currentHandData.score === 21) {
+             // Se raggiunge 21 con hit, passa automaticamente alla prossima mano/banco
+             currentHandData.status = 'Stood (21)';
+             moveToNextHandOrDealer();
+         } else {
+             updateActionButtons(); // Aggiorna pulsanti (disabilita double/split/surrender)
+         }
+         saveGameState();
+    }
+
+    function playerStand() {
+        if (gameOver || insuranceOffered || !playerHands[currentPlayerHandIndex] || playerHands[currentPlayerHandIndex].status !== 'active') return;
+
+        const currentHandData = playerHands[currentPlayerHandIndex];
+        currentHandData.status = 'Stood';
+        console.log(`Player stands on hand ${currentPlayerHandIndex + 1}.`);
+        moveToNextHandOrDealer();
+        saveGameState();
+    }
+
+    function moveToNextHandOrDealer() {
+        currentPlayerHandIndex++;
+        if (currentPlayerHandIndex < playerHands.length) {
+            // C'è un'altra mano da giocare (dopo split)
+            const nextHand = playerHands[currentPlayerHandIndex];
+            // Se la prossima mano è già a 21 (es. A split + 10), passa oltre
+            if(getHandScore(nextHand.hand) === 21 && nextHand.hand.length === 2) {
+                 nextHand.status = 'Stood (21)';
+                 moveToNextHandOrDealer();
+            } else {
+                 nextHand.status = 'active'; // Assicura sia attiva
+                 updatePlayerDisplay(); // Evidenzia la nuova mano e aggiorna pulsanti
+            }
+        } else {
+            // Tutte le mani del giocatore sono giocate, tocca al banco
+             console.log("Player finished. Dealer's turn.");
+             if (actionButtonsContainer) actionButtonsContainer.style.display = 'none'; // Nascondi pulsanti giocatore
+             dealerTurn();
+        }
+    }
+
+    function playerDoubleDown() {
+         if (gameOver || insuranceOffered || !playerHands[currentPlayerHandIndex] || playerHands[currentPlayerHandIndex].status !== 'active') return;
+
+         const currentHandData = playerHands[currentPlayerHandIndex];
+         // Verifica condizioni (solo su prime 2 carte, saldo sufficiente)
+         if (currentHandData.hand.length === 2 && playerBalance >= currentHandData.bet) {
+             playerBalance -= currentHandData.bet;
+             currentTotalBet += currentHandData.bet;
+             currentHandData.bet *= 2;
+             console.log(`Player doubles down on hand ${currentPlayerHandIndex + 1}. New bet: $${currentHandData.bet}`);
+             updateBalanceDisplay();
+             updateBetDisplay();
+
+             const handElement = currentHandData.element.querySelector('.player-cards');
+             dealCard(currentHandData.hand, handElement); // Distribuisci una sola carta
+             currentHandData.score = getHandScore(currentHandData.hand);
+             updatePlayerDisplay(); // Mostra la nuova carta e punteggio
+
+             if (currentHandData.score > 21) {
+                 currentHandData.status = 'Sballato (Double)';
+                 determineOutcome(currentHandData, 0); // Marca come persa
+                 console.log(`Hand ${currentPlayerHandIndex + 1} busted after double down.`);
+             } else {
+                 currentHandData.status = 'Stood (Double)';
+                 updateChallengeProgress('double_2_success'); // <- AGGIORNAMENTO SFIDA (Raddoppio riuscito)
+             }
+             moveToNextHandOrDealer(); // Passa alla prossima mano o al banco
+             saveGameState();
+         } else {
+             showNotification("Non puoi raddoppiare ora.", "warn");
+             console.warn("Double down conditions not met.");
+         }
+    }
+
+    function playerSplit() {
+          if (gameOver || insuranceOffered || !playerHands[currentPlayerHandIndex] || playerHands[currentPlayerHandIndex].status !== 'active') return;
+
+          const currentHandData = playerHands[currentPlayerHandIndex];
+          // Verifica condizioni (2 carte, valore uguale, saldo suff., limite split)
+          if (currentHandData.hand.length === 2 &&
+              playerBalance >= currentHandData.bet &&
+              getCardValue(currentHandData.hand[0]) === getCardValue(currentHandData.hand[1]) &&
+              playerHands.length < 4)
+          {
+              playerBalance -= currentHandData.bet; // Paga la puntata per la nuova mano
+              currentTotalBet += currentHandData.bet;
+              const originalHand = currentHandData.hand;
+              const originalBet = currentHandData.bet;
+
+              // Crea la nuova mano spostando la seconda carta
+              const newHandData = {
+                  hand: [originalHand.pop()], // Muove la seconda carta alla nuova mano
+                  bet: originalBet,
+                  score: 0, // Verrà ricalcolato
+                  status: 'active',
+                  element: null // Verrà creato da updatePlayerDisplay
+              };
+
+              // Inserisci la nuova mano nell'array DOPO quella corrente
+              playerHands.splice(currentPlayerHandIndex + 1, 0, newHandData);
+
+              console.log(`Player splits hand ${currentPlayerHandIndex + 1}.`);
+              updateBalanceDisplay();
+              updateBetDisplay();
+
+              // Pesca una carta per la mano originale
+              const originalHandElementContainer = currentHandData.element.querySelector('.player-cards');
+              dealCard(currentHandData.hand, originalHandElementContainer); // Pesca per la prima mano splittata
+              currentHandData.score = getHandScore(currentHandData.hand);
+
+              // updatePlayerDisplay gestirà la creazione dell'elemento per la nuova mano
+              // e pescherà la carta per essa quando la renderizza per la prima volta
+              updatePlayerDisplay();
+
+              // Controlla se la prima mano splittata è già 21 (es. split di Assi)
+               if (getHandScore(currentHandData.hand) === 21) {
+                    currentHandData.status = 'Stood (Split 21)';
+                    // Non muovere subito, aspetta che updatePlayerDisplay peschi per la seconda mano
+               }
+
+               // Ora che entrambe le mani hanno 2 carte (grazie a updatePlayerDisplay),
+               // verifica se la seconda mano splittata è 21
+               const secondHandData = playerHands[currentPlayerHandIndex + 1];
+               if (getHandScore(secondHandData.hand) === 21) {
+                    secondHandData.status = 'Stood (Split 21)';
+               }
+
+              // Se la PRIMA mano NON è 21, rimane attiva e i pulsanti si aggiornano
+              if (currentHandData.status === 'active') {
+                   updateActionButtons();
+              }
+               // Se la PRIMA mano è 21, ma la seconda no, ci si sposta automaticamente alla seconda
+               else if (secondHandData.status === 'active') {
+                   moveToNextHandOrDealer(); // Si sposta all'indice +1
+               }
+                // Se entrambe sono 21, ci si sposta oltre entrambe
+               else {
+                   moveToNextHandOrDealer(); // Tenta di spostarsi sulla prima (indice +1)
+                   moveToNextHandOrDealer(); // Tenta di spostarsi sulla seconda (indice +2) -> dealer turn
+               }
+
+              saveGameState();
+          } else {
+              showNotification("Non puoi dividere ora.", "warn");
+              console.warn("Split conditions not met.");
+          }
+      }
+
+
+    function playerSurrender() {
+         if (gameOver || insuranceOffered || !playerHands[currentPlayerHandIndex] || playerHands[currentPlayerHandIndex].status !== 'active') return;
+
+         const currentHandData = playerHands[currentPlayerHandIndex];
+         // Verifica condizioni (solo prime 2 carte, solo prima mano del round)
+         if (currentHandData.hand.length === 2 && playerHands.length === 1) {
+             const refund = currentHandData.bet / 2;
+             playerBalance += refund;
+             currentTotalBet -= refund; // Rimuovi metà puntata dal totale
+             currentHandData.status = 'Resa';
+             console.log(`Player surrenders hand ${currentPlayerHandIndex + 1}. Half bet refunded.`);
+             determineOutcome(currentHandData, 0); // Marca come persa (ma con rimborso parziale)
+             updateBalanceDisplay();
+             updateBetDisplay();
+             updatePlayerDisplay(); // Mostra lo stato "Resa"
+             endRound(0); // Termina il round subito dopo la resa
+             saveGameState();
+         } else {
+             showNotification("Non puoi arrenderti ora.", "warn");
+             console.warn("Surrender conditions not met.");
+         }
+    }
+
+
+    // --- Logica Banco e Fine Round ---
+    function dealerTurn() {
+        updateDealerDisplay(true); // Mostra la carta coperta
+
+        let dealerScore = getHandScore(dealerHand);
+        const hitOnSoft17 = dealerHitSoft17Toggle?.checked ?? true;
+
+        function dealerHit() {
+            if (dealerHand.length >= 17) { // Limite carte per sicurezza
+                 console.warn("Dealer has too many cards, stopping.");
+                 endRound(dealerScore);
+                 return;
+            }
+
+            console.log("Dealer hits.");
+            dealCard(dealerHand, dealerCardsElement);
+            dealerScore = getHandScore(dealerHand);
+            updateDealerDisplay(true);
+
+            if (dealerScore > 21) {
+                console.log("Dealer busts!");
+                endRound(dealerScore);
+            } else if (dealerScore < 17 || (dealerScore === 17 && dealerHand.some(c => c.value === 'A') && hitOnSoft17)) {
+                 // Continua a pescare se < 17 o su Soft 17 (se l'opzione è attiva)
+                 setTimeout(dealerHit, 800 * parseFloat(document.documentElement.style.getPropertyValue('--animation-factor') || '1')); // Ritardo per visibilità
+            } else {
+                // Il banco sta
+                console.log(`Dealer stands with ${dealerScore}.`);
+                endRound(dealerScore);
+            }
+        }
+
+        // Verifica se il banco deve pescare
+        if (dealerScore < 17 || (dealerScore === 17 && dealerHand.some(c => c.value === 'A') && hitOnSoft17)) {
+            setTimeout(dealerHit, 800 * parseFloat(document.documentElement.style.getPropertyValue('--animation-factor') || '1'));
+        } else {
+             console.log(`Dealer stands with ${dealerScore}.`);
+             endRound(dealerScore);
+        }
+    }
+
+
+    function determineOutcome(playerHandData, dealerScore) {
+         // Se lo stato non è giocabile (busted, surrendered, blackjack già gestito), aggiorna solo le stats
+         if (!['active', 'stood', 'stood (double)', 'stood (split 21)', 'stood (21)'].includes(playerHandData.status.toLowerCase())) {
+              if (playerHandData.status.toLowerCase().includes('sballato') || playerHandData.status.toLowerCase() === 'resa') {
+                  stats.losses++;
+                  consecutiveWins = 0;
+                  updateChallengeProgress('vip_streak_5', 0, true); // Resetta streak VIP
+                  stats.lastHandResult = 'loss';
+              } else if (playerHandData.status.toLowerCase().includes('pareggio')) {
+                   stats.pushes++;
+                   consecutiveWins = 0;
+                   updateChallengeProgress('vip_streak_5', 0, true);
+                   stats.lastHandResult = 'push';
+              } else if (playerHandData.status.toLowerCase().includes('blackjack')) {
+                   // Già gestito in checkForBlackjack, ma assicurati che lastHandResult sia corretto
+                   // stats.wins++; (già fatto)
+                   // consecutiveWins++; (già fatto)
+                   // ... update sfide (già fatto)
+                   stats.lastHandResult = 'blackjack';
+              } else {
+                   stats.lastHandResult = ''; // Stato non riconosciuto o non finale
+              }
+              return playerHandData.status; // Ritorna lo stato esistente
+         }
+
+         // Se lo stato è giocabile, determina l'esito vs banco
+         const playerScore = playerHandData.score;
+         let result = '';
+         let payout = 0;
+         let statusText = '';
+         let winClass = ''; // Per messaggio risultato
+
+         if (dealerScore > 21) { result = 'Win'; winClass = 'win'; }
+         else if (playerScore > dealerScore) { result = 'Win'; winClass = 'win'; }
+         else if (playerScore < dealerScore) { result = 'Loss'; winClass = 'lose'; }
+         else { result = 'Push'; winClass = 'push'; }
+
+         stats.lastHandResult = result.toLowerCase(); // Salva esito per streak BJ
+
+         switch (result) {
+              case 'Win':
+                  payout = playerHandData.bet; // Vincita 1:1
+                  playerBalance += playerHandData.bet + payout; // Restituzione puntata + vincita
+                  statusText = `Vinto +$${payout.toLocaleString()}`;
+                  stats.wins++;
+                  consecutiveWins++;
+                  if(consecutiveWins > stats.maxStreak) stats.maxStreak = consecutiveWins;
+                  updateChallengeProgress('win_5_hands'); // Sfida 5 vittorie
+                  updateChallengeProgress('vip_streak_5', consecutiveWins, true); // Sfida streak VIP (assoluto)
+                  if (playerHandData.bet > 100) updateChallengeProgress('win_bet_over_100'); // Sfida puntata > 100
+                  if (playerHandData.bet > 500) updateChallengeProgress('vip_win_over_500'); // Sfida puntata > 500 (VIP)
+                  // Sfida VIP split win: controlla se la mano deriva da uno split E non è un BJ naturale
+                  if (playerHands.length > 1 && !playerHandData.status.toLowerCase().includes('blackjack')) {
+                      updateChallengeProgress('vip_split_win_2');
+                  }
+                  break;
+              case 'Loss':
+                  statusText = `Perso -$${playerHandData.bet.toLocaleString()}`;
+                  stats.losses++;
+                  consecutiveWins = 0; // Interrompe streak
+                  updateChallengeProgress('vip_streak_5', 0, true); // Resetta streak VIP
+                  break;
+              case 'Push':
+                  playerBalance += playerHandData.bet; // Restituzione puntata
+                  statusText = 'Pareggio';
+                  stats.pushes++;
+                  consecutiveWins = 0; // Interrompe streak
+                  updateChallengeProgress('vip_streak_5', 0, true); // Resetta streak VIP
+                  break;
+         }
+         playerHandData.status = statusText;
+         playerHandData.winClass = winClass; // Salva classe per messaggio risultato
+         return statusText;
+     }
+
+
+    function endRound(dealerFinalScore = getHandScore(dealerHand)) {
+         if (gameOver) return; // Evita esecuzioni multiple
+         gameOver = true;
+         console.log("Ending round...");
+
+         // Assicurati che la carta del banco sia visibile
+         updateDealerDisplay(true);
+
+         let overallResultMessage = [];
+         let finalWinClass = 'push'; // Default a push, cambia se c'è almeno una vincita/perdita
+
+         playerHands.forEach((handData, index) => {
+              // Determina l'esito solo per le mani che erano ancora attive o in attesa
+              if (['active', 'stood', 'stood (double)', 'stood (split 21)', 'stood (21)'].includes(handData.status.toLowerCase())) {
+                 determineOutcome(handData, dealerFinalScore);
+             }
+             let handResultText = `Mano ${index + 1}: ${handData.status}`;
+             overallResultMessage.push(handResultText);
+
+             // Determina la classe generale del risultato (win > lose > push)
+             if (handData.winClass === 'win') {
+                 finalWinClass = 'win';
+             } else if (handData.winClass === 'lose' && finalWinClass !== 'win') {
+                 finalWinClass = 'lose';
+             }
+         });
+
+         updatePlayerDisplay(); // Mostra stati finali delle mani
+         updateStatsDisplay(); // Aggiorna statistiche
+         updateBalanceDisplay(); // Aggiorna saldo finale
+         displayChallenges(); // Mostra stato finale sfide (es. completate)
+
+         showResult(overallResultMessage.join('<br>'), finalWinClass); // Mostra messaggio risultato
+
+         // Prepara per il prossimo round dopo un ritardo
+         const endDelay = 3000 * parseFloat(document.documentElement.style.getPropertyValue('--animation-factor') || '1');
+         setTimeout(() => {
+             console.log("Preparing for next round betting.");
+             resetGame(true); // Resetta per permettere nuova puntata
+             saveGameState(); // Salva stato generale dopo il round
+             // NON salvare le sfide qui, vengono salvate ad ogni progresso/completamento
+         }, endDelay);
+     }
+
+
+    function showResult(message, resultClass = 'push') {
+        if (resultMessageElement && resultOverlay) {
+            resultMessageElement.innerHTML = message;
+            // Rimuovi classi precedenti e aggiungi quella nuova per l'effetto glow
+            resultMessageElement.classList.remove('win', 'lose', 'push');
+            resultMessageElement.classList.add(resultClass);
+
+            resultOverlay.classList.add('show');
+            // Forza reflow prima di aggiungere la classe show al messaggio per animazione
+            void resultMessageElement.offsetWidth;
+            resultMessageElement.classList.add('result-show');
+
+            // Cancella timeout precedente se esiste
+            if (resultTimeoutId) clearTimeout(resultTimeoutId);
+             // Nascondi automaticamente dopo un po' se l'animazione non è istantanea
+             const speedFactor = parseFloat(document.documentElement.style.getPropertyValue('--animation-factor') || '1');
+             if (speedFactor > 0) {
+                 resultTimeoutId = setTimeout(hideResult, 5000 * speedFactor);
+             }
+        }
+    }
+
+    function hideResult() {
+        if (resultMessageElement && resultOverlay) {
+            resultMessageElement.classList.remove('result-show');
+            resultOverlay.classList.remove('show');
+        }
+        if (resultTimeoutId) {
+            clearTimeout(resultTimeoutId);
+            resultTimeoutId = null;
+        }
+    }
+
+    // --- Conteggio Carte & Strategia ---
+    function updateRunningCount(card) {
+        if (card && hiLoValues.hasOwnProperty(card.value)) {
+            runningCount += hiLoValues[card.value];
+            updateRunningCountDisplay(); // Aggiorna visualizzazione se attiva
+        }
+    }
+
+    function getStrategyHint() {
+         if (!playerHands[currentPlayerHandIndex] || playerHands[currentPlayerHandIndex].status !== 'active' || !dealerHand[0]) {
+             return null; // Nessun suggerimento se la mano non è attiva o il banco non ha carte
+         }
+
+         const playerHand = playerHands[currentPlayerHandIndex].hand;
+         const playerScore = getHandScore(playerHand);
+         const dealerUpCardValue = getCardValue(dealerHand[0]);
+         const isSoft = playerHand.some(c => c.value === 'A') && playerScore <= 21 && getHandScore(playerHand.map(c => (c.value === 'A' ? { ...c, value: '1' } : c))) !== playerScore; // Verifica se l'asso conta 11
+         const canSplit = playerHand.length === 2 && getCardValue(playerHand[0]) === getCardValue(playerHand[1]);
+         const canDouble = playerHand.length === 2 && playerBalance >= playerHands[currentPlayerHandIndex].bet;
+
+         // Logica Strategia Base (semplificata - da espandere per accuratezza completa)
+         if (canSplit) {
+             const cardVal = getCardValue(playerHand[0]);
+             if (cardVal === 11 || cardVal === 8) return 'split'; // Sempre split Assi e 8
+             if (cardVal === 10) return 'stand'; // Mai split 10
+             if (cardVal === 9 && ![7, 10, 11].includes(dealerUpCardValue)) return 'split';
+             if (cardVal === 7 && dealerUpCardValue <= 7) return 'split';
+             if (cardVal === 6 && dealerUpCardValue <= 6) return 'split';
+             if (cardVal === 4 && [5, 6].includes(dealerUpCardValue) && canDouble) return 'split'; // Split 4 solo se double after split permesso (qui assumiamo di sì per il suggerimento)
+             if (cardVal === 2 || cardVal === 3) {
+                  if(dealerUpCardValue <= 7) return 'split';
+                  else return 'hit';
+             }
+             // Altri casi di split (5s non si splittano)
+         }
+
+         if (isSoft) {
+             if (playerScore >= 19) return 'stand';
+             if (playerScore === 18) {
+                  if (dealerUpCardValue <= 6 && canDouble) return 'double';
+                  if (dealerUpCardValue <= 8) return 'stand';
+                  else return 'hit';
+             }
+             if (playerScore === 17 && canDouble && dealerUpCardValue >= 3 && dealerUpCardValue <= 6) return 'double';
+             if (playerScore >= 13 && playerScore <= 16 && canDouble && dealerUpCardValue >= 4 && dealerUpCardValue <= 6) return 'double';
+             // Per tutti gli altri soft, hit
+             return 'hit';
+         } else { // Hard Hands
+             if (playerScore >= 17) return 'stand';
+             if (playerScore >= 13 && playerScore <= 16 && dealerUpCardValue <= 6) return 'stand';
+             if (playerScore === 12 && dealerUpCardValue >= 4 && dealerUpCardValue <= 6) return 'stand';
+             if (playerScore === 11 && canDouble) return 'double';
+             if (playerScore === 10 && canDouble && dealerUpCardValue <= 9) return 'double';
+             if (playerScore === 9 && canDouble && dealerUpCardValue >= 3 && dealerUpCardValue <= 6) return 'double';
+             // Per tutti gli altri hard, hit
+             return 'hit';
+         }
+
+         return 'hit'; // Default se nessuna regola matchata (non dovrebbe succedere)
+     }
+
+
+    function highlightStrategyHint() {
+         // Rimuovi highlight precedenti
+         [hitButton, standButton, doubleDownButton, splitButton, surrenderButton].forEach(btn => {
+            if(btn) btn.classList.remove('hint-highlight');
+         });
+
+         if (strategyHintToggle?.checked && !gameOver && playerHands[currentPlayerHandIndex]?.status === 'active') {
+            const hint = getStrategyHint();
+             let targetButton = null;
+             switch (hint) {
+                 case 'hit': targetButton = hitButton; break;
+                 case 'stand': targetButton = standButton; break;
+                 case 'double': targetButton = doubleDownButton?.disabled ? hitButton : doubleDownButton; break; // Se non puoi raddoppiare, chiedi carta
+                 case 'split': targetButton = splitButton; break;
+                 // Aggiungere resa se implementata nella strategia
+                 // case 'surrender': targetButton = surrenderButton; break;
+            }
+             if (targetButton && !targetButton.disabled) {
+                 targetButton.classList.add('hint-highlight');
+             }
+         }
+     }
+
+    // --- Funzioni Utility e Notifiche ---
+    function showNotification(message, type = 'info') {
+        if (!notificationArea) return;
+
+        const notification = document.createElement('div');
+        notification.classList.add('notification', type); // Aggiunge classe tipo (info, win, warn, error)
+        notification.textContent = message;
+        notificationArea.appendChild(notification);
+
+        // Mostra con animazione
+        requestAnimationFrame(() => {
+             notification.classList.add('show');
+        });
+
+
+        // Nascondi e rimuovi dopo un po'
+        setTimeout(() => {
+            notification.classList.remove('show');
+            // Rimuovi dal DOM dopo la transizione
+            notification.addEventListener('transitionend', () => {
+                if(notification.parentNode) {
+                     notification.remove();
+                }
+            }, { once: true });
+        }, 3500); // Durata notifica
+    }
+
+    function resetStats() {
+        if (confirm("Sei sicuro di voler azzerare tutte le statistiche?")) {
+            stats = { hands: 0, wins: 0, losses: 0, pushes: 0, blackjacks: 0, peakBalance: playerBalance, maxStreak: 0, lastHandResult: '', bjStreak: 0 };
+            consecutiveWins = 0; // Azzera anche la streak corrente
+            localStorage.removeItem(STATS_KEY); // Rimuovi dal localStorage
+            updateStatsDisplay();
+            showNotification("Statistiche azzerate.", "info");
+        }
+    }
+
+
+    // --- Event Listeners ---
+    function addEventListeners() {
+        // Pulsanti Chip
+        chipButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const value = parseInt(button.dataset.value, 10);
+                addBet(value);
+            });
+        });
+
+        // Controlli Puntata
+        if(dealButton) dealButton.addEventListener('click', dealHand);
+        if(clearBetButton) clearBetButton.addEventListener('click', clearBet);
+        if(restoreBetButton) restoreBetButton.addEventListener('click', restoreLastBet);
+        if(allInButton) allInButton.addEventListener('click', playerAllIn);
+
+        // Azioni Gioco
+        if(hitButton) hitButton.addEventListener('click', playerHit);
+        if(standButton) standButton.addEventListener('click', playerStand);
+        if(doubleDownButton) doubleDownButton.addEventListener('click', playerDoubleDown);
+        if(splitButton) splitButton.addEventListener('click', playerSplit);
+        if(surrenderButton) surrenderButton.addEventListener('click', playerSurrender);
+
+        // Assicurazione
+        if(acceptInsuranceButton) acceptInsuranceButton.addEventListener('click', acceptInsurance);
+        if(declineInsuranceButton) declineInsuranceButton.addEventListener('click', declineInsurance);
+
+        // Overlay Risultato
+        if(resultOverlay) resultOverlay.addEventListener('click', hideResult);
+
+        // Settings Toggles & Selects (salvano lo stato generale quando cambiano)
+        if(darkThemeToggle) darkThemeToggle.addEventListener('change', () => {
+             document.body.setAttribute('data-theme', darkThemeToggle.checked ? 'dark' : 'light');
+             saveGameState();
+        });
+        if(deckCountSelect) deckCountSelect.addEventListener('change', () => {
+            deckCount = parseInt(deckCountSelect.value, 10);
+            resetGame(false); // Resetta il mazzo con il nuovo numero
+            saveGameState();
+        });
+        if(shufflePercentageInput) shufflePercentageInput.addEventListener('change', () => {
+            shufflePercentage = parseInt(shufflePercentageInput.value, 10) / 100;
+            saveGameState();
+        });
+        if(dealerHitSoft17Toggle) dealerHitSoft17Toggle.addEventListener('change', saveGameState);
+        if(animationSpeedSelect) animationSpeedSelect.addEventListener('change', () => {
+             const speedFactor = parseFloat(animationSpeedSelect.value);
+             document.documentElement.style.setProperty('--animation-factor', speedFactor.toString());
+             saveGameState();
+        });
+        if(cardCountingToggle) cardCountingToggle.addEventListener('change', () => {
+            toggleCardCountingDisplay(cardCountingToggle.checked);
+            saveGameState();
+        });
+        if(strategyHintToggle) strategyHintToggle.addEventListener('change', () => {
+             highlightStrategyHint(); // Aggiorna subito l'highlight
+             saveGameState();
+        });
+
+        // Reset Stats
+        if(resetStatsButton) resetStatsButton.addEventListener('click', resetStats);
+
+        // Salva stato apertura <details> (incluso challengesSection)
+        [settingsSection, statsSection, strategySection, challengesSection].forEach(details => {
+            if(details) {
+                details.addEventListener('toggle', saveGameState);
+            }
+        });
+
+        // Keyboard Shortcuts (Opzionale ma utile)
+        document.addEventListener('keydown', (event) => {
+             if (event.repeat) return; // Ignora pressioni ripetute
+             if (document.activeElement && ['INPUT', 'SELECT'].includes(document.activeElement.tagName)) return; // Ignora se si sta scrivendo
+
+             if (!gameOver && !insuranceOffered && actionButtonsContainer?.style.display !== 'none') { // Azioni durante il gioco
+                 if (event.key === 'h' || event.key === 'H') hitButton?.click();
+                 if (event.key === 's' || event.key === 'S') standButton?.click();
+                 if (event.key === 'd' || event.key === 'D') doubleDownButton?.click();
+                 if (event.key === 'p' || event.key === 'P') splitButton?.click(); // 'p' per 'pair' split
+                 if (event.key === 'r' || event.key === 'R') surrenderButton?.click(); // 'r' per 'resa'/'surrender'
+             } else if (gameOver && bettingControls?.style.display !== 'none') { // Azioni durante puntata
+                 if (event.key === 'Enter' || event.key === ' ') dealButton?.click(); // Spazio o Invio per distribuire
+                 if (event.key === 'Backspace' || event.key === 'c' || event.key === 'C') clearBetButton?.click(); // Canc o 'c' per cancellare
+                 if (event.key === 'a' || event.key === 'A') allInButton?.click(); // 'a' per all-in
+                 if (event.key === 'l' || event.key === 'L') restoreBetButton?.click(); // 'l' per last bet
+                 // Aggiungere scorciatoie per le fiches? Es. 1-6
+             } else if (insuranceOffered && insuranceControlsContainer?.style.display !== 'none') { // Azioni assicurazione
+                 if (event.key === 'y' || event.key === 'Y' || event.key === 's' || event.key === 'S') acceptInsuranceButton?.click(); // 'y'/'s' per yes/sì
+                 if (event.key === 'n' || event.key === 'N') declineInsuranceButton?.click(); // 'n' per no
+             }
+        });
+
+        console.log("Event listeners added.");
+    }
+
+    // --- Inizializzazione ---
+    window.onload = () => {
+        console.log("Window loaded. Initializing premium game...");
+        loadGameState();           // Carica stato base (saldo, stats, settings, lastBet)
+        applySettings();           // Applica le impostazioni caricate (tema, valori controlli, stato <details>)
+        loadOrGenerateChallenges(); // Carica o genera le sfide del giorno
+        updateAllDisplays();       // Aggiorna tutta l'UI iniziale
+        resetGame(false);          // Prepara il tavolo (crea mazzo, non azzera puntata proposta)
+        addEventListeners();       // Aggiunge listener agli elementi
+        console.log("Premium Game Initialized and ready.");
+    };
+
+</script>
+
+</body>
+</html>
