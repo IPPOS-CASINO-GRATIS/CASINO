@@ -1,0 +1,2519 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Blackjack</title>
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-J1YN9CKJS2"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-J1YN9CKJS2');
+</script>
+<meta name="google-adsense-account" content="ca-pub-9456850571765688">
+<meta name="description" content="Gioca a Blackjack online con tavoli a limiti diversi, sfide giornaliere multiple (anche Premium) e funzionalità avanzate!" />
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;700&display=swap');
+  :root {
+    /* Light/Green Theme */
+    --bg-color: #1e5631;
+    --text-color: #ffffff;
+    --card-bg: white;
+    --card-text-black: black;
+    --card-text-red: red;
+    --button-bg: #e0e0e0;
+    --button-text: #333333;
+    --button-hover-bg: #d0d0d0;
+    --button-disabled-opacity: 0.5;
+    --highlight-color: #ffeb3b;
+    --border-color: rgba(255, 255, 255, 0.2);
+    --panel-bg: rgba(0, 0, 0, 0.3);
+    --accent-color: #4fc3f7;
+    --dealer-hidden-card-bg: #8b4513;
+    --font-main: 'Nunito', sans-serif;
+    --result-bg-color: rgba(0, 0, 0, 0.75);
+    --result-text-color: #ffffff;
+    --result-win-glow: rgba(76, 175, 80, 0.8);
+    --result-lose-glow: rgba(244, 67, 54, 0.8);
+    --result-push-glow: rgba(255, 152, 0, 0.8);
+    --details-summary-bg: rgba(0, 0, 0, 0.4);
+    --premium-popup-bg: rgba(50, 50, 50, 0.9);
+    --premium-popup-border: #ffd700;
+    /* Chip Colors */
+    --chip-color-1: #f8f8f8; --chip-text-1: #333; --chip-border-1: #aaa;
+    --chip-color-5: #e53935; --chip-text-5: white; --chip-border-5: #b71c1c;
+    --chip-color-10: #1e88e5; --chip-text-10: white; --chip-border-10: #0d47a1;
+    --chip-color-25: #43a047; --chip-text-25: white; --chip-border-25: #1b5e20;
+    --chip-color-100: #37474f; --chip-text-100: white; --chip-border-100: #212121;
+    --chip-color-500: #8e24aa; --chip-text-500: white; --chip-border-500: #4a148c;
+    --chip-color-1000: #fdd835; --chip-text-1000: #333; --chip-border-1000: #f57f17;
+    --chip-color-5000: #f06292; --chip-text-5000: white; --chip-border-5000: #e91e63;
+    --challenge-item-bg: rgba(255, 255, 255, 0.05);
+    --challenge-border: rgba(255, 255, 255, 0.1);
+  }
+
+  body[data-theme="dark"] {
+    --bg-color: #1f1f1f;
+    --text-color: #dcdcdc;
+    --card-bg: #383838;
+    --card-text-black: #dcdcdc;
+    --card-text-red: #ff9a8f;
+    --button-bg: #4a4a4a;
+    --button-text: #dcdcdc;
+    --button-hover-bg: #5a5a5a;
+    --highlight-color: #ffd700;
+    --border-color: rgba(255, 255, 255, 0.15);
+    --panel-bg: rgba(255, 255, 255, 0.1);
+    --accent-color: #4fc3f7;
+    --dealer-hidden-card-bg: #252525;
+    --details-summary-bg: rgba(255, 255, 255, 0.15);
+    --premium-popup-bg: rgba(20, 20, 20, 0.95);
+    --premium-popup-border: #4fc3f7;
+    background-image: radial-gradient(circle at top center, hsl(0, 0%, 18%) 0%, var(--bg-color) 70%);
+    background-attachment: fixed;
+    /* Dark Theme Chip Colors (optional adjustments) */
+    --chip-color-1: #bdbdbd; --chip-text-1: #212121; --chip-border-1: #757575;
+    --chip-color-100: #546e7a; --chip-text-100: #eceff1; --chip-border-100: #37474f;
+    --chip-color-1000: #ffeb3b; --chip-text-1000: #3e2723; --chip-border-1000: #fbc02d;
+    --challenge-item-bg: rgba(0, 0, 0, 0.15);
+    --challenge-border: rgba(0, 0, 0, 0.25);
+  }
+
+  /* --- General Styles --- */
+  body {
+    font-family: var(--font-main);
+    text-align: center;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    padding-top: 15px; /* Adjusted for balance display */
+    margin: 0;
+    transition: background-color 0.3s, color 0.3s, background-image 0.3s;
+    background-image: none;
+    min-height: 100vh;
+  }
+
+  .game-container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 20px;
+    position: relative;
+    overflow-x: hidden;
+  }
+
+  h1 { margin-bottom: 15px; }
+  h2 { margin-bottom: 10px; font-size: 1.5em; text-transform: uppercase; letter-spacing: 1px;}
+
+   /* --- Balance Display (Top Right) --- */
+   #balance-display {
+       position: absolute;
+       top: 15px;
+       right: 20px;
+       background-color: var(--panel-bg);
+       color: var(--highlight-color);
+       padding: 8px 15px;
+       border-radius: 8px;
+       font-size: 1.1em;
+       font-weight: bold;
+       border: 1px solid var(--border-color);
+       box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+       z-index: 10; /* Ensure it's above most elements */
+       transition: background-color 0.3s, color 0.3s;
+   }
+
+  /* --- Collapsible Sections (Details/Summary) --- */
+  details {
+    background-color: var(--panel-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    padding: 0;
+    margin: 15px auto;
+    max-width: 450px;
+    font-size: 1em;
+    box-shadow: 0 3px 6px rgba(0,0,0,0.3);
+    overflow: hidden;
+    position: relative;
+  }
+   details.premium-locked > summary {
+       cursor: not-allowed;
+       opacity: 0.7;
+   }
+   details.premium-locked summary:hover {
+       background-color: var(--details-summary-bg);
+   }
+
+  details summary {
+    font-weight: bold;
+    cursor: pointer;
+    padding: 12px 15px;
+    background-color: var(--details-summary-bg);
+    list-style: none;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border-color);
+    transition: background-color 0.2s;
+  }
+
+  details summary:hover {
+      background-color: rgba(0,0,0,0.5);
+  }
+
+  details[open] summary {
+      border-bottom: 1px solid var(--border-color);
+  }
+
+  details summary::-webkit-details-marker { display: none; }
+
+  details .content-wrapper {
+      padding: 15px;
+  }
+
+  details h3 {
+      margin-top: 0;
+      margin-bottom: 15px;
+      color: var(--accent-color);
+      font-size: 1.2em;
+      text-align: center;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 8px;
+  }
+
+   details summary::after {
+        content: '+';
+        font-size: 1.4em;
+        font-weight: bold;
+        margin-left: 10px;
+        transition: transform 0.2s ease-in-out;
+   }
+   details[open] summary::after {
+        content: '−';
+   }
+
+  /* --- Specific Content Styling within <details> --- */
+  #utility-controls-content div,
+  #stats-content div,
+  #trainer-controls-content div
+  {
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 3px 0;
+   }
+   #utility-controls-content label, #trainer-controls-content label {
+      margin-right: 15px;
+      font-weight: bold;
+   }
+   #stats-content span:last-child, #trainer-controls-content span:last-child {
+      font-weight: bold;
+      color: var(--highlight-color);
+   }
+   #stats-content #stats-win-rate {
+      color: var(--accent-color);
+   }
+   #reset-stats-button {
+       margin-top: 10px;
+       width: 100%;
+   }
+   #trainer-title {
+       display: flex;
+       justify-content: center;
+       align-items: center;
+       position: relative;
+   }
+   #hilo-info-button {
+       padding: 0; margin: 0 0 0 10px; width: 24px;
+       height: 24px; font-size: 15px; line-height: 22px; font-weight: bold; border-radius: 50%; background-color: var(--button-bg); color: var(--button-text); border: 1px solid var(--border-color); box-shadow: none;
+       cursor: help; vertical-align: middle; transition: background-color 0.2s, border-color 0.2s; flex-shrink: 0;
+   }
+   #hilo-info-button:hover { background-color: var(--button-hover-bg); border-color: var(--accent-color); transform: none; box-shadow: none; }
+
+   /* --- Daily Challenges --- */
+   #daily-challenges-container {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      margin-top: 10px;
+   }
+   .challenge-item {
+      background-color: var(--challenge-item-bg);
+      border: 1px solid var(--challenge-border);
+      border-radius: 8px;
+      padding: 10px 12px;
+      text-align: left;
+      transition: opacity 0.3s;
+   }
+   .challenge-item.premium-challenge {
+      border-left: 4px solid var(--premium-popup-border); /* Highlight premium */
+   }
+   .challenge-item.locked {
+       opacity: 0.6;
+       cursor: not-allowed;
+       position: relative;
+       overflow: hidden; /* Keep lock inside */
+   }
+   .challenge-item.locked::after {
+       content: '🔒 Premium';
+       position: absolute;
+       top: 50%;
+       left: 50%;
+       transform: translate(-50%, -50%);
+       background-color: rgba(0,0,0,0.7);
+       color: var(--highlight-color);
+       padding: 6px 10px;
+       border-radius: 5px;
+       font-size: 0.9em;
+       font-weight: bold;
+       z-index: 2;
+       pointer-events: none; /* Allow clicks on item for popup */
+   }
+   .challenge-item p {
+       margin: 3px 0;
+       font-size: 0.95em;
+   }
+   .challenge-item .challenge-description {
+       font-weight: bold;
+       margin-bottom: 5px;
+   }
+   .challenge-item .challenge-progress-bar {
+        width: 100%;
+        height: 10px;
+        background-color: rgba(255, 255, 255, 0.15);
+        border-radius: 5px;
+        overflow: hidden;
+        margin-top: 5px;
+   }
+   .challenge-item .challenge-progress {
+        height: 100%;
+        width: 0%;
+        background-color: var(--highlight-color);
+        border-radius: 5px 0 0 5px;
+        transition: width 0.5s ease-in-out;
+    }
+    .challenge-item .challenge-reward {
+        font-weight: bold;
+        color: var(--highlight-color);
+    }
+    .challenge-item .challenge-completed-text {
+        font-style: italic;
+        font-weight: bold;
+        color: var(--accent-color);
+        text-align: center;
+        margin-top: 5px;
+    }
+    .challenge-item[data-completed="true"] .challenge-progress-bar {
+        opacity: 0.7;
+    }
+    .challenge-item[data-completed="true"] .challenge-progress {
+        background-color: var(--accent-color); /* Change color on completion */
+    }
+
+
+  /* --- Table Limits --- */
+   #table-limits {
+       margin: 15px auto;
+       padding: 10px 15px;
+       background-color: var(--panel-bg);
+       border: 1px solid var(--border-color);
+       border-radius: 8px;
+       max-width: 450px;
+       display: flex;
+       align-items: center;
+       justify-content: center;
+       gap: 15px;
+   }
+   #table-limits label {
+       font-weight: bold;
+       margin-right: 5px;
+   }
+   #table-select {
+       padding: 8px 10px;
+       border-radius: 5px;
+       border: 1px solid var(--border-color);
+       background-color: var(--button-bg);
+       color: var(--button-text);
+       font-family: var(--font-main);
+       font-size: 0.9em;
+       cursor: pointer;
+   }
+   #table-select:focus {
+       outline: none;
+       box-shadow: 0 0 5px var(--accent-color);
+   }
+
+  /* --- Cards Styles --- */
+  .cards { margin: 15px auto; display: flex; justify-content: center; min-height: 115px; gap: 12px; flex-wrap: wrap; perspective: 1200px; transition: opacity 0.5s ease-out; /* Added for fade out */ }
+  .card { display: inline-block; border: 1px solid var(--border-color); border-radius: 8px; background: var(--card-bg); width: 65px; height: 95px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4); margin: 3px; position: relative; transform-style: preserve-3d; transition: transform 0.7s cubic-bezier(0.4, 0.0, 0.2, 1); transform: rotateY(180deg); }
+  .card-inner { position: relative; width: 100%; height: 100%; text-align: center; transform-style: preserve-3d; }
+  .card-face { position: absolute; width: 100%; height: 100%; -webkit-backface-visibility: hidden; backface-visibility: hidden; border-radius: 8px; display: flex; flex-direction: column; justify-content: space-around; /* Distribute space */ align-items: center; padding: 8px 5px; /* Adjust padding */ box-sizing: border-box; }
+  .card-front { background-color: var(--card-bg); background-image: linear-gradient(to bottom, rgba(255,255,255,0.05) 0%, rgba(0,0,0,0.05) 100%); color: var(--card-text-black); font-size: 24px; /* Slightly larger */ font-weight: bold; transform: rotateY(0deg); border: 1px solid rgba(0,0,0,0.1); }
+  .card-back { background-color: var(--dealer-hidden-card-bg); color: var(--text-color); transform: rotateY(180deg); background-image: linear-gradient(45deg, rgba(255,255,255,0.1) 25%, transparent 25%), linear-gradient(-45deg, rgba(255,255,255,0.1) 25%, transparent 25%), linear-gradient(45deg, transparent 75%, rgba(255,255,255,0.1) 75%), linear-gradient(-45deg, transparent 75%, rgba(255,255,255,0.1) 75%); background-size: 18px 18px; }
+  .card.flipped { transform: rotateY(0deg); }
+  .card-front.red { color: var(--card-text-red); }
+  .card-front.black { color: var(--card-text-black); }
+  .card .value { line-height: 1; /* Ensure value is tight */ }
+  .card .suit { font-size: 18px; /* Slightly larger suit */ font-weight: normal; line-height: 1; }
+
+  /* --- Buttons & Betting --- */
+  #buttons, #betting-buttons { margin-top: 20px; display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
+  button, .toggle-switch label { padding: 12px 20px; font-size: 15px; font-weight: bold; margin: 5px; cursor: pointer; border: none; border-radius: 8px; background-color: var(--button-bg); color: var(--button-text); transition: background-color 0.2s ease, opacity 0.3s ease, transform 0.15s ease, box-shadow 0.2s ease; user-select: none; -webkit-user-select: none; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3); letter-spacing: 0.5px; }
+  button:hover:not(:disabled) { background-color: var(--button-hover-bg); transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4); }
+  button:active:not(:disabled) { transform: translateY(0px); box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3); }
+  button:disabled { opacity: var(--button-disabled-opacity); cursor: not-allowed; box-shadow: none; transform: none; }
+  button.hint-highlight { box-shadow: 0 0 12px 4px var(--highlight-color); border: 1px solid var(--highlight-color); transform: translateY(-1px); }
+  button.premium-locked { position: relative; }
+  button.premium-locked::after { content: '🔒'; position: absolute; top: 2px; right: 5px; font-size: 10px; color: var(--highlight-color); background-color: rgba(0,0,0,0.6); padding: 1px 3px; border-radius: 3px; }
+
+  /* --- Betting Area with CSS Chips --- */
+   #betting-area { margin-bottom: 20px; display: flex; flex-direction: column; align-items: center; gap: 15px; }
+   #proposed-bet-display { font-size: 1.4em; font-weight: bold; color: var(--highlight-color); min-height: 1.5em; background-color: var(--panel-bg); padding: 5px 15px; border-radius: 5px; }
+   #clickable-chips { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin-bottom: 15px; }
+   /* Base Chip Button Style */
+   .chip-button { width: 55px; height: 55px; cursor: pointer; border-radius: 50%; border: none; /* Removed default border */ padding: 0; /* Remove padding */ transition: transform 0.1s ease-out, opacity 0.3s ease, box-shadow 0.2s ease; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.4); user-select: none; -webkit-user-select: none; position: relative; /* For premium lock */ display: flex; /* Use flexbox for centering content */ justify-content: center; align-items: center; font-family: var(--font-main); font-weight: bold; font-size: 14px; /* Adjust as needed */ background-color: grey; /* Default background */ color: white; /* Default text */ border: 3px solid rgba(255, 255, 255, 0.1); /* Default border */ }
+   /* Chip Button Inner Circle (for layered effect) */
+   .chip-button::before { content: ''; position: absolute; top: 5px; /* Inset distance */ left: 5px; right: 5px; bottom: 5px; border-radius: 50%; border: 2px dashed rgba(255, 255, 255, 0.3); /* Example inner detail */ box-sizing: border-box; /* Include border in size */ }
+   /* Chip Value Text */
+   .chip-value { position: relative; /* Ensure text is above pseudo-elements */ z-index: 1; }
+    /* Chip Colors using data attribute */
+    .chip-button[data-value="1"] { background-color: var(--chip-color-1); color: var(--chip-text-1); border-color: var(--chip-border-1); }
+    .chip-button[data-value="5"] { background-color: var(--chip-color-5); color: var(--chip-text-5); border-color: var(--chip-border-5); }
+    .chip-button[data-value="10"] { background-color: var(--chip-color-10); color: var(--chip-text-10); border-color: var(--chip-border-10); }
+    .chip-button[data-value="25"] { background-color: var(--chip-color-25); color: var(--chip-text-25); border-color: var(--chip-border-25); }
+    .chip-button[data-value="100"] { background-color: var(--chip-color-100); color: var(--chip-text-100); border-color: var(--chip-border-100); }
+    .chip-button[data-value="500"] { background-color: var(--chip-color-500); color: var(--chip-text-500); border-color: var(--chip-border-500); }
+    .chip-button[data-value="1000"] { background-color: var(--chip-color-1000); color: var(--chip-text-1000); border-color: var(--chip-border-1000); }
+    .chip-button[data-value="5000"] { background-color: var(--chip-color-5000); color: var(--chip-text-5000); border-color: var(--chip-border-5000); }
+   /* Chip Hover/Active States */
+   .chip-button:hover:not([disabled]) { transform: scale(1.05) translateY(-2px); box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5), 0 0 8px var(--highlight-color); }
+   .chip-button:active:not([disabled]) { transform: scale(0.98); box-shadow: inset 0 3px 5px rgba(0, 0, 0, 0.6); }
+   .chip-button[disabled] { opacity: 0.5; /* Dim disabled chips */ cursor: not-allowed; transform: none; box-shadow: 0 2px 5px rgba(0, 0, 0, 0.4); /* Keep some shadow */ background-image: linear-gradient(rgba(100,100,100,0.5), rgba(100,100,100,0.5)); /* Grey overlay */ }
+   /* Remove image styles */
+   .chip-button img { display: none; }
+   /* Premium Lock on Chips (keep) */
+   .chip-button.premium-locked::after { content: '🔒'; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 18px; color: var(--highlight-color); background-color: rgba(0,0,0,0.7); padding: 5px; border-radius: 50%; line-height: 1; pointer-events: none; z-index: 2; /* Ensure lock is above chip content */ }
+   #bet-chips { min-height: 30px; margin-top: 10px; font-size: 1.2em; font-weight: bold; color: var(--text-color); background-color: var(--panel-bg); padding: 3px 10px; border-radius: 5px; }
+
+  /* --- Player/Dealer Info --- */
+  #player-info, #dealer-info { margin-bottom: 20px; }
+  #player-info h2 { font-size: 1.3em; }
+  #player-money { /* Style the original player money display */
+      font-size: 0.9em; color: rgba(255,255,255,0.7); /* Make less prominent */
+      font-weight: normal;
+      margin-left: 5px;
+  }
+  /* Dealer Score Display */
+  #dealer-score {
+      font-weight: bold;
+      margin-left: 8px;
+      color: var(--text-color);
+      background-color: var(--panel-bg);
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 0.9em;
+      min-width: 25px; /* Ensure space for score */
+      display: inline-block; /* Allow padding and alignment */
+      text-align: center;
+  }
+
+  /* --- Multiple Hands --- */
+  #player-hands-container { display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; margin-top: 15px; transition: opacity 0.5s ease-out; /* Added for fade out */ }
+  .player-hand { border: 2px solid var(--border-color); border-radius: 12px; padding: 15px; min-width: 180px; background-color: var(--panel-bg); position: relative; transition: border-color 0.3s, box-shadow 0.3s; box-shadow: 0 2px 5px rgba(0,0,0,0.3); }
+  .player-hand h3 { margin-top: 0; margin-bottom: 8px; font-size: 1.1em; color: var(--accent-color); text-align: center; }
+  .player-hand .cards { min-height: 100px; margin-bottom: 10px; }
+  .player-score { font-size: 1em; margin-bottom: 5px; margin-top: 8px; font-weight: bold; }
+  .hand-status { font-size: 1em; font-weight: bold; color: var(--highlight-color); min-height: 1.2em; text-align: center; }
+  .player-hand.current-hand { border-color: var(--highlight-color); box-shadow: 0 0 15px rgba(255, 223, 0, 0.6); }
+
+  /* --- Result Message --- */
+  #result { opacity: 0; visibility: hidden; transform: translate(-50%, -50%) scale(0.8); transition: opacity 0.4s ease-out, visibility 0s linear 0.4s, transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); position: fixed; top: 50%; left: 50%; z-index: 100; background-color: var(--result-bg-color); color: var(--result-text-color); padding: 25px 40px; border-radius: 15px; font-size: 2.8em; font-weight: bold; text-align: center; white-space: pre-line; min-width: 300px; max-width: 80%; box-shadow: 0 0 20px 5px rgba(0, 0, 0, 0.5); }
+  #result.result-show { opacity: 1; visibility: visible; transform: translate(-50%, -50%) scale(1); transition: opacity 0.4s ease-out, visibility 0s linear 0s, transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+  #result.win { box-shadow: 0 0 25px 10px var(--result-win-glow); }
+  #result.lose { box-shadow: 0 0 25px 10px var(--result-lose-glow); }
+  #result.push { box-shadow: 0 0 25px 10px var(--result-push-glow); }
+
+  /* --- Premium Popup --- */
+  #premium-popup { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.9); background-color: var(--premium-popup-bg); color: var(--text-color); padding: 30px 40px; border-radius: 15px; border: 3px solid var(--premium-popup-border); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5); z-index: 1001; opacity: 0; visibility: hidden; transition: opacity 0.3s ease-out, visibility 0s linear 0.3s, transform 0.3s ease-out; text-align: center; max-width: 85%; width: 450px; }
+  #premium-popup.show { opacity: 1; visibility: visible; transform: translate(-50%, -50%) scale(1); transition: opacity 0.3s ease-out, visibility 0s linear 0s, transform 0.3s ease-out; }
+  #premium-popup h3 { margin-top: 0; margin-bottom: 15px; color: var(--highlight-color); font-size: 1.5em; }
+  #premium-popup #premium-message { margin-bottom: 25px; font-size: 1.1em; line-height: 1.5; text-align: left; }
+  #premium-popup #premium-message ul { list-style-type: '⭐ '; padding-left: 20px; margin-top: 15px; }
+   #premium-popup #premium-message li { margin-bottom: 8px; }
+  #premium-popup .popup-buttons { display: flex; justify-content: center; gap: 15px; margin-top: 20px; }
+  #premium-popup button { padding: 10px 25px; font-size: 1em; }
+  #premium-popup-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.6); z-index: 1000; opacity: 0; visibility: hidden; transition: opacity 0.3s ease-out, visibility 0s linear 0.3s; }
+   #premium-popup-overlay.show { opacity: 1; visibility: visible; transition: opacity 0.3s ease-out, visibility 0s linear 0s; }
+
+  /* --- Toggle Switch --- */
+   .toggle-switch { position: relative; display: inline-block; width: 50px; height: 24px; vertical-align: middle; }
+   .toggle-switch input { opacity: 0; width: 0; height: 0; }
+   .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #555; transition: .4s; border-radius: 24px; }
+   .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+   input:checked + .slider { background-color: var(--accent-color); }
+   input:focus + .slider { box-shadow: 0 0 2px var(--accent-color); }
+   input:checked + .slider:before { transform: translateX(26px); }
+
+  /* --- Visually Hidden --- */
+  .visually-hidden { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0, 0, 0, 0); border: 0; }
+
+  /* --- Responsiveness --- */
+  @media (max-width: 768px) {
+      #balance-display { font-size: 1em; padding: 6px 10px; top: 10px; right: 15px; }
+      .card { width: 60px; height: 90px; border-radius: 6px;}
+      .card-front { font-size: 20px; }
+      .card .suit { font-size: 16px; /* Adjusted */ }
+      button, .toggle-switch label { font-size: 14px; padding: 10px 15px;}
+      #hilo-info-button { width: 22px; height: 22px; font-size: 14px; line-height: 20px; }
+      .player-hand { min-width: 160px; padding: 12px; border-radius: 10px;}
+      h1 { font-size: 2em; }
+      details, #table-limits { max-width: 90%; }
+       details .content-wrapper, #table-limits { padding: 12px; }
+       .challenge-item { padding: 8px 10px; }
+       .challenge-item p { font-size: 0.9em; }
+       .challenge-item .challenge-progress-bar { height: 8px; }
+      /* Adjusted chip size */
+      .chip-button { width: 50px; height: 50px; font-size: 12px; border-width: 2px; }
+       .chip-button::before { top: 4px; left: 4px; right: 4px; bottom: 4px; border-width: 1px; }
+      #result { font-size: 2.2em; padding: 20px 30px; }
+      #table-limits { flex-direction: column; gap: 8px; }
+      #premium-popup { width: 80%; padding: 20px; }
+      #premium-popup h3 { font-size: 1.3em; }
+      #premium-popup #premium-message { font-size: 1em; }
+  }
+
+   @media (max-width: 480px) {
+      body { padding-top: 50px; /* Increased padding for balance */ }
+      #balance-display { top: 10px; right: 10px; font-size: 0.9em; padding: 5px 8px; }
+      .game-container { padding: 10px; }
+      h1 { font-size: 1.6em; margin-top: 25px; /* Push h1 down slightly */ }
+      .cards { min-height: 100px; gap: 8px;}
+      .card { width: 50px; height: 75px; border-radius: 4px; margin: 2px;}
+      .card-front { font-size: 18px; /* Adjusted */ padding: 5px 3px; /* Adjusted */ }
+      .card .suit { font-size: 14px; /* Adjusted */ }
+      #buttons, #betting-buttons { margin-top: 15px; gap: 5px;}
+      button, .toggle-switch label { font-size: 12px; padding: 8px 10px; margin: 3px;}
+      #hilo-info-button { width: 20px; height: 20px; font-size: 12px; line-height: 18px; margin-left: 5px;}
+      .player-hand { min-width: 130px; padding: 8px; gap: 8px; border-radius: 8px;}
+      .player-hand .cards { min-height: 80px; }
+      #player-hands-container { gap: 10px; }
+      #result { font-size: 1.6em; padding: 15px 20px; min-width: 250px;}
+      details, #table-limits { margin: 10px auto; font-size: 0.9em; }
+      details .content-wrapper, #table-limits { padding: 10px; }
+      #utility-controls-content div, #stats-content div, #trainer-controls-content div { flex-direction: row; align-items: center; }
+      .challenge-item { padding: 6px 8px; }
+      .challenge-item p { font-size: 0.85em; }
+      .challenge-item .challenge-progress-bar { height: 6px; }
+      .challenge-item.locked::after { font-size: 0.8em; padding: 4px 6px; }
+      /* Adjusted chip size */
+      .chip-button { width: 45px; height: 45px; font-size: 11px; border-width: 2px; }
+       .chip-button::before { top: 3px; left: 3px; right: 3px; bottom: 3px; border-width: 1px; }
+      #proposed-bet-display { font-size: 1.2em; padding: 4px 10px; }
+      #premium-popup { width: 90%; font-size: 0.9em; padding: 15px;}
+      #premium-popup h3 { font-size: 1.2em; }
+      #premium-popup #premium-message { font-size: 0.95em; }
+      #premium-popup button { font-size: 0.9em; }
+   }
+</style>
+</head>
+<body data-theme="light">
+
+<div id="premium-popup-overlay" onclick="closePremiumPopup()"></div>
+<div id="premium-popup">
+    <h3>🌟 Sblocca i Vantaggi Premium! 🌟</h3>
+    <div id="premium-message">
+        <p>Passa a Premium per accedere a funzionalità esclusive:</p>
+        <ul>
+            <li>Statistiche dettagliate della sessione</li>
+            <li>Trainer per il conteggio delle carte (Hi-Lo)</li>
+            <li>Suggerimenti di gioco basati sulla strategia ottimale</li>
+            <li>Fiches di valore più alto per puntate maggiori</li>
+            <li>Sfide Premium con ricompense maggiori</li>
+            <li>Supporta lo sviluppo del gioco!</li>
+        </ul>
+    </div>
+    <div class="popup-buttons">
+        <button onclick="closePremiumPopup()">Più Tardi</button>
+        <button onclick="activatePremiumPlaceholder()">Passa a Premium</button>
+    </div>
+</div>
+
+<div class="game-container">
+    <h1>Blackjack Premium Trainer</h1>
+    <div id="balance-display">Saldo: €1000</div>
+
+    <details id="utility-controls">
+        <summary>Utilità e Opzioni</summary>
+        <div class="content-wrapper" id="utility-controls-content">
+            <div>
+                <label for="theme-toggle">Tema Scuro</label>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="theme-toggle">
+                    <span class="slider"></span>
+                </label>
+            </div>
+             <div>
+                <label for="training-mode-toggle">Modalità Allenamento Conteggio</label>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="training-mode-toggle">
+                     <span class="slider"></span>
+                </label>
+            </div>
+             <div class="premium-option">
+                <label for="show-hints-toggle">Mostra Suggerimenti (Premium)</label>
+                <label class="toggle-switch">
+                     <input type="checkbox" id="show-hints-toggle" class="premium-feature-input">
+                    <span class="slider"></span>
+                </label>
+            </div>
+            <div style="margin-top: 15px; text-align: center;">
+                <button id="change-game-button" onclick="changeGame()">Cambia Gioco</button>
+            </div>
+        </div>
+    </details>
+
+    <details id="trainer-controls" class="premium-feature-section">
+        <summary>Contatore Carte (Hi-Lo) - Premium</summary>
+        <div class="content-wrapper" id="trainer-controls-content">
+             <h3 id="trainer-title">
+                Contatore Carte (Hi-Lo)
+                <button id="hilo-info-button" onclick="showHiLoInfo()" aria-label="Informazioni sul conteggio Hi-Lo" title="Cos'è il conteggio Hi-Lo?">?</button>
+             </h3>
+             <div><span>Conteggio Corrente (Running Count):</span> <span id="running-count">0</span></div>
+             <div><span>Mazzi Rimanenti (stimati):</span> <span id="decks-remaining">0.0</span></div>
+             <div><span>Conteggio Reale (True Count):</span> <span id="true-count">0.0</span></div>
+        </div>
+    </details>
+
+    <details id="session-stats" class="premium-feature-section">
+        <summary>Statistiche Sessione - Premium</summary>
+        <div class="content-wrapper" id="stats-content">
+            <h3>Statistiche Sessione</h3>
+            <div><span>Mani Giocate:</span> <span id="stats-hands">0</span></div>
+            <div><span>Vittorie:</span> <span id="stats-wins">0</span></div>
+            <div><span>Sconfitte:</span> <span id="stats-losses">0</span></div>
+             <div><span>Pareggi:</span> <span id="stats-pushes">0</span></div>
+            <div><span>Blackjack Vinti:</span> <span id="stats-bjs">0</span></div>
+            <div><span>Win Rate (V/V+S):</span> <span id="stats-win-rate">N/A</span></div>
+            <button id="reset-stats-button" onclick="resetStats()">Azzera Statistiche</button>
+        </div>
+    </details>
+
+    <details id="daily-challenges-details">
+        <summary>Sfide Giornaliere</summary>
+        <div class="content-wrapper" id="daily-challenges-content">
+            <h3>Sfide Giornaliere</h3>
+            <div id="daily-challenges-container">
+                <p id="challenges-loading">Caricamento sfide...</p>
+            </div>
+        </div>
+     </details>
+
+
+     <div id="table-limits">
+        <label for="table-select">Limiti Tavolo:</label>
+        <select id="table-select">
+            <option value="low">€5 - €100</option>
+            <option value="medium">€25 - €500</option>
+            <option value="high" class="premium-feature">€100 - €2000 (Premium)</option>
+            <option value="whale" class="premium-feature">€500 - €10000 (Premium)</option>
+        </select>
+     </div>
+
+
+     <div id="betting-area">
+        <div id="proposed-bet-display">Punta: €0</div>
+        <div id="clickable-chips">
+            </div>
+        <div id="betting-buttons">
+            <button id="deal-button" onclick="deal()">Distribuisci</button>
+            <button id="rebet-button" onclick="rebet()" style="display: none;">Stessa Puntata</button>
+            <button id="clear-bet-button" onclick="clearProposedBet()">Azzera Puntata</button>
+        </div>
+    </div>
+
+    <div id="game-area" style="display: none;">
+        <div id="dealer-info">
+            <h2>Dealer <span id="dealer-score">?</span></h2>
+            <div id="dealer-cards" class="cards"></div>
+        </div>
+
+        <div id="player-info">
+             <h2>Giocatore <span id="player-money">€1000</span></h2>
+             <div id="player-hands-container" class="cards">
+             </div>
+        </div>
+
+        <div id="buttons">
+            <button id="hit-button" onclick="hit()">Carta</button>
+            <button id="stand-button" onclick="stand()">Stai</button>
+            <button id="double-button" onclick="doubleDown()">Raddoppia</button>
+            <button id="split-button" onclick="split()">Dividi</button>
+        </div>
+    </div>
+
+    <div id="result"></div>
+</div>
+
+<script>
+    // --- DOM Elements ---
+    const playerMoneyElement = document.getElementById('player-money'); // Inside game area
+    const balanceDisplayElement = document.getElementById('balance-display'); // Top right display
+    const dealerCardsElement = document.getElementById('dealer-cards');
+    const playerHandsContainer = document.getElementById('player-hands-container');
+    const dealerScoreElement = document.getElementById('dealer-score'); // <-- Added dealer score display element
+    // playerScoreElement is handled per hand
+    const hitButton = document.getElementById('hit-button');
+    const standButton = document.getElementById('stand-button');
+    const doubleButton = document.getElementById('double-button');
+    const splitButton = document.getElementById('split-button');
+    const dealButton = document.getElementById('deal-button');
+    const rebetButton = document.getElementById('rebet-button');
+    const clearBetButton = document.getElementById('clear-bet-button');
+    const resultElement = document.getElementById('result');
+    const bettingArea = document.getElementById('betting-area');
+    const gameArea = document.getElementById('game-area');
+    const clickableChipsContainer = document.getElementById('clickable-chips');
+    const proposedBetDisplay = document.getElementById('proposed-bet-display');
+    const themeToggle = document.getElementById('theme-toggle');
+    const runningCountElement = document.getElementById('running-count');
+    const decksRemainingElement = document.getElementById('decks-remaining');
+    const trueCountElement = document.getElementById('true-count');
+    const statsHandsElement = document.getElementById('stats-hands');
+    const statsWinsElement = document.getElementById('stats-wins');
+    const statsLossesElement = document.getElementById('stats-losses');
+    const statsPushesElement = document.getElementById('stats-pushes');
+    const statsBjsElement = document.getElementById('stats-bjs');
+    const statsWinRateElement = document.getElementById('stats-win-rate');
+    const resetStatsButton = document.getElementById('reset-stats-button');
+    const trainingModeToggle = document.getElementById('training-mode-toggle');
+    const showHintsToggle = document.getElementById('show-hints-toggle');
+    const premiumPopup = document.getElementById('premium-popup');
+    const premiumPopupOverlay = document.getElementById('premium-popup-overlay');
+    const premiumFeatureSections = document.querySelectorAll('.premium-feature-section');
+    const premiumFeatureInputs = document.querySelectorAll('.premium-feature-input');
+    // premiumChipButtons selection needs to happen dynamically in setupChipButtons
+    const trainerControls = document.getElementById('trainer-controls');
+    const sessionStats = document.getElementById('session-stats');
+    const utilityControls = document.getElementById('utility-controls');
+    const tableSelect = document.getElementById('table-select');
+    // Daily Challenge Elements
+    const dailyChallengesDetails = document.getElementById('daily-challenges-details'); // The <details> element
+    const dailyChallengesContainer = document.getElementById('daily-challenges-container'); // Div inside details
+    const challengesLoading = document.getElementById('challenges-loading');
+
+    // --- Game Variables ---
+    let deck = [];
+    let playerHands = [];
+    let dealerHand = [];
+    let currentHandIndex = 0;
+    let playerMoney = 1000;
+    let currentBet = 0;
+    let initialBet = 0;
+    let lastBet = 0;
+    let proposedBet = 0;
+    let isGameOver = true;
+    let isPremium = false;
+    let runningCount = 0;
+    let decksInShoe = 6;
+    let cardsDealt = 0;
+    let sessionStatsData = { hands: 0, wins: 0, losses: 0, pushes: 0, blackjacks: 0 };
+    let trainingModeActive = false;
+    let showHintsActive = false;
+    let isSplitRound = false;
+    let dailyChallenges = []; // <-- Changed to array for multiple challenges
+    let dailyBonusInfo = { // Combined bonus and streak info
+        collectedToday: false,
+        lastLoginTimestamp: 0,
+        consecutiveDays: 0
+    };
+    let cardClearTimeout = null; // Timeout ID for clearing cards
+
+    const SUITS = ["C", "D", "H", "S"];
+    const VALUES = ["2", "3", "4", "5", "6", "7", "8", "9", "T", "J", "Q", "K", "A"];
+    const TABLE_LIMITS = {
+        low: { min: 5, max: 100, chips: [1, 5, 10, 25] },
+        medium: { min: 25, max: 500, chips: [5, 10, 25, 100] },
+        high: { min: 100, max: 2000, chips: [25, 100, 500, 1000], premium: true },
+        whale: { min: 500, max: 10000, chips: [100, 500, 1000, 5000], premium: true }
+    };
+    let currentTableLimits = TABLE_LIMITS.low;
+    const DAILY_CHALLENGE_COUNT = 3; // Number of daily challenges
+    const PREMIUM_CHALLENGE_INDEX = 2; // Which challenge index is premium (0-based)
+    const PREMIUM_CHALLENGE_REWARD = 1000;
+    const NORMAL_CHALLENGE_REWARD_BASE = 100;
+
+    // --- Game Logic Functions ---
+
+    function createDeck() {
+        let newDeck = [];
+        for (let d = 0; d < decksInShoe; d++) {
+            for (let suit of SUITS) {
+                for (let value of VALUES) {
+                    newDeck.push({ value, suit });
+                }
+            }
+        }
+        return newDeck;
+    }
+
+    function shuffleDeck(deck) {
+        for (let i = deck.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [deck[i], deck[j]] = [deck[j], deck[i]];
+        }
+        runningCount = 0;
+        cardsDealt = 0;
+        console.log(`Deck shuffled (${deck.length} cards)`);
+        updateTrainerDisplay();
+    }
+
+    function getCardValue(card) {
+        if (["T", "J", "Q", "K"].includes(card.value)) {
+            return 10;
+        } else if (card.value === "A") {
+            return 11;
+        } else {
+            return parseInt(card.value);
+        }
+    }
+
+    function calculateScore(hand) {
+        let score = 0;
+        let aceCount = 0;
+        for (let card of hand) {
+            score += getCardValue(card);
+            if (card.value === "A") {
+                aceCount++;
+            }
+        }
+        while (score > 21 && aceCount > 0) {
+            score -= 10;
+            aceCount--;
+        }
+        return score;
+    }
+
+    function updateRunningCount(card) {
+        if (!trainingModeActive) return;
+        const value = getCardValue(card);
+        if (value >= 2 && value <= 6) {
+            runningCount++;
+        } else if (value === 10 || value === 11) { // Ace counts as 11 here for value, but -1 for HiLo
+            runningCount--;
+        }
+        cardsDealt++;
+        updateTrainerDisplay();
+    }
+
+    function updateTrainerDisplay() {
+        if (!trainerControls.open || !trainingModeActive) return;
+        const cardsRemainingInShoe = deck.length;
+        // Estimate decks remaining, ensuring minimum 0.25 decks for calculation stability
+        const decksRemaining = Math.max(0.25, cardsRemainingInShoe / 52).toFixed(1);
+        const trueCount = (decksRemaining > 0) ? (runningCount / decksRemaining).toFixed(1) : 0;
+        runningCountElement.textContent = runningCount;
+        decksRemainingElement.textContent = decksRemaining;
+        trueCountElement.textContent = trueCount;
+    }
+
+    function dealCard(targetHand, isHidden = false) {
+        // Reshuffle if penetration reaches ~50% or less (adjustable)
+        if (deck.length < (decksInShoe * 52 * 0.5)) {
+            console.log("Reshuffling deck (low penetration)...");
+            deck = createDeck();
+            shuffleDeck(deck);
+        }
+        if (deck.length === 0) {
+             console.error("Deck is empty! Cannot deal card.");
+             deck = createDeck(); // Create a new deck if somehow empty
+             shuffleDeck(deck);
+        }
+        const card = deck.pop();
+        card.hidden = isHidden;
+        targetHand.push(card);
+        if (!isHidden) {
+            updateRunningCount(card); // Update count for visible cards
+        }
+        return card;
+    }
+
+    function createCardElement(card) {
+        const cardDiv = document.createElement('div');
+        cardDiv.classList.add('card');
+        const cardInner = document.createElement('div');
+        cardInner.classList.add('card-inner');
+
+        const cardBack = document.createElement('div');
+        cardBack.classList.add('card-face', 'card-back');
+
+        const cardFront = document.createElement('div');
+        cardFront.classList.add('card-face', 'card-front');
+        if (card.hidden) {
+             // Start showing back if hidden
+             // cardDiv class 'flipped' now controls rotation, remove it initially for back face
+        } else {
+            cardDiv.classList.add('flipped'); // Add flipped class to show front face initially
+             // setTimeout(() => cardDiv.style.transform = 'rotateY(0deg)', 10); // Ensure transform for animation - Removed, CSS handles flip
+        }
+
+        // Flip animation handled by adding/removing 'flipped' class dynamically later
+
+        const displayValue = card.value === 'T' ? '10' : card.value;
+        const valueSpan = document.createElement('span');
+        valueSpan.classList.add('value');
+        valueSpan.textContent = displayValue;
+
+        const suitSpan = document.createElement('span');
+        suitSpan.classList.add('suit');
+        let suitSymbol = '';
+        let colorClass = 'black';
+        switch (card.suit) {
+            case 'H': suitSymbol = '♥'; colorClass = 'red'; break;
+            case 'D': suitSymbol = '♦'; colorClass = 'red'; break;
+            case 'C': suitSymbol = '♣'; colorClass = 'black'; break;
+            case 'S': suitSymbol = '♠'; colorClass = 'black'; break;
+        }
+        suitSpan.textContent = suitSymbol;
+        cardFront.classList.add(colorClass);
+
+        cardFront.appendChild(valueSpan);
+        cardFront.appendChild(suitSpan);
+        cardInner.appendChild(cardBack); // Back first in DOM
+        cardInner.appendChild(cardFront); // Front second
+        cardDiv.appendChild(cardInner);
+        // If card should be revealed (not hidden), trigger flip after slight delay
+        if (!card.hidden) {
+             setTimeout(() => { cardDiv.classList.add('flipped'); }, 100);
+        }
+
+        return cardDiv;
+    }
+
+    function renderHand(hand, element) {
+        element.innerHTML = ''; // Clear previous cards in the element
+        hand.forEach((card, index) => {
+            const cardElement = createCardElement(card);
+            // Apply animation delay for dealing effect
+            cardElement.style.transitionDelay = `${index * 0.1}s`; // Delay for card itself
+            element.appendChild(cardElement);
+            // Trigger flip slightly after append (if not hidden)
+            if(!card.hidden) {
+                 setTimeout(() => cardElement.classList.add('flipped'), 50 + index * 100);
+            }
+        });
+    }
+
+     function createPlayerHandElement(index, initialBet) {
+        const handDiv = document.createElement('div');
+        handDiv.classList.add('player-hand');
+        handDiv.id = `player-hand-${index}`;
+
+        const title = document.createElement('h3');
+        title.textContent = `Mano ${index + 1} - Punta: €${initialBet}`;
+        handDiv.appendChild(title);
+        const cardsDiv = document.createElement('div');
+        cardsDiv.classList.add('cards'); // Use 'cards' class for consistency
+        handDiv.appendChild(cardsDiv);
+
+        const scoreDiv = document.createElement('div');
+        scoreDiv.classList.add('player-score');
+        scoreDiv.textContent = 'Punteggio: 0';
+        handDiv.appendChild(scoreDiv);
+
+        const statusDiv = document.createElement('div');
+        statusDiv.classList.add('hand-status');
+        handDiv.appendChild(statusDiv);
+
+        playerHandsContainer.appendChild(handDiv);
+        return handDiv;
+    }
+
+    function updateHandDisplay(handData) {
+        if (!handData || !handData.element) return;
+        const cardsElement = handData.element.querySelector('.cards');
+        const scoreElement = handData.element.querySelector('.player-score');
+        const statusElement = handData.element.querySelector('.hand-status');
+
+        renderHand(handData.cards, cardsElement); // Re-render cards in the hand's card container
+        scoreElement.textContent = `Punteggio: ${handData.score}`;
+        statusElement.textContent = handData.status === 'active' ? '' : handData.status.toUpperCase();
+
+        // Highlight current hand
+        document.querySelectorAll('.player-hand.current-hand').forEach(el => el.classList.remove('current-hand'));
+        if (playerHands.indexOf(handData) === currentHandIndex && !isGameOver) {
+             handData.element.classList.add('current-hand');
+        }
+    }
+
+    function updateDealerDisplay(revealHidden = false) {
+        let scoreToShow = '?'; // Default to question mark
+        let finalScore = 0;
+
+        // Reveal logic
+        if (revealHidden) {
+            let cardsToReveal = [];
+            dealerHand.forEach(card => {
+                if (card.hidden) {
+                     card.hidden = false;
+                     updateRunningCount(card); // Count revealed card
+                     cardsToReveal.push(card); // Track which cards are newly revealed
+                }
+            });
+
+            // Re-render hand to potentially update card elements if needed (e.g., if classes change)
+            renderHand(dealerHand, dealerCardsElement);
+
+            // Trigger flip animation for revealed cards after re-render
+            dealerCardsElement.querySelectorAll('.card').forEach((cardElement, index) => {
+                 const cardData = dealerHand[index]; // Assuming order matches dealerHand
+                 if (cardData && !cardData.hidden && !cardElement.classList.contains('flipped')) {
+                     // Flip any card that should be visible but isn't flipped yet
+                     setTimeout(() => cardElement.classList.add('flipped'), 100 + index * 100); // Stagger flip
+                 }
+            });
+
+            finalScore = calculateScore(dealerHand);
+            scoreToShow = finalScore; // Show final score
+        } else {
+             // Initial render or during play before reveal
+             renderHand(dealerHand, dealerCardsElement);
+             // Show only the value of the upcard (usually second card) if available and not hidden
+             if (dealerHand.length > 1 && !dealerHand[1].hidden) {
+                 scoreToShow = getCardValue(dealerHand[1]); // Show upcard value
+             } else if (dealerHand.length === 1 && !dealerHand[0].hidden) {
+                 // Should not happen in standard BJ deal, but handle just in case
+                 scoreToShow = getCardValue(dealerHand[0]);
+             }
+             // Keep scoreToShow as '?' if hole card is still hidden
+        }
+        dealerScoreElement.textContent = scoreToShow; // Update the score display element
+    }
+
+
+     function startNewRound() {
+        console.log("Starting new round...");
+        clearTimeout(cardClearTimeout); // Cancel any pending card clear timeout
+
+        // Make sure cards containers are visible
+        dealerCardsElement.style.opacity = '1';
+        playerHandsContainer.style.opacity = '1';
+
+        if (deck.length < 52) { // Simple check, could be more sophisticated
+            console.log("Deck low, creating and shuffling new shoe.");
+            deck = createDeck();
+            shuffleDeck(deck);
+        }
+
+        playerHandsContainer.innerHTML = ''; // Clear previous hands visually
+        dealerCardsElement.innerHTML = '';   // Clear dealer cards visually
+        dealerScoreElement.textContent = '?'; // Reset dealer score display
+        resultElement.textContent = '';
+        resultElement.className = ''; // Clear result classes
+        currentHandIndex = 0;
+        isSplitRound = false; // Reset split flag
+
+        // Create first player hand element
+        const handElement = createPlayerHandElement(0, initialBet);
+        playerHands = [{
+            cards: [],
+            score: 0,
+            bet: initialBet,
+            element: handElement,
+            status: 'active', // 'active', 'stand', 'bust', 'blackjack', 'surrender'
+            canDouble: true,
+            canSplit: false,
+             doubled: false // Track if doubled
+        }];
+        dealerHand = [];
+
+        // Deal initial cards (Player, Dealer Hidden, Player, Dealer Visible)
+        dealCard(playerHands[0].cards);
+        dealCard(dealerHand, true);       // Dealer's hole card
+        dealCard(playerHands[0].cards);
+        dealCard(dealerHand);              // Dealer's up card
+
+        playerHands[0].score = calculateScore(playerHands[0].cards);
+        updateHandDisplay(playerHands[0]); // Render player hand
+        updateDealerDisplay();             // Render dealer hand (shows only up card and '?')
+
+        const dealerScore = calculateScore(dealerHand); // Calculate potential score (including hidden)
+        const playerScore = playerHands[0].score;
+        // Check for immediate Blackjacks
+        const playerHasBlackjack = playerScore === 21 && playerHands[0].cards.length === 2;
+        const dealerHasBlackjack = dealerScore === 21 && dealerHand.length === 2;
+
+        if (playerHasBlackjack) {
+             playerHands[0].status = 'blackjack';
+             updateHandDisplay(playerHands[0]);
+             sessionStatsData.blackjacks++;
+             updateStatsDisplay();
+             // Don't end round immediately, let dealer check too (Push case)
+        }
+
+         // Check for dealer Blackjack AFTER player check (peek rule usually applies)
+         if (dealerHasBlackjack) {
+             console.log("Dealer has Blackjack.");
+             updateDealerDisplay(true); // Reveal dealer hand immediately if they have BJ
+             endRound(); // End round as Dealer BJ overrides most outcomes (except player BJ push)
+        } else if (playerHasBlackjack) {
+            // If player had BJ and dealer didn't, end round (Player wins BJ)
+             console.log("Player has Blackjack!");
+             endRound();
+        } else {
+            // No immediate Blackjacks, proceed with player turn
+            isGameOver = false;
+            playerHands[0].canSplit = checkSplitPossibility(playerHands[0]);
+            updateActionButtons();
+            highlightHint();
+        }
+        saveGameState(); // Save state after dealing
+    }
+
+
+    function deal() {
+        if (proposedBet === 0) {
+            alert("Per favore, piazza una puntata prima di distribuire le carte.");
+            return;
+        }
+        if (proposedBet < currentTableLimits.min || proposedBet > currentTableLimits.max) {
+            alert(`La puntata deve essere tra €${currentTableLimits.min} e €${currentTableLimits.max}.`);
+            return;
+        }
+        if (proposedBet > playerMoney) {
+            alert("Non hai abbastanza soldi per questa puntata.");
+            return;
+        }
+
+        playerMoney -= proposedBet;
+        initialBet = proposedBet; // Store the bet for this round
+        lastBet = initialBet;     // Store for rebet functionality
+        updatePlayerMoneyDisplay();
+        bettingArea.style.display = 'none'; // Hide betting controls
+        gameArea.style.display = 'block';   // Show game area
+        rebetButton.style.display = 'none'; // Hide rebet button during game
+
+        startNewRound(); // Deal the cards and start the game logic
+        saveGameState(); // Save state after bet placed and round started
+    }
+
+
+    function addBet(amount) {
+        const potentialBet = proposedBet + amount;
+        if (potentialBet > currentTableLimits.max) {
+            alert(`La puntata massima è €${currentTableLimits.max}.`);
+            return;
+        }
+        if (potentialBet > playerMoney) {
+            alert("Non hai abbastanza soldi per aumentare la puntata.");
+            return;
+        }
+        proposedBet = potentialBet;
+        updateProposedBetDisplay();
+        // Re-enable/disable chip buttons based on the new proposed bet
+        updateBettingUI(); // This will re-evaluate chip disabled states
+    }
+
+    function clearProposedBet() {
+        proposedBet = 0;
+        updateProposedBetDisplay();
+        updateBettingUI(); // Re-evaluate chip disabled states
+    }
+
+     function updateProposedBetDisplay() {
+        proposedBetDisplay.textContent = `Punta: €${proposedBet}`;
+        // Enable Deal button only if bet is valid (within limits and affordable)
+        dealButton.disabled = (proposedBet < currentTableLimits.min || proposedBet > playerMoney || proposedBet > currentTableLimits.max);
+        clearBetButton.disabled = (proposedBet === 0);
+    }
+
+    function rebet() {
+        if (lastBet <= 0) {
+            alert("Nessuna puntata precedente da ripetere.");
+            return;
+        }
+        if (lastBet < currentTableLimits.min || lastBet > currentTableLimits.max) {
+            alert(`La puntata precedente (€${lastBet}) non è valida per i limiti attuali (€${currentTableLimits.min} - €${currentTableLimits.max}). Piazza una nuova puntata.`);
+            rebetButton.style.display = 'none'; // Hide button if invalid
+            return;
+        }
+        if (lastBet > playerMoney) {
+            alert("Non hai abbastanza soldi per ripetere l'ultima puntata.");
+            rebetButton.style.display = 'none'; // Hide button if unaffordable
+            return;
+        }
+        proposedBet = lastBet;
+        updateProposedBetDisplay();
+        deal(); // Automatically deal after setting the rebet amount
+    }
+
+
+    function hit() {
+        if (isGameOver) return;
+        const currentHand = playerHands[currentHandIndex];
+        if (currentHand.status !== 'active') return;
+
+        dealCard(currentHand.cards);
+        currentHand.score = calculateScore(currentHand.cards);
+        currentHand.canDouble = false; // Cannot double after hitting
+        currentHand.canSplit = false;  // Cannot split after hitting
+        updateHandDisplay(currentHand);
+
+        if (currentHand.score > 21) {
+            currentHand.status = 'bust';
+            updateHandDisplay(currentHand); // Show bust status
+            console.log(`Hand ${currentHandIndex + 1} Busts!`);
+            moveToNextHandOrEndRound();
+        } else {
+            // Player can still hit or stand
+            updateActionButtons();
+            highlightHint();
+            saveGameState();
+        }
+    }
+
+    function stand() {
+        if (isGameOver) return;
+        const currentHand = playerHands[currentHandIndex];
+        if (currentHand.status !== 'active') return;
+
+        currentHand.status = 'stand';
+        updateHandDisplay(currentHand); // Show stand status
+        console.log(`Hand ${currentHandIndex + 1} Stands.`);
+        moveToNextHandOrEndRound();
+    }
+
+    function doubleDown() {
+        if (isGameOver) return;
+        const currentHand = playerHands[currentHandIndex];
+        // Allow double only on first two cards AND if affordable AND if hand is active
+        if (currentHand.status !== 'active' || !currentHand.canDouble || playerMoney < currentHand.bet) {
+             if (playerMoney < currentHand.bet) alert("Non hai abbastanza soldi per raddoppiare.");
+             else if (!currentHand.canDouble) alert("Puoi raddoppiare solo sulla mano iniziale.");
+             else console.log("Cannot double down now.");
+            return;
+        }
+
+        playerMoney -= currentHand.bet; // Deduct the additional bet
+        currentHand.bet *= 2;           // Double the bet amount for the hand
+        currentHand.doubled = true;     // Mark hand as doubled
+        updatePlayerMoneyDisplay();
+        // Update hand title to show doubled bet
+        const titleElement = currentHand.element.querySelector('h3');
+        if (titleElement) {
+             titleElement.textContent = titleElement.textContent.replace(/€\d+/, `€${currentHand.bet}`);
+        }
+
+        console.log(`Hand ${currentHandIndex + 1} Doubles Down!`);
+        dealCard(currentHand.cards); // Deal exactly one more card
+        currentHand.score = calculateScore(currentHand.cards);
+        updateHandDisplay(currentHand);
+        // Hand automatically stands after doubling, unless it busts
+        currentHand.status = (currentHand.score > 21) ? 'bust' : 'stand';
+        updateHandDisplay(currentHand); // Show final score and status (bust or stand)
+
+        moveToNextHandOrEndRound(); // Move to next hand or dealer turn
+    }
+
+    function checkSplitPossibility(handData) {
+         // Can split if: active hand, exactly 2 cards, affordable, cards have same value (10, J, Q, K count as 10)
+         return handData.status === 'active' &&
+               handData.cards.length === 2 &&
+               playerMoney >= handData.bet &&
+               getCardValue(handData.cards[0]) === getCardValue(handData.cards[1]);
+    }
+
+    function split() {
+         if (isGameOver) return;
+         const currentHand = playerHands[currentHandIndex];
+         if (!currentHand.canSplit) { // Use the pre-calculated flag
+             console.log("Cannot split this hand.");
+             if (playerMoney < currentHand.bet) alert("Non hai abbastanza soldi per dividere.");
+             else if (currentHand.cards.length !== 2) alert("Puoi dividere solo sulla mano iniziale.");
+             else if (getCardValue(currentHand.cards[0]) !== getCardValue(currentHand.cards[1])) alert("Le carte devono avere lo stesso valore per dividerle.");
+             return;
+         }
+         if (playerHands.length >= 4) { // Limit number of splits
+            alert("Non puoi dividere più di 4 mani.");
+            return;
+         }
+
+         console.log(`Splitting hand ${currentHandIndex + 1}`);
+         isSplitRound = true;
+         const originalBet = currentHand.bet;
+         playerMoney -= originalBet; // Deduct bet for the new hand
+         updatePlayerMoneyDisplay();
+
+         const secondCard = currentHand.cards.pop(); // Move one card to the new hand
+
+         // Create the new hand object and element
+         const newHandIndex = currentHandIndex + 1;
+         const newHandElement = createPlayerHandElement(newHandIndex, originalBet);
+         const newHand = {
+             cards: [secondCard], // Starts with the second card from the split pair
+             score: 0,
+             bet: originalBet,
+             element: newHandElement,
+             status: 'active',
+             canDouble: true, // Can double after split (usually)
+             canSplit: false, // Will be checked after dealing next card
+             doubled: false
+         };
+         // Insert the new hand into the array
+         playerHands.splice(newHandIndex, 0, newHand);
+         // Update IDs and titles of subsequent hands if any
+         for (let i = newHandIndex + 1; i < playerHands.length; i++) {
+            const title = playerHands[i].element.querySelector('h3');
+            if (title) title.textContent = `Mano ${i + 1} - Punta: €${playerHands[i].bet}`;
+            playerHands[i].element.id = `player-hand-${i}`;
+         }
+
+         // Deal one new card to each split hand
+         dealCard(currentHand.cards);
+         dealCard(newHand.cards);
+
+         // Recalculate scores and check possibilities for both hands
+         currentHand.score = calculateScore(currentHand.cards);
+         newHand.score = calculateScore(newHand.cards);
+
+         // Check for Blackjack on split hands (usually counts as 21, not 3:2 payout)
+         if (currentHand.score === 21) currentHand.status = 'blackjack'; // Or 'stand' based on rules
+         if (newHand.score === 21) newHand.status = 'blackjack';       // Or 'stand'
+
+         // Re-check split possibility ONLY if Ace was split (common rule)
+         currentHand.canSplit = (getCardValue(currentHand.cards[0]) === 11) ? checkSplitPossibility(currentHand) : false;
+         newHand.canSplit = (getCardValue(newHand.cards[0]) === 11) ? checkSplitPossibility(newHand) : false;
+         // Re-check double possibility (usually allowed after split, unless Aces were split)
+         currentHand.canDouble = (currentHand.status === 'active' && getCardValue(currentHand.cards[0]) !== 11);
+         newHand.canDouble = (newHand.status === 'active' && getCardValue(newHand.cards[0]) !== 11);
+
+
+         updateHandDisplay(currentHand);
+         updateHandDisplay(newHand);
+         // If the first hand became a Blackjack/21, automatically move to the next hand
+         if(currentHand.status === 'blackjack') {
+             moveToNextHandOrEndRound();
+         } else {
+             // Stay on the current (first split) hand
+             updateActionButtons();
+             highlightHint();
+         }
+         saveGameState();
+    }
+
+
+    function moveToNextHandOrEndRound() {
+        const currentHand = playerHands[currentHandIndex];
+        // Check if the current hand's turn is over
+        if (currentHand.status === 'bust' || currentHand.status === 'stand' || currentHand.status === 'blackjack' || currentHand.status === 'surrender') {
+            currentHand.element.classList.remove('current-hand'); // Unhighlight completed hand
+            // Check if there are more hands to play
+            if (currentHandIndex < playerHands.length - 1) {
+                 currentHandIndex++; // Move to the next hand index
+                 const nextHand = playerHands[currentHandIndex];
+                 nextHand.element.classList.add('current-hand'); // Highlight the new current hand
+
+                 // If the next hand is already finished (e.g., blackjack after split), skip it
+                 if (nextHand.status !== 'active') {
+                     moveToNextHandOrEndRound(); // Recursively move to the next one
+                 } else {
+                     // Next hand is active, update buttons and wait for player action
+                     console.log(`Moving to Hand ${currentHandIndex + 1}`);
+                     nextHand.canSplit = checkSplitPossibility(nextHand); // Re-check split on new hand's turn
+                     updateActionButtons();
+                     highlightHint();
+                     saveGameState();
+                 }
+             } else {
+                 // All player hands are finished, play dealer's hand
+                 console.log("All player hands played. Playing dealer hand...");
+                 playDealerHand();
+             }
+        }
+    }
+
+
+    async function playDealerHand() { // Made async to allow delays
+        updateDealerDisplay(true); // Reveal hole card and update count/score
+        let dealerScore = calculateScore(dealerHand);
+        // Dealer hits on soft 17 rule (common variation, can be adjusted)
+        const hitSoft17 = true; // Change to false for "Dealer stands on all 17s"
+
+        // Dealer draws cards until score is 17 or higher
+        // Condition adjusted based on hitSoft17 rule
+        while (dealerScore < 17 || (hitSoft17 && dealerScore === 17 && dealerHand.some(c => c.value === 'A' && calculateScore(dealerHand) === 17))) {
+             console.log(`Dealer Hits (Score: ${dealerScore})`);
+             await new Promise(resolve => setTimeout(resolve, 600)); // Delay for visual effect
+             dealCard(dealerHand);
+             dealerScore = calculateScore(dealerHand);
+             updateDealerDisplay(true); // Update display after each hit
+        }
+         console.log(`Dealer Stands with ${dealerScore}`);
+         await new Promise(resolve => setTimeout(resolve, 300)); // Short delay before ending
+         endRound(); // Proceed to determine results
+    }
+
+
+    function endRound() {
+        isGameOver = true;
+        updateDealerDisplay(true); // Ensure dealer hand is fully revealed
+        const dealerScore = calculateScore(dealerHand);
+        const dealerBusted = dealerScore > 21;
+        let roundOutcomeMessages = [];
+        let totalWinnings = 0; // Tracks money returned to player (original bet + profit/loss)
+        let netChange = 0;     // Tracks profit/loss compared to initial bet(s)
+        let handsWon = 0;
+        let handsLost = 0;
+        let handsPushed = 0;
+        let gotBlackjackWin = false; // Track if any hand won with a Blackjack
+        let wonDoubleDown = false; // Track if won with double down
+
+        playerHands.forEach((hand, index) => {
+            let handResult = '';
+            let handPay = 0; // Payout relative to the hand's bet (e.g., 1 for win, 1.5 for BJ, 0 for push, -1 for loss)
+            let handStatusSuffix = playerHands.length > 1 ? ` (Mano ${index + 1})` : '';
+            let currentHandWon = false;
+
+
+            if (hand.status === 'bust') {
+                handResult = `Mano ${index + 1} Sballa`;
+                handPay = -1;
+                handsLost++;
+            } else {
+                 const playerFinalScore = hand.score;
+                 const isPlayerBlackjack = (hand.status === 'blackjack'); // Status set earlier
+
+                 if (dealerBusted) {
+                     if (isPlayerBlackjack) {
+                          handResult = `Blackjack!${handStatusSuffix}`;
+                          handPay = 1.5; // BJ payout
+                          gotBlackjackWin = true;
+                     } else {
+                          handResult = `Dealer Sballa!${handStatusSuffix} Vince`;
+                          handPay = 1; // Regular win
+                     }
+                     handsWon++;
+                     currentHandWon = true;
+                 } else { // Dealer did not bust
+                     if (isPlayerBlackjack) {
+                          // Player BJ vs Dealer non-BJ (check for push handled implicitly below)
+                          if(dealerScore === 21) { // Dealer also has 21 (not BJ necessarily)
+                              handResult = `Pareggio${handStatusSuffix}`;
+                              handPay = 0;
+                              handsPushed++;
+                          } else {
+                              handResult = `Blackjack!${handStatusSuffix}`;
+                              handPay = 1.5;
+                              handsWon++;
+                              gotBlackjackWin = true;
+                              currentHandWon = true;
+                          }
+                     } else if (playerFinalScore > dealerScore) {
+                          handResult = `Mano ${index + 1} Vince`;
+                          handPay = 1;
+                          handsWon++;
+                          currentHandWon = true;
+                     } else if (playerFinalScore === dealerScore) {
+                          handResult = `Mano ${index + 1} Pareggia`;
+                          handPay = 0; // Push
+                          handsPushed++;
+                     } else { // Player score < Dealer score
+                          handResult = `Dealer Vince${handStatusSuffix}`;
+                          handPay = -1;
+                          handsLost++;
+                     }
+                 }
+            }
+             // Calculate winnings for this hand (original bet + payout * bet)
+             let winningsThisHand = hand.bet + (handPay * hand.bet);
+             totalWinnings += winningsThisHand;
+             netChange += (handPay * hand.bet); // Track only the profit/loss
+
+             // Check for double down win
+             if (currentHandWon && hand.doubled) {
+                 wonDoubleDown = true;
+             }
+
+             // Add bet amount to result message for clarity
+             if (handPay > 0) handResult += ` (+€${handPay * hand.bet})`;
+             else if (handPay < 0) handResult += ` (-€${hand.bet})`;
+             else handResult += ` (+€0)`;
+
+             roundOutcomeMessages.push(handResult);
+             hand.element.classList.remove('current-hand'); // Ensure hand is unhighlighted
+        });
+
+        playerMoney += totalWinnings; // Add back original bets + winnings/losses
+        updatePlayerMoneyDisplay();
+
+        // Determine overall result class based on net change
+         let finalResultClass = '';
+         if (netChange > 0) finalResultClass = 'win';
+         else if (netChange < 0) finalResultClass = 'lose';
+         else finalResultClass = 'push';
+
+        showResult(roundOutcomeMessages.join('\n'), finalResultClass);
+
+        // Update session statistics
+        sessionStatsData.hands += playerHands.length;
+        sessionStatsData.wins += handsWon;
+        sessionStatsData.losses += handsLost;
+        sessionStatsData.pushes += handsPushed;
+        // Note: sessionStatsData.blackjacks is incremented when player GETS blackjack, not necessarily when they WIN with it.
+        updateDailyChallengeProgress(handsWon, gotBlackjackWin, wonDoubleDown, playerHands); // Pass necessary info
+
+        updateStatsDisplay();
+        prepareNextRoundWithDelay(); // Prepare for the next round after a delay
+        saveGameState(); // Save state after round ends
+    }
+
+    // NEW function to handle delay before reset
+    function prepareNextRoundWithDelay() {
+        const cardPersistDelay = 2000; // 2 seconds
+
+        // Start fade out animation for cards after result is shown
+        setTimeout(() => {
+            dealerCardsElement.style.opacity = '0';
+            playerHandsContainer.style.opacity = '0';
+        }, 500); // Start fading slightly after result appears
+
+        // Set timeout to actually clear cards and reset betting phase
+        clearTimeout(cardClearTimeout); // Clear any existing timeout
+        cardClearTimeout = setTimeout(() => {
+            resetBettingPhase(); // This will hide game area and show betting
+        }, cardPersistDelay);
+    }
+
+
+    function resetBettingPhase() {
+        isGameOver = true;
+        proposedBet = 0;
+        initialBet = 0; // Reset initial bet for the new round
+
+        // Clear card containers only *after* the delay handled by prepareNextRoundWithDelay
+        // dealerCardsElement.innerHTML = ''; // Moved out
+        // playerHandsContainer.innerHTML = ''; // Moved out
+        dealerScoreElement.textContent = '?'; // Reset score display for next round
+
+        updateProposedBetDisplay();
+        updateActionButtons(); // Disable game buttons, enable betting buttons conditionally
+
+        bettingArea.style.display = 'flex'; // Show betting area
+        gameArea.style.display = 'none';    // Hide game area
+
+        // Show Rebet button only if there was a last bet, it's valid for current limits, and affordable
+        if (lastBet > 0 && lastBet >= currentTableLimits.min && lastBet <= currentTableLimits.max && lastBet <= playerMoney) {
+             rebetButton.style.display = 'inline-block';
+        } else {
+             rebetButton.style.display = 'none';
+        }
+        updateBettingUI(); // Update chips based on money and limits
+        checkOutOfMoney(); // Final check if player can even place the minimum bet
+    }
+
+     function checkOutOfMoney() {
+         if (playerMoney < currentTableLimits.min && currentTableLimits.min > 0) {
+             console.log("Player out of money for this table!");
+             showResult(`Non hai abbastanza soldi (€${playerMoney}) per la puntata minima di €${currentTableLimits.min}.\nResetta i soldi o cambia tavolo.`, "lose");
+             dealButton.disabled = true;
+             rebetButton.style.display = 'none';
+             // Disable all chip buttons
+             clickableChipsContainer.querySelectorAll('button').forEach(btn => btn.disabled = true);
+         }
+     }
+
+
+    function updateActionButtons() {
+        const bettingPhase = isGameOver; // True if in betting phase
+
+        // Game action buttons (Hit, Stand, Double, Split)
+        hitButton.disabled = bettingPhase;
+        standButton.disabled = bettingPhase;
+        doubleButton.disabled = bettingPhase;
+        splitButton.disabled = bettingPhase;
+
+        // Betting action buttons (Deal, Rebet, Clear)
+        dealButton.disabled = !bettingPhase || (proposedBet < currentTableLimits.min || proposedBet > playerMoney || proposedBet > currentTableLimits.max);
+        clearBetButton.disabled = !bettingPhase || (proposedBet === 0);
+        // Rebet button visibility handled in resetBettingPhase
+
+        if (!bettingPhase && playerHands.length > 0 && playerHands[currentHandIndex]) {
+            // If in game phase, enable/disable based on current hand state
+            const currentHand = playerHands[currentHandIndex];
+            if (currentHand.status === 'active') {
+                hitButton.disabled = false;
+                standButton.disabled = false;
+                // Double allowed only if active, canDouble flag is true, and enough money
+                doubleButton.disabled = !(currentHand.canDouble && playerMoney >= currentHand.bet);
+                // Split allowed only if active, canSplit flag is true (checked value match & affordability)
+                splitButton.disabled = !(currentHand.canSplit);
+            }
+        }
+         // Apply hint highlights AFTER setting disabled states
+         applyHintHighlight();
+    }
+
+    function showResult(message, resultClass = '') {
+        resultElement.innerHTML = message.replace(/\n/g, '<br>'); // Keep newline conversion
+        resultElement.className = `result-show ${resultClass}`; // Apply show and result type class
+
+        // Hide the result message after a delay (longer delay now)
+        const resultDisplayDuration = 4000; // Keep result visible longer
+        setTimeout(() => {
+            resultElement.className = ''; // Remove all classes to hide
+        }, resultDisplayDuration);
+    }
+
+     function updatePlayerMoneyDisplay() {
+        const moneyString = `Saldo: €${playerMoney}`;
+        playerMoneyElement.textContent = `€${playerMoney}`; // Update display inside game area (less prominent)
+        balanceDisplayElement.textContent = moneyString; // Update main balance display
+        // Also update betting UI as affordability might change
+        if(isGameOver) { // Only update chip disabled state if in betting phase
+             updateBettingUI();
+             // Update rebet button state
+             if (lastBet > 0 && lastBet >= currentTableLimits.min && lastBet <= currentTableLimits.max && lastBet <= playerMoney) {
+                rebetButton.style.display = 'inline-block';
+             } else {
+                 rebetButton.style.display = 'none';
+             }
+             // Update deal button state
+             dealButton.disabled = (proposedBet < currentTableLimits.min || proposedBet > playerMoney || proposedBet > currentTableLimits.max);
+        }
+     }
+
+    // --- UI Functions ---
+
+    function setupChipButtons() {
+        clickableChipsContainer.innerHTML = ''; // Clear existing chips
+        currentTableLimits.chips.forEach(value => {
+            const chipButton = document.createElement('button');
+            chipButton.classList.add('chip-button');
+            chipButton.dataset.value = value; // Use data-value for styling and logic
+
+            const valueSpan = document.createElement('span');
+            valueSpan.classList.add('chip-value');
+            // Format value (e.g., '1K' for 1000)
+            valueSpan.textContent = value >= 1000 ? (value / 1000) + 'K' : value;
+            chipButton.appendChild(valueSpan);
+
+            chipButton.onclick = () => addBet(value);
+
+            // Check if this chip requires premium access (based on table limits, not just chip value)
+            const isChipPremiumLocked = Object.values(TABLE_LIMITS).some(limit =>
+                limit.premium && limit.chips.includes(value) && !TABLE_LIMITS[tableSelect.value]?.chips.includes(value)
+             );
+             // Disable chip if adding it exceeds max bet OR exceeds player money OR if it's premium locked FOR THIS TABLE
+            const requiresPremiumForThisTable = currentTableLimits.premium && !isPremium; // Is the current table premium locked?
+             chipButton.disabled = (
+                 proposedBet + value > currentTableLimits.max ||
+                 proposedBet + value > playerMoney ||
+                 (requiresPremiumForThisTable && currentTableLimits.chips.includes(value)) // Disable *all* chips on locked premium table
+             );
+
+
+             // Add premium lock icon and behavior if the *table itself* is premium and locked
+             if (requiresPremiumForThisTable && currentTableLimits.chips.includes(value)) {
+                 chipButton.classList.add('premium-locked');
+                 chipButton.onclick = (event) => { // Override click
+                     event.preventDefault();
+                     checkPremiumAccess(`Tavolo ${tableSelect.options[tableSelect.selectedIndex].text}`);
+                 };
+             }
+
+
+            clickableChipsContainer.appendChild(chipButton);
+        });
+    }
+
+    function updateBettingUI() {
+        // This function is called when money, limits, or proposed bet change
+        setupChipButtons(); // Recreate/update chips based on current limits and premium status
+        updateProposedBetDisplay(); // Update bet display text and Deal/Clear button states
+        // Re-check if out of money for the minimum bet
+        checkOutOfMoney();
+    }
+
+
+    // --- Theme Toggle ---
+    themeToggle.addEventListener('change', () => {
+        const theme = themeToggle.checked ? 'dark' : 'light';
+        document.body.setAttribute('data-theme', theme);
+        localStorage.setItem('blackjackTheme', theme);
+        saveGameState(); // Save theme preference
+    });
+    function loadTheme() {
+        const savedTheme = localStorage.getItem('blackjackTheme') || 'light'; // Default to light
+        document.body.setAttribute('data-theme', savedTheme);
+        themeToggle.checked = (savedTheme === 'dark');
+    }
+
+
+    function changeGame() {
+        console.log("Redirecting to index.html...");
+        // Assuming index.html is in the same directory
+        window.location.href = 'index.html';
+    }
+
+    // --- Premium Features Handling ---
+
+    function showPremiumPopup(featureName = "questa funzionalità") {
+        // You might want to customize the message based on the featureName
+        // premiumPopup.querySelector('#premium-feature-name').textContent = featureName; // If you add an element for it
+        premiumPopup.classList.add('show');
+        premiumPopupOverlay.classList.add('show');
+    }
+
+    function closePremiumPopup() {
+        premiumPopup.classList.remove('show');
+        premiumPopupOverlay.classList.remove('show');
+    }
+
+    function activatePremiumPlaceholder() {
+         // This is just a simulation
+         if (!isPremium) {
+             isPremium = true;
+             localStorage.setItem('blackjackPremium', 'true');
+             applyPremiumFeatures(); // Update UI immediately
+             closePremiumPopup();
+             saveGameState(); // Save premium status
+             alert("Premium attivato (simulazione). Le funzionalità Premium sono ora disponibili.");
+             // Re-evaluate betting UI as premium chips/tables/challenges might become available
+             updateBettingUI();
+             updateChallengeDisplay(); // Update challenge display for premium state
+         } else {
+             closePremiumPopup(); // Already premium
+         }
+    }
+
+     function checkPremiumAccess(elementOrFeatureName) {
+        if (isPremium) return true; // Already premium, allow access
+
+        let featureName = "questa funzionalità Premium"; // Default name
+        if (typeof elementOrFeatureName === 'string') {
+            featureName = elementOrFeatureName;
+        } else if (elementOrFeatureName) {
+             // Try to get a more specific name based on the element clicked
+             const detailsSummary = elementOrFeatureName.closest('details')?.querySelector('summary');
+             const label = document.querySelector(`label[for="${elementOrFeatureName.id}"]`);
+             const option = elementOrFeatureName.tagName === 'OPTION' ? elementOrFeatureName : null;
+             const chip = elementOrFeatureName.classList.contains('chip-button') ? elementOrFeatureName : null;
+             const challengeItem = elementOrFeatureName.classList.contains('challenge-item') ? elementOrFeatureName : null;
+
+
+             if (detailsSummary) {
+                featureName = detailsSummary.textContent.replace(/ ?- Premium/i, '').trim();
+             } else if (label) {
+                featureName = label.textContent.replace(/\(Premium\)/i, '').trim();
+             } else if (option) {
+                 featureName = `Limite tavolo "${option.textContent.replace(' (Premium)', '')}"`;
+             } else if (chip) {
+                 featureName = `Fiche da €${chip.dataset.value}`;
+             } else if (challengeItem) {
+                 featureName = 'Sfida Premium';
+             }
+        }
+
+        showPremiumPopup(featureName);
+        return false; // Access denied
+    }
+
+
+    function applyPremiumFeatures() {
+         console.log("Applying premium features state. isPremium:", isPremium);
+         // Sections (Details)
+         premiumFeatureSections.forEach(el => {
+            const summary = el.querySelector('summary');
+            if (isPremium) {
+                el.classList.remove('premium-locked');
+                el.onclick = null; // Remove blocker click handler
+                if (summary) summary.style.cursor = 'pointer';
+                 // Restore original content if text was modified
+                 if (summary && summary.dataset.originalText) {
+                     summary.textContent = summary.dataset.originalText;
+                 }
+            } else {
+                el.classList.add('premium-locked');
+                el.open = false; // Ensure locked sections are closed
+                 if (summary) {
+                     summary.style.cursor = 'not-allowed';
+                     // Store original text and append lock icon? Or handle in CSS?
+                     if (!summary.dataset.originalText) {
+                         summary.dataset.originalText = summary.textContent;
+                     }
+                     // summary.textContent = summary.dataset.originalText + " 🔒"; // Optionally add lock icon
+                 }
+                 // Add click handler to summary to prevent opening and show popup
+                 if (summary) {
+                     summary.onclick = (event) => {
+                         event.preventDefault(); // Prevent toggling details
+                         checkPremiumAccess(el);
+                     };
+                 } else { // Fallback if no summary? (Shouldn't happen for details)
+                    el.onclick = (event) => {
+                        event.preventDefault();
+                        checkPremiumAccess(el);
+                    };
+                 }
+            }
+        });
+         // Inputs (Toggles)
+         premiumFeatureInputs.forEach(input => {
+             const parentDiv = input.closest('.premium-option') || input.closest('div');
+             const label = parentDiv?.querySelector('label.toggle-switch') || input; // Click target
+
+            if (isPremium) {
+                 input.disabled = false;
+                 if (parentDiv) parentDiv.classList.remove('premium-locked');
+                 // Remove specific premium blocker click handler
+                 label.onclick = null; // Allow normal toggle behaviour
+            } else {
+                 input.disabled = true;
+                 input.checked = false; // Ensure toggles are off if premium locked
+                 if (parentDiv) parentDiv.classList.add('premium-locked');
+                 // Add click handler to prevent interaction and show popup
+                 label.onclick = (event) => {
+                     event.preventDefault(); // Prevent toggling switch
+                     checkPremiumAccess(input);
+                 };
+            }
+        });
+         // Table Limit Options
+         tableSelect.querySelectorAll('option.premium-feature').forEach(option => {
+            if (isPremium) {
+                 option.disabled = false;
+                 option.textContent = option.textContent.replace(" (Premium)", "");
+             } else {
+                 option.disabled = true;
+                 if (!option.textContent.includes("(Premium)")) {
+                     option.textContent += " (Premium)";
+                 }
+            }
+         });
+         // Premium Chips are handled dynamically in setupChipButtons based on TABLE limits
+
+         // Update related state variables based on toggles AFTER applying locks
+         trainingModeActive = trainingModeToggle.checked; // Not premium, can always toggle
+         showHintsActive = showHintsToggle.checked && isPremium; // Only active if toggle is on AND premium
+
+         // Ensure dependent UI updates
+         if (!isPremium && trainerControls.open) trainerControls.open = false;
+         if (!isPremium && sessionStats.open) sessionStats.open = false;
+
+         updateTrainerDisplay(); // Update trainer display based on active state
+         updateStatsDisplay();   // Update stats display if open
+         applyHintHighlight();   // Update hints based on active state
+         updateBettingUI();      // Update chips and betting based on premium status and limits
+         updateChallengeDisplay(); // Update challenges based on premium status
+    }
+
+    // Event listeners for premium toggles
+    trainingModeToggle.addEventListener('change', () => {
+         trainingModeActive = trainingModeToggle.checked;
+         console.log("Training Mode Toggled:", trainingModeActive);
+         if (trainingModeActive && trainerControls.open) updateTrainerDisplay();
+         else if (!trainingModeActive) { // Clear display if turned off
+              runningCountElement.textContent = '0';
+              decksRemainingElement.textContent = '0.0';
+              trueCountElement.textContent = '0.0';
+         }
+         saveGameState();
+    });
+    showHintsToggle.addEventListener('change', (event) => {
+         // Check premium FIRST
+         if (event.target.checked && !checkPremiumAccess(event.target)) {
+             event.target.checked = false; // Revert toggle if not premium
+             return;
+         }
+         // If check passed (or user is unchecking), update state
+         showHintsActive = event.target.checked;
+         console.log("Show Hints Toggled:", showHintsActive);
+         applyHintHighlight(); // Update highlights immediately
+         saveGameState();
+    });
+    // --- Stats Functions ---
+    function resetStats() {
+        if (!checkPremiumAccess('Statistiche Sessione')) return;
+        if (confirm("Sei sicuro di voler azzerare le statistiche della sessione?")) {
+            sessionStatsData = { hands: 0, wins: 0, losses: 0, pushes: 0, blackjacks: 0 };
+            updateStatsDisplay(); // Update UI immediately
+            saveGameState();      // Save cleared stats
+        }
+    }
+
+    function updateStatsDisplay() {
+        // No need to check premium here, just update if the section is open
+        if (!sessionStats.open) return;
+        statsHandsElement.textContent = sessionStatsData.hands;
+        statsWinsElement.textContent = sessionStatsData.wins;
+        statsLossesElement.textContent = sessionStatsData.losses;
+        statsPushesElement.textContent = sessionStatsData.pushes;
+        statsBjsElement.textContent = sessionStatsData.blackjacks;
+        const totalDecided = sessionStatsData.wins + sessionStatsData.losses;
+        const winRate = totalDecided > 0 ? ((sessionStatsData.wins / totalDecided) * 100).toFixed(1) + '%' : 'N/A';
+        statsWinRateElement.textContent = winRate;
+    }
+
+     // --- Basic Strategy Hint ---
+     function getHint() {
+        // Return null if hints are off, not premium, game over, or hand not active
+        if (!showHintsActive || !isPremium || isGameOver || !playerHands[currentHandIndex] || playerHands[currentHandIndex].status !== 'active') {
+            return null;
+        }
+
+        const currentHand = playerHands[currentHandIndex];
+        const playerScore = currentHand.score;
+        // Use visible dealer upcard value
+        const dealerUpCardValue = (dealerHand.length > 1 && !dealerHand[1].hidden) ? getCardValue(dealerHand[1]) : 0; // 0 if not visible yet
+        // Check if hand is soft (Ace counted as 11)
+        const isSoft = currentHand.cards.some(c => c.value === 'A') && playerScore !== calculateScore(currentHand.cards.map(c => ({...c, value: (c.value === 'A' ? '1' : c.value)}))); // Crude recalculation as 1
+        const canSplit = currentHand.canSplit; // Use the pre-calculated flag
+        const canDouble = currentHand.canDouble && playerMoney >= currentHand.bet; // Use flag AND check affordability
+
+        // --- Basic Strategy Logic (Simplified Example - Stands on Soft 17) ---
+
+        // 1. Split? (Highest Priority)
+        if (canSplit) {
+            const cardValue = getCardValue(currentHand.cards[0]); // Value of one card in the pair
+            if (cardValue === 11 || cardValue === 8) return 'split'; // Always split Aces and 8s
+            if (cardValue === 9 && ![7, 10, 11].includes(dealerUpCardValue)) return 'split'; // Split 9s except vs 7, 10, A
+            if (cardValue === 7 && dealerUpCardValue <= 7) return 'split'; // Split 7s vs 2-7
+            if (cardValue === 6 && dealerUpCardValue <= 6) return 'split'; // Split 6s vs 2-6
+            if (cardValue === 4 && [5, 6].includes(dealerUpCardValue) && canDouble) return 'split'; // Split 4s vs 5,6 if Double After Split allowed (canDouble implies DAS here)
+            if ((cardValue === 2 || cardValue === 3) && dealerUpCardValue <= 7) return 'split'; // Split 2s, 3s vs 2-7
+            // If split not recommended, proceed to Soft/Hard logic
+        }
+
+        // 2. Soft Hands?
+        if (isSoft) {
+            if (playerScore >= 19) return 'stand'; // Stand Soft 19+
+            if (playerScore === 18) {
+                 if ([2, 7, 8].includes(dealerUpCardValue)) return 'stand'; // Stand Soft 18 vs 2, 7, 8
+                 if (dealerUpCardValue >= 3 && dealerUpCardValue <= 6 && canDouble) return 'double'; // Double Soft 18 vs 3-6
+                 else return 'hit'; // Hit Soft 18 vs 9, 10, A
+            }
+            if (playerScore === 17) { // Soft 17
+                 if (dealerUpCardValue >= 3 && dealerUpCardValue <= 6 && canDouble) return 'double'; // Double vs 3-6
+                 else return 'hit'; // Hit vs 2, 7-A
+            }
+             if (playerScore === 15 || playerScore === 16) { // Soft 15/16
+                 if (dealerUpCardValue >= 4 && dealerUpCardValue <= 6 && canDouble) return 'double'; // Double vs 4-6
+                 else return 'hit'; // Hit vs 2,3, 7-A
+             }
+             if (playerScore === 13 || playerScore === 14) { // Soft 13/14
+                 if (dealerUpCardValue >= 5 && dealerUpCardValue <= 6 && canDouble) return 'double'; // Double vs 5-6
+                 else return 'hit'; // Hit vs 2-4, 7-A
+             }
+             // Should cover all soft hands down to A-2 (Soft 13)
+             return 'hit'; // Failsafe for lower soft hands (shouldn't be reached if logic above is complete)
+        }
+
+        // 3. Hard Hands?
+        if (playerScore >= 17) return 'stand'; // Stand Hard 17+
+        if (playerScore >= 13 && playerScore <= 16) {
+             if (dealerUpCardValue <= 6) return 'stand'; // Stand Hard 13-16 vs 2-6
+             else return 'hit'; // Hit Hard 13-16 vs 7-A
+        }
+        if (playerScore === 12) {
+             if (dealerUpCardValue >= 4 && dealerUpCardValue <= 6) return 'stand'; // Stand Hard 12 vs 4-6
+             else return 'hit'; // Hit Hard 12 vs 2,3, 7-A
+        }
+        if (playerScore === 11 && canDouble) return 'double'; // Always Double Hard 11 if possible
+        if (playerScore === 10) {
+             if (dealerUpCardValue <= 9 && canDouble) return 'double'; // Double Hard 10 vs 2-9
+             else return 'hit'; // Hit Hard 10 vs 10, A
+        }
+        if (playerScore === 9) {
+             if (dealerUpCardValue >= 3 && dealerUpCardValue <= 6 && canDouble) return 'double'; // Double Hard 9 vs 3-6
+             else return 'hit'; // Hit Hard 9 vs 2, 7-A
+        }
+        // Hard 8 or less
+        return 'hit';
+     }
+
+     function applyHintHighlight() {
+        // Clear previous highlights
+        [hitButton, standButton, doubleButton, splitButton].forEach(btn => btn.classList.remove('hint-highlight'));
+
+        const hint = getHint(); // Get the strategy hint
+        console.log("Hint:", hint);
+        if (!hint) return; // No hint available or needed
+
+        let targetButton = null;
+        switch(hint) {
+            case 'hit': targetButton = hitButton; break;
+            case 'stand': targetButton = standButton; break;
+            case 'double':
+                // Suggest Double if available, otherwise suggest Hit (as Double implies Hit if cannot Double)
+                targetButton = !doubleButton.disabled ? doubleButton : hitButton;
+                break;
+            case 'split':
+                targetButton = !splitButton.disabled ? splitButton : null; // Suggest split only if possible
+                break;
+        }
+
+        // Apply highlight only if the suggested button exists and is not disabled
+        if (targetButton && !targetButton.disabled) {
+            targetButton.classList.add('hint-highlight');
+        } else if (hint === 'double' && targetButton === hitButton && !hitButton.disabled) {
+             // Special case: Double suggested but unavailable/unaffordable, highlight Hit if Hit is possible
+             hitButton.classList.add('hint-highlight');
+             console.log("Hint fallback: Double suggested but unavailable/unaffordable, highlighting Hit.");
+        } else if (hint === 'split' && targetButton === null) {
+             // Split suggested but unavailable/unaffordable, determine fallback (usually hit/stand based on hard total)
+             // This requires re-evaluating strategy without split option - simplified: highlight Hit for now
+             if (!hitButton.disabled) hitButton.classList.add('hint-highlight');
+             console.log("Hint fallback: Split suggested but unavailable/unaffordable, highlighting Hit (simplified).");
+        }
+     }
+
+
+     function highlightHint() {
+         // This function is called whenever action buttons might change
+         // It simply calls applyHintHighlight which internally checks if hints are active/premium
+         applyHintHighlight();
+     }
+
+     function showHiLoInfo() {
+         alert("Conteggio Hi-Lo:\n\n" +
+               "È una strategia di conteggio delle carte nel Blackjack.\n\n" +
+               "- Carte Basse (2-6): +1 al conteggio\n" +
+               "- Carte Neutre (7-9): +0 al conteggio\n" +
+               "- Carte Alte (10, J, Q, K, A): -1 al conteggio\n\n" +
+               "Conteggio Corrente (Running Count): La somma dei valori delle carte uscite.\n" +
+               "Conteggio Reale (True Count): Running Count / Mazzi Rimanenti (stima). Indica il vantaggio.\n\n" +
+               "Un True Count positivo alto suggerisce un vantaggio per il giocatore (più carte alte rimaste), favorendo puntate maggiori. Un True Count negativo suggerisce un vantaggio per il banco.");
+     }
+
+    // --- Daily Challenge & Bonus Logic (Modified for 3 Challenges) ---
+
+     function getChallengesForDay(timestamp = Date.now()) {
+         const date = new Date(timestamp);
+         const dayOfYear = Math.floor((timestamp - new Date(date.getFullYear(), 0, 0).getTime()) / (1000 * 60 * 60 * 24));
+         const year = date.getFullYear();
+         const seedBase = `${year}-${dayOfYear}`; // Unique seed for the day
+
+         // Simple Pseudo-Random Number Generator based on seed
+         const simpleHash = (str) => {
+            let hash = 0;
+            for (let i = 0; i < str.length; i++) {
+                const char = str.charCodeAt(i);
+                hash = ((hash << 5) - hash) + char;
+                hash |= 0; // Convert to 32bit integer
+            }
+            return Math.abs(hash); // Use absolute value for seeding RNG
+         };
+
+         // Simple Seedable RNG (Mulberry32)
+         const mulberry32 = (seed) => {
+             return function() {
+               var t = seed += 0x6D2B79F5;
+               t = Math.imul(t ^ t >>> 15, t | 1);
+               t ^= t + Math.imul(t ^ t >>> 7, t | 61);
+               return ((t ^ t >>> 14) >>> 0) / 4294967296;
+             }
+         }
+
+         const generatedChallenges = [];
+         const usedTypes = new Set(); // Ensure different challenge types
+
+         const availableChallengeTypes = [
+             { type: 'win_hands', baseTarget: 5, description: (t) => `Vinci ${t} mani` },
+             { type: 'get_blackjack', baseTarget: 1, description: (t) => `Ottieni ${t === 1 ? 'un' : t} Blackjack vincente/i` },
+             { type: 'play_hands', baseTarget: 10, description: (t) => `Gioca ${t} mani` },
+             { type: 'double_down_win', baseTarget: 2, description: (t) => `Vinci ${t} mano/i con Raddoppio`},
+             { type: 'reach_score', baseTarget: 20, description: (t) => `Ottieni un punteggio di ${t} o più (senza sballare)` },
+             { type: 'win_streak', baseTarget: 3, description: (t) => `Ottieni una serie di ${t} vittorie consecutive` },
+             // Add more challenge types if desired
+         ];
+
+         for(let i = 0; i < DAILY_CHALLENGE_COUNT; i++) {
+             const challengeSeed = simpleHash(seedBase + `-${i}`); // Unique seed for each challenge slot
+             const rng = mulberry32(challengeSeed);
+
+             let selectedType;
+             let attempts = 0;
+             // Try to pick an unused challenge type
+             do {
+                 const selectedTypeIndex = Math.floor(rng() * availableChallengeTypes.length);
+                 selectedType = availableChallengeTypes[selectedTypeIndex];
+                 attempts++;
+             } while (usedTypes.has(selectedType.type) && attempts < availableChallengeTypes.length * 2)
+
+             usedTypes.add(selectedType.type); // Mark type as used
+
+             const isPremiumChallenge = (i === PREMIUM_CHALLENGE_INDEX);
+             const targetMultiplier = 1 + Math.floor(rng() * (isPremiumChallenge ? 4 : 3)); // Premium challenge can be harder (1-4x)
+             const target = selectedType.baseTarget * targetMultiplier;
+             const reward = isPremiumChallenge ? PREMIUM_CHALLENGE_REWARD : (NORMAL_CHALLENGE_REWARD_BASE + Math.floor(rng() * 51)); // Normal reward 100-150
+
+             generatedChallenges.push({
+                 id: `${seedBase}-${i}`, // Unique ID including slot index
+                 type: selectedType.type,
+                 target: target,
+                 current: 0,
+                 reward: reward,
+                 description: selectedType.description(target),
+                 completed: false,
+                 isPremium: isPremiumChallenge,
+                 lastCheckTimestamp: timestamp // Store when it was generated/checked
+             });
+         }
+
+         return generatedChallenges;
+     }
+
+     function loadDailyChallenges() {
+        const savedChallenges = JSON.parse(localStorage.getItem('blackjackDailyChallenges') || 'null');
+        const now = Date.now();
+        const todayIdBase = getChallengesForDay(now)[0].id.split('-').slice(0, 2).join('-'); // Get YYYY-DayOfYear part
+
+        // Check if saved challenges exist and are for today
+        if (savedChallenges && Array.isArray(savedChallenges) && savedChallenges.length === DAILY_CHALLENGE_COUNT && savedChallenges[0].id.startsWith(todayIdBase)) {
+            // Load existing challenges for today
+            dailyChallenges = savedChallenges;
+            console.log("Loaded existing daily challenges:", dailyChallenges);
+        } else {
+            // Generate new challenges for today
+            dailyChallenges = getChallengesForDay(now);
+            localStorage.setItem('blackjackDailyChallenges', JSON.stringify(dailyChallenges));
+            console.log("Generated new daily challenges:", dailyChallenges);
+        }
+         updateChallengeDisplay(); // Update UI with loaded/new challenges
+     }
+
+     // Update challenge progress based on round results
+     function updateDailyChallengeProgress(handsWonThisRound, gotBlackjackWinThisRound, wonDoubleDownThisRound, handsPlayedThisRound) {
+         if (!dailyChallenges || dailyChallenges.length === 0) return;
+
+         let challengeUpdated = false;
+         const dealerScore = calculateScore(dealerHand); // Needed for some checks
+
+         dailyChallenges.forEach((challenge, index) => {
+             if (challenge.completed) return; // Skip completed
+             // Skip premium challenge if user is not premium
+             if (challenge.isPremium && !isPremium) return;
+
+             let progressMadeThisRound = 0;
+             let handSpecificCheck = false;
+
+             switch (challenge.type) {
+                 case 'win_hands':
+                     progressMadeThisRound = handsWonThisRound;
+                     break;
+                 case 'get_blackjack':
+                     if (gotBlackjackWinThisRound) {
+                         progressMadeThisRound = 1;
+                     }
+                     break;
+                 case 'play_hands':
+                     progressMadeThisRound = handsPlayedThisRound.length;
+                     break;
+                 case 'double_down_win':
+                     if(wonDoubleDownThisRound) {
+                         progressMadeThisRound = 1; // Count per round where at least one double win occurred
+                     }
+                     break;
+                 case 'reach_score':
+                      handSpecificCheck = true;
+                      handsPlayedThisRound.forEach(hand => {
+                          if (hand.status !== 'bust' && hand.score >= challenge.target) {
+                              progressMadeThisRound = 1; // Increment only once per round if condition met
+                          }
+                      });
+                      break;
+                 // case 'win_streak': // Needs more complex state tracking across rounds
+                 //     // Logic to track consecutive wins would go here
+                 //     break;
+
+             }
+
+             if (progressMadeThisRound > 0) {
+                const previousProgress = challenge.current;
+                challenge.current += progressMadeThisRound;
+                challenge.current = Math.min(challenge.current, challenge.target); // Cap at target
+
+                if (challenge.current > previousProgress) { // Only mark as updated if progress actually increased
+                    challengeUpdated = true;
+                    console.log(`Challenge '${challenge.description}' progress: ${challenge.current}/${challenge.target}`);
+                }
+
+
+                if (challenge.current >= challenge.target && !challenge.completed) {
+                    // Challenge Completed!
+                    challenge.completed = true;
+                    playerMoney += challenge.reward;
+                    console.log(`Daily challenge completed! ${challenge.description} +€${challenge.reward}`);
+                    // Show separate result for each completed challenge? Or combine?
+                    showResult(`Sfida Completata!\n${challenge.description}\n+€${challenge.reward}`, 'win');
+                    updatePlayerMoneyDisplay();
+                }
+             }
+         });
+
+         if (challengeUpdated) {
+            // Save progress and update display if any challenge made progress
+            localStorage.setItem('blackjackDailyChallenges', JSON.stringify(dailyChallenges));
+            updateChallengeDisplay();
+         }
+     }
+
+
+    // Helper to calculate payout multiplier (-1, 0, 1, 1.5) - needed for double_down_win challenge
+    function calculateHandPayout(hand, dealerScore) {
+        const playerFinalScore = hand.score;
+        const isPlayerBlackjack = hand.status === 'blackjack';
+        const dealerBusted = dealerScore > 21;
+
+        if (hand.status === 'bust') return -1;
+        if (dealerBusted) return isPlayerBlackjack ? 1.5 : 1;
+        // Check for dealer blackjack ONLY if player doesn't have one
+        if (!isPlayerBlackjack && dealerHand.length === 2 && dealerScore === 21) return -1;
+        // Player BJ vs Dealer non-BJ (or non-21)
+        if (isPlayerBlackjack) return (dealerScore === 21) ? 0 : 1.5; // Push vs dealer 21, win otherwise
+        // Regular hand comparison
+        if (playerFinalScore > dealerScore) return 1;
+        if (playerFinalScore === dealerScore) return 0;
+        return -1; // Player score < dealer score
+    }
+
+
+     function updateChallengeDisplay() {
+         if (!dailyChallengesContainer) return;
+         dailyChallengesContainer.innerHTML = ''; // Clear previous
+         challengesLoading.style.display = 'none'; // Hide loading text
+
+         if (!dailyChallenges || dailyChallenges.length === 0) {
+            dailyChallengesContainer.innerHTML = '<p>Nessuna sfida attiva oggi.</p>';
+            return;
+         }
+
+         dailyChallenges.forEach((challenge, index) => {
+             const challengeDiv = document.createElement('div');
+             challengeDiv.classList.add('challenge-item');
+             challengeDiv.dataset.id = challenge.id;
+             challengeDiv.dataset.completed = challenge.completed;
+
+             const isLocked = challenge.isPremium && !isPremium;
+             if (isLocked) {
+                 challengeDiv.classList.add('locked');
+                 challengeDiv.onclick = () => checkPremiumAccess(challengeDiv); // Show popup on click
+             }
+             if (challenge.isPremium) {
+                 challengeDiv.classList.add('premium-challenge');
+             }
+
+
+             const descriptionP = document.createElement('p');
+             descriptionP.classList.add('challenge-description');
+             descriptionP.textContent = challenge.description + (challenge.isPremium ? ' (Premium)' : '');
+
+             const progressP = document.createElement('p');
+             progressP.classList.add('challenge-progress-text');
+             progressP.textContent = `Progresso: ${isLocked ? '🔒' : challenge.current} / ${challenge.target}`;
+
+             const progressBarDiv = document.createElement('div');
+             progressBarDiv.classList.add('challenge-progress-bar');
+             const progressInnerDiv = document.createElement('div');
+             progressInnerDiv.classList.add('challenge-progress');
+             const progressPercent = challenge.target > 0 ? (challenge.current / challenge.target) * 100 : 0;
+             progressInnerDiv.style.width = isLocked ? '0%' : `${progressPercent}%`;
+             progressBarDiv.appendChild(progressInnerDiv);
+
+             const rewardP = document.createElement('p');
+             rewardP.classList.add('challenge-reward');
+             rewardP.innerHTML = `Ricompensa: <span style="color: var(--highlight-color); font-weight: bold;">€${challenge.reward}</span>`;
+
+
+             challengeDiv.appendChild(descriptionP);
+             challengeDiv.appendChild(progressP);
+             challengeDiv.appendChild(progressBarDiv);
+             challengeDiv.appendChild(rewardP);
+
+             if (challenge.completed && !isLocked) {
+                 const completedP = document.createElement('p');
+                 completedP.classList.add('challenge-completed-text');
+                 completedP.textContent = 'Completata!';
+                 challengeDiv.appendChild(completedP);
+             }
+
+
+             dailyChallengesContainer.appendChild(challengeDiv);
+         });
+     }
+
+    // --- Daily Bonus & Streak Logic ---
+    function isSameDay(timestamp1, timestamp2) {
+        if (!timestamp1 || !timestamp2) return false; // Handle initial case
+        const date1 = new Date(timestamp1);
+        const date2 = new Date(timestamp2);
+        return date1.getFullYear() === date2.getFullYear() &&
+               date1.getMonth() === date2.getMonth() &&
+               date1.getDate() === date2.getDate();
+    }
+
+    function isConsecutiveDay(timestamp1, timestamp2) {
+         if (!timestamp1 || !timestamp2) return false;
+         const date1 = new Date(timestamp1); // Earlier date
+         const date2 = new Date(timestamp2); // Later date
+         const oneDay = 24 * 60 * 60 * 1000;
+         // Set both times to noon to avoid DST issues? Or just check date components.
+         const date1StartOfDay = new Date(date1.getFullYear(), date1.getMonth(), date1.getDate()).getTime();
+         const date2StartOfDay = new Date(date2.getFullYear(), date2.getMonth(), date2.getDate()).getTime();
+
+         return (date2StartOfDay - date1StartOfDay) === oneDay;
+    }
+
+
+    function checkDailyBonusAndStreak() {
+        const savedBonusInfo = JSON.parse(localStorage.getItem('blackjackDailyBonusInfo') || 'null');
+        const now = Date.now();
+
+        if (savedBonusInfo) {
+            dailyBonusInfo = savedBonusInfo;
+        } else {
+            // Initialize if no saved data
+             dailyBonusInfo = { collectedToday: false, lastLoginTimestamp: 0, consecutiveDays: 0 };
+        }
+
+
+        // Check if it's a new day since the last login
+        if (!isSameDay(now, dailyBonusInfo.lastLoginTimestamp)) {
+            console.log("New day detected.");
+            // Reset collected flag for the new day
+            dailyBonusInfo.collectedToday = false;
+            // Check for consecutive login streak
+            if (dailyBonusInfo.lastLoginTimestamp !== 0 && isConsecutiveDay(dailyBonusInfo.lastLoginTimestamp, now)) {
+                dailyBonusInfo.consecutiveDays++;
+                console.log(`Consecutive login streak: ${dailyBonusInfo.consecutiveDays} days.`);
+            } else if (dailyBonusInfo.lastLoginTimestamp !== 0) { // Don't reset if it's the very first login
+                console.log("Consecutive login streak broken.");
+                dailyBonusInfo.consecutiveDays = 1; // Reset to 1 for today's login
+            } else {
+                 dailyBonusInfo.consecutiveDays = 1; // First login ever
+                 console.log("First login detected.");
+            }
+
+            // Update last login timestamp to now
+            dailyBonusInfo.lastLoginTimestamp = now;
+            // Attempt to collect the bonus for the new day
+            collectDailyBonus();
+            // Save updated bonus info (including streak and timestamp)
+            localStorage.setItem('blackjackDailyBonusInfo', JSON.stringify(dailyBonusInfo));
+        } else {
+            // Same day, check if bonus was already collected
+            if (dailyBonusInfo.collectedToday) {
+                 console.log("Daily bonus already collected today.");
+            } else {
+                 // Bonus not collected yet today (e.g., closed and reopened browser)
+                 console.log("Daily bonus available for today (re-opened).");
+                 collectDailyBonus(); // Attempt collection again
+                 // Save state in case collection was successful now
+                 localStorage.setItem('blackjackDailyBonusInfo', JSON.stringify(dailyBonusInfo));
+            }
+        }
+    }
+
+
+     function collectDailyBonus() {
+         // Can only collect once per day
+         if (dailyBonusInfo.collectedToday) {
+             console.log("Attempted to collect bonus, but already collected today.");
+             return;
+         }
+
+         const baseBonusAmount = 1000; // Base daily bonus
+         // Calculate streak bonus (starts from day 2)
+         const streakBonusAmount = (dailyBonusInfo.consecutiveDays > 1) ? (dailyBonusInfo.consecutiveDays - 1) * 50 : 0; // Smaller streak bonus
+         const totalBonus = baseBonusAmount + streakBonusAmount;
+
+         playerMoney += totalBonus;
+         dailyBonusInfo.collectedToday = true; // Mark as collected for today
+
+         console.log(`Daily Bonus Collected: Base €${baseBonusAmount}, Streak Bonus (€${streakBonusAmount}), Total €${totalBonus}`);
+         // Prepare message
+         let bonusMessage = `Bonus Giornaliero Riscosso!\n+€${baseBonusAmount}`;
+         if (streakBonusAmount > 0) {
+             bonusMessage += `\nSerie Accessi (${dailyBonusInfo.consecutiveDays} giorni): +€${streakBonusAmount}`;
+         }
+
+         updatePlayerMoneyDisplay();
+         showResult(bonusMessage, 'win');
+
+         // Note: Saving is handled in checkDailyBonusAndStreak after collection attempt
+     }
+
+
+    // --- Save/Load Game State ---
+    function saveGameState() {
+        const gameState = {
+            playerMoney: playerMoney,
+            lastBet: lastBet,
+            isPremium: isPremium,
+             sessionStats: sessionStatsData,
+            theme: themeToggle.checked ? 'dark' : 'light',
+            trainingMode: trainingModeToggle.checked,
+            showHints: showHintsToggle.checked,
+            // Save open states of details elements
+            utilityOpen: utilityControls.open,
+            trainerOpen: trainerControls.open,
+            statsOpen: sessionStats.open,
+            challengeOpen: dailyChallengesDetails.open, // Save parent details open state
+             selectedTable: tableSelect.value,
+            // Save daily bonus and streak info
+            dailyBonusInfo: dailyBonusInfo,
+            // Save daily challenge state (array now)
+            dailyChallenges: dailyChallenges,
+            // --- Do not save mid-game state for simplicity ---
+            // currentDeck: deck,
+            // currentPlayerHands: playerHands,
+            // currentDealerHand: dealerHand,
+            // currentHandIndex: currentHandIndex,
+            // isGameOver: isGameOver,
+            // proposedBet: proposedBet // If saving mid-betting phase
+        };
+        localStorage.setItem('blackjackGameState', JSON.stringify(gameState));
+        // console.log("Game state saved."); // Reduce console noise
+    }
+
+    function loadGameState() {
+        loadTheme(); // Load theme preference first
+
+        const savedState = JSON.parse(localStorage.getItem('blackjackGameState') || '{}');
+
+        // Load Player Money and Bets
+        playerMoney = savedState.playerMoney !== undefined ? savedState.playerMoney : 1000;
+        lastBet = savedState.lastBet !== undefined ? savedState.lastBet : 0;
+        // Load Premium Status and Session Stats
+        isPremium = savedState.isPremium !== undefined ? savedState.isPremium : false;
+        localStorage.setItem('blackjackPremium', isPremium ? 'true' : 'false'); // Sync localStorage premium flag
+
+        sessionStatsData = savedState.sessionStats !== undefined ? savedState.sessionStats : { hands: 0, wins: 0, losses: 0, pushes: 0, blackjacks: 0 };
+        // Load Toggle States
+        trainingModeToggle.checked = savedState.trainingMode !== undefined ? savedState.trainingMode : false;
+        // Show Hints toggle state depends on saved value AND premium status
+        showHintsToggle.checked = (savedState.showHints !== undefined ? savedState.showHints : false) && isPremium;
+        // Load Details Open States
+        utilityControls.open = savedState.utilityOpen !== undefined ? savedState.utilityOpen : false;
+        // Only open premium sections if premium is active
+        trainerControls.open = (savedState.trainerOpen !== undefined ? savedState.trainerOpen : false) && isPremium;
+        sessionStats.open = (savedState.statsOpen !== undefined ? savedState.statsOpen : false) && isPremium;
+        dailyChallengesDetails.open = savedState.challengeOpen !== undefined ? savedState.challengeOpen : false;
+        // Load Table Limits
+         const savedTable = savedState.selectedTable || 'low';
+         if (TABLE_LIMITS[savedTable]) {
+             // If saved table is premium but user isn't, default to low
+             if (TABLE_LIMITS[savedTable].premium && !isPremium) {
+                 tableSelect.value = 'low';
+                 currentTableLimits = TABLE_LIMITS.low;
+                 console.log("Saved table was premium, user not premium. Defaulting to low limits.");
+             } else {
+                 tableSelect.value = savedTable;
+                 currentTableLimits = TABLE_LIMITS[savedTable];
+             }
+         } else {
+             tableSelect.value = 'low'; // Fallback to low if saved value is invalid
+             currentTableLimits = TABLE_LIMITS.low;
+         }
+
+        // Apply premium feature styling/locks based on loaded 'isPremium' status
+        applyPremiumFeatures();
+
+        // Load Daily Bonus/Streak Info (before checking bonus)
+        dailyBonusInfo = savedState.dailyBonusInfo !== undefined ? savedState.dailyBonusInfo : { collectedToday: false, lastLoginTimestamp: 0, consecutiveDays: 0 };
+
+        // Load Daily Challenges (before checking bonus)
+        dailyChallenges = savedState.dailyChallenges !== undefined ? savedState.dailyChallenges : [];
+        // Check if loaded challenges are valid for today, otherwise reload
+        if (dailyChallenges.length > 0) {
+             const todayIdBase = getChallengesForDay(Date.now())[0].id.split('-').slice(0, 2).join('-');
+             if (!dailyChallenges[0].id.startsWith(todayIdBase)) {
+                 console.log("Saved challenges are outdated, generating new ones.");
+                 loadDailyChallenges(); // This will generate today's challenges and update display
+             } else {
+                 updateChallengeDisplay(); // Update display with loaded challenges
+             }
+        } else {
+             loadDailyChallenges(); // Load challenges if none were saved or array empty
+        }
+
+
+        // Check Daily Bonus & Streak Status (AFTER loading state)
+        checkDailyBonusAndStreak();
+
+        // Update UI elements based on loaded state
+        updatePlayerMoneyDisplay();
+        updateStatsDisplay(); // Updates only if section is open
+        updateTrainerDisplay(); // Updates only if section is open and mode is active
+        updateBettingUI(); // Sets up chips based on limits/money/premium
+
+        console.log("Game state loaded.");
+        // Reset to betting phase when loading (simplest approach)
+        resetBettingPhase();
+    }
+
+
+     // --- Initialization ---
+     deck = createDeck();
+     shuffleDeck(deck);
+     // Event Listener for Table Limit Change
+    tableSelect.addEventListener('change', (event) => {
+         const selectedLimitKey = event.target.value;
+         const newLimits = TABLE_LIMITS[selectedLimitKey];
+
+         if (!newLimits) return; // Should not happen
+
+         // Check premium access BEFORE changing limits
+         if (newLimits.premium && !checkPremiumAccess(event.target.options[event.target.selectedIndex])) {
+             // If premium check fails, revert selection to the previous valid limit
+             tableSelect.value = Object.keys(TABLE_LIMITS).find(key => TABLE_LIMITS[key] === currentTableLimits) || 'low';
+             return; // Stop further processing
+         }
+
+         // If check passes (or not premium), apply the change
+         console.log(`Changing table limits to: ${selectedLimitKey}`);
+         currentTableLimits = newLimits;
+         proposedBet = 0; // Reset proposed bet when limits change
+         lastBet = 0;     // Also reset last bet as it might be invalid now
+         rebetButton.style.display = 'none';
+         saveGameState();   // Save the new limit selection
+         updateBettingUI(); // Update chips and betting display immediately
+
+         alert("Limiti del tavolo cambiati. Piazza una nuova puntata.");
+     });
+
+     // Event listeners for details toggle + save state
+     // Use 'toggle' event on the <details> elements
+     utilityControls.addEventListener('toggle', saveGameState);
+     dailyChallengesDetails.addEventListener('toggle', saveGameState); // Save state for challenge details
+
+     trainerControls.addEventListener('toggle', (event) => {
+         if (event.target.open && !checkPremiumAccess(trainerControls)) {
+             event.target.open = false; // Prevent opening if not premium
+             event.preventDefault(); // Stop the toggle action
+         } else {
+             if (event.target.open) updateTrainerDisplay(); // Update display when opened
+             saveGameState(); // Save open/closed state
+         }
+      });
+     sessionStats.addEventListener('toggle', (event) => {
+         if (event.target.open && !checkPremiumAccess(sessionStats)) {
+             event.target.open = false; // Prevent opening if not premium
+             event.preventDefault();
+         } else {
+              if (event.target.open) updateStatsDisplay(); // Update display when opened
+              saveGameState(); // Save open/closed state
+         }
+      });
+
+
+    // --- Initialization on Load ---
+    window.onload = () => {
+        console.log("Window loaded. Initializing game...");
+        loadGameState(); // Load saved state, theme, check bonus, apply premium etc.
+        // loadGameState now calls resetBettingPhase at the end
+    };
+
+</script>
+</body>
+</html>

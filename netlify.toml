@@ -1,0 +1,14 @@
+[build]
+  publish = "sito"
+  functions = "functions"
+  command = ""
+
+[[redirects]]
+  from = "/api/paypal/create-order"
+  to = "/.netlify/functions/createPaypalOrder"
+  status = 200
+
+[[redirects]]
+  from = "/api/paypal/capture-order"
+  to = "/.netlify/functions/capturePaypalOrder"
+  status = 200

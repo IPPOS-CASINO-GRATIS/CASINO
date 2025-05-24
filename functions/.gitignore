@@ -1,0 +1,3 @@
+node_modules/
+*.local
+sito/functions/firebase-service-account.json
