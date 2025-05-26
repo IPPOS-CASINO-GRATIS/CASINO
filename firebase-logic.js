@@ -1,47 +1,29 @@
-// Blocco unico JavaScript <script type="module">
+// js/firebase-logic.js
 
-// =========================================
-// 1. CONFIGURAZIONE E INIZIALIZZAZIONE FIREBASE
-// =========================================
 // Importa le funzioni necessarie dal SDK di Firebase
-import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-// Rimosso getAnalytics se non usato direttamente qui per chiarezza
-// import { getAnalytics } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-analytics.js";
+// Non inizializzare l'app qui se firebase-config.js lo fa e lo esporta.
+// Assumiamo che auth e db vengano importati da firebase-config.js
+import { auth, db } from "./firebase-config.js";
+
+// Importa funzioni specifiche per Firestore
 import {
-    getAuth,
+    doc,
+    setDoc,
+    getDoc,
+    updateDoc,
+    serverTimestamp
+} from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+// Importa onAuthStateChanged direttamente da Firebase Auth
+import {
     onAuthStateChanged,
     createUserWithEmailAndPassword,
     signInWithEmailAndPassword,
     signOut
 } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-import {
-    getFirestore,
-    doc,
-    setDoc,     // Per creare il documento utente
-    getDoc,     // Per leggere lo stato VIP
-    updateDoc,  // Per aggiornare lo stato VIP
-    serverTimestamp // Per salvare timestamp
-} from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-// Configurazione del tuo progetto Firebase (come fornita)
-const firebaseConfig = {
-  apiKey: "AIzaSyCU5qdpokOFHYw7_MkKA0IJMYvJRwXSSlE", // USA LA TUA CHIAVE REALE
-  authDomain: "ippos-casino-premium.firebaseapp.com",
-  projectId: "ippos-casino-premium",
-  storageBucket: "ippos-casino-premium.appspot.com", // Controlla sia corretto nella tua console Firebase
-  messagingSenderId: "691446568112",
-  appId: "1:691446568112:web:8d63d548226abde7aa1775",
-  measurementId: "G-B5S9W3WGBW" // opzionale
-};
 
-// Inizializza Firebase
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);      // Istanza Autenticazione
-const db = getFirestore(app);  // Istanza Firestore Database
-// const analytics = getAnalytics(app); // Inizializza se necessario
-
-console.log("Firebase Initialized (Auth & Firestore ready)");
-
+console.log("Firebase Logic loaded. Auth & Firestore instances expected from firebase-config.js.");
 
 // =========================================
 // 2. FUNZIONI DI AUTENTICAZIONE
@@ -59,32 +41,28 @@ async function registerUser(email, password) {
         throw new Error("Email e password valide (min 6 caratteri) sono richieste.");
     }
     try {
-        // 1. Crea utente in Firebase Auth
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
         const newUser = userCredential.user;
         console.log(`User registered in Auth: ${newUser.email} (UID: ${newUser.uid})`);
 
-        // 2. Crea documento utente in Firestore
         const userDocRef = doc(db, "users", newUser.uid);
         try {
             await setDoc(userDocRef, {
                 email: newUser.email,
-                isVIP: false, // Nuovo utente NON è VIP di default
-                createdAt: serverTimestamp(), // Timestamp creazione account
-                vipUpdatedAt: null // Timestamp ultimo aggiornamento VIP
+                isVIP: false,
+                saldo: 1000, // Saldo iniziale di default
+                createdAt: serverTimestamp(),
+                vipUpdatedAt: null
             });
             console.log(`User document created in Firestore for UID: ${newUser.uid}`);
-            return newUser; // Ritorna l'oggetto User completo
+            return newUser;
         } catch (dbError) {
             console.error("Firestore Error: Failed to create user document.", dbError);
-            // L'utente è registrato in Auth ma non nel DB! Gestire questo caso critico.
-            // Potresti tentare di eliminare l'utente da Auth o segnalare l'errore.
             throw new Error("Errore critico: impossibile salvare i dati utente dopo la registrazione.");
         }
     } catch (authError) {
         console.error("Auth Error: Registration failed.", authError);
-        // Rilancia l'errore per essere gestito dal chiamante (es. UI)
-        throw authError; // Puoi mappare questo a un messaggio più user-friendly se necessario
+        throw authError;
     }
 }
 
@@ -105,7 +83,7 @@ async function loginUser(email, password) {
         return userCredential.user;
     } catch (error) {
         console.error("Auth Error: Login failed.", error);
-        throw error; // Rilancia per gestione UI
+        throw error;
     }
 }
 
@@ -131,7 +109,6 @@ async function logoutUser() {
 
 /**
  * Imposta lo stato VIP di un utente su Firestore a true.
- * Da chiamare DOPO una verifica di pagamento PayPal andata a buon fine.
  * @param {string} userId UID dell'utente da aggiornare.
  * @returns {Promise<void>}
  * @throws {Error} Errore Firestore.
@@ -144,7 +121,7 @@ async function setUserVIPStatus(userId) {
     try {
         await updateDoc(userDocRef, {
             isVIP: true,
-            vipUpdatedAt: serverTimestamp() // Aggiorna timestamp VIP
+            vipUpdatedAt: serverTimestamp()
         });
         console.log(`User ${userId} successfully updated to VIP status in Firestore.`);
     } catch (error) {
@@ -168,15 +145,73 @@ async function checkUserVIPStatus(userId) {
         const docSnap = await getDoc(userDocRef);
         if (docSnap.exists()) {
             const userData = docSnap.data();
-            console.log(`Checked VIP status for ${userId}: ${userData.isVIP || false}`);
-            return userData.isVIP || false; // Ritorna il valore di isVIP (o false se non definito)
+            return userData.isVIP || false;
         } else {
             console.warn(`User document not found for UID: ${userId} during VIP check.`);
-            return false; // Utente non trovato, quindi non VIP
+            return false;
         }
     } catch (error) {
         console.error(`Firestore Error: Failed to get VIP status for user ${userId}.`, error);
-        return false; // In caso di errore, considera non VIP per sicurezza
+        return false;
+    }
+}
+
+// =========================================
+// AGGIUNTA: FUNZIONE PER AGGIORNARE IL SALDO UTENTE IN FIRESTORE
+// =========================================
+
+/**
+ * Aggiorna il saldo dell'utente in Firestore.
+ * @param {string} userId UID dell'utente.
+ * @param {number} newSaldo Il nuovo saldo da salvare.
+ * @returns {Promise<void>}
+ * @throws {Error} Errore Firestore.
+ */
+async function updateSaldoInFirestore(userId, newSaldo) {
+    if (!userId || typeof newSaldo !== 'number') {
+        throw new Error("User ID e un saldo numerico valido sono richiesti.");
+    }
+    const userDocRef = doc(db, "users", userId);
+    try {
+        await updateDoc(userDocRef, {
+            saldo: newSaldo,
+            lastUpdated: serverTimestamp() // Aggiungi un timestamp per tracciare le modifiche
+        });
+        console.log(`Saldo utente ${userId} aggiornato a ${newSaldo} in Firestore.`);
+    } catch (error) {
+        console.error(`Firestore Error: Failed to update saldo for user ${userId}.`, error);
+        throw new Error("Errore durante l'aggiornamento del saldo.");
+    }
+}
+
+// =========================================
+// AGGIUNTA: FUNZIONE PER LEGGERE IL SALDO UTENTE DA FIRESTORE
+// =========================================
+
+/**
+ * Legge il saldo dell'utente da Firestore.
+ * @param {string} userId UID dell'utente.
+ * @returns {Promise<number>} Il saldo dell'utente, o 0 se non trovato.
+ * @throws {Error} Errore Firestore.
+ */
+async function getSaldoFromFirestore(userId) {
+    if (!userId) {
+        console.warn("getSaldoFromFirestore called without userId.");
+        return 0;
+    }
+    const userDocRef = doc(db, "users", userId);
+    try {
+        const docSnap = await getDoc(userDocRef);
+        if (docSnap.exists()) {
+            const userData = docSnap.data();
+            return userData.saldo || 0;
+        } else {
+            console.warn(`User document not found for UID: ${userId} during saldo check.`);
+            return 0;
+        }
+    } catch (error) {
+        console.error(`Firestore Error: Failed to get saldo for user ${userId}.`, error);
+        return 0;
     }
 }
 
@@ -186,9 +221,9 @@ async function checkUserVIPStatus(userId) {
 // =========================================
 
 /**
- * Funzione Placeholder da chiamare dopo che PayPal conferma un pagamento valido.
- * Simula la logica post-pagamento: verifica (dovrebbe essere fatta server-side!)
- * e aggiorna lo stato VIP su Firestore.
+ * Funzione da chiamare dopo che PayPal conferma un pagamento valido.
+ * DOVREBBE ESSERE FATTA SERVER-SIDE (es. Firebase Cloud Function) per sicurezza.
+ * Qui è client-side solo per dimostrazione.
  * @param {string} userId UID dell'utente che ha pagato.
  * @param {object} paypalDetails Dettagli della transazione PayPal (es. { orderId: '...', status: 'COMPLETED', amount: ... })
  * @returns {Promise<void>}
@@ -204,16 +239,13 @@ async function handlePayPalSuccess(userId, paypalDetails) {
     // per confermare stato 'COMPLETED' e importo corretto PRIMA di aggiornare Firestore.
 
     // --- Simulazione Verifica (NON SICURA!) ---
-    if (paypalDetails && paypalDetails.status === 'COMPLETED') { // Esempio molto basilare
+    if (paypalDetails && paypalDetails.status === 'COMPLETED') {
         console.log("PayPal payment status seems COMPLETED (Client-side check - INSECURE!).");
         try {
-            // Se la verifica (server-side) fosse ok, aggiorna lo stato VIP
             await setUserVIPStatus(userId);
             console.log(`VIP status updated for user ${userId} after simulated successful payment.`);
-            // Qui potresti triggerare un refresh dell'UI o mostrare un messaggio di successo
         } catch (error) {
             console.error("Failed to update VIP status after payment.", error);
-            // Gestire l'errore (es. informare l'utente, loggare per intervento manuale)
             throw new Error("Errore aggiornamento VIP dopo pagamento.");
         }
     } else {
@@ -224,93 +256,18 @@ async function handlePayPalSuccess(userId, paypalDetails) {
 
 
 // =========================================
-// 5. LISTENER STATO AUTENTICAZIONE (VERIFICA VIP AL LOGIN)
+// 5. ESPORTAZIONI (per uso in altri moduli)
 // =========================================
-
-onAuthStateChanged(auth, async (user) => {
-    if (user) {
-        // Utente è loggato
-        console.log(`Auth State Change: User ${user.email} is logged in.`);
-        try {
-            // Verifica lo stato VIP leggendo da Firestore
-            const isVIP = await checkUserVIPStatus(user.uid);
-            console.log(`User ${user.email} is ${isVIP ? 'VIP' : 'NOT VIP'}.`);
-
-            // -------- Punto Decisionale per l'UI --------
-            // Qui, basandoti sul valore di 'isVIP', decideresti cosa mostrare/nascondere
-            // nell'interfaccia utente (es. sbloccare giochi, mostrare badge VIP).
-            // Esempio concettuale:
-            if (isVIP) {
-                // showVIPFeatures();
-                // hideUpgradeButton();
-            } else {
-                // hideVIPFeatures();
-                // showUpgradeButton();
-            }
-            // --------------------------------------------
-
-        } catch (error) {
-            console.error("Error checking VIP status on Auth State Change:", error);
-            // Gestire l'errore (es. mostrare un messaggio all'utente)
-        }
-    } else {
-        // Utente è loggato fuori
-        console.log("Auth State Change: User is logged out.");
-         // -------- Punto Decisionale per l'UI --------
-         // Qui resetteresti l'interfaccia allo stato "non loggato / non VIP"
-         // Esempio concettuale:
-         // showLoginForm();
-         // hideVIPFeatures();
-         // hideLogoutButton();
-         // --------------------------------------------
-    }
-});
-
-
-// =========================================
-// 6. ESPORTAZIONI (Opzionale, per uso in altri moduli)
-// =========================================
-// Esporta le funzioni principali per poterle chiamare da altri script/event listener
 export {
-    auth, // Esporta istanza Auth
-    db,   // Esporta istanza Firestore
+    auth,
+    db,
     registerUser,
     loginUser,
     logoutUser,
     setUserVIPStatus,
     checkUserVIPStatus,
     handlePayPalSuccess,
-    onAuthStateChanged // Esporta anche il listener se serve altrove
+    onAuthStateChanged, // Esporta anche il listener per collegarlo a uno script esterno
+    updateSaldoInFirestore,
+    getSaldoFromFirestore
 };
-
-// Esempio di come potresti usare queste funzioni da un altro script
-// (che gestisce i click sui bottoni, etc.):
-/*
-import { loginUser, registerUser, logoutUser, handlePayPalSuccess } from './firebase-logic.js'; // Assumendo questo file sia firebase-logic.js
-
-document.getElementById('login-button').addEventListener('click', async () => {
-    const email = document.getElementById('email').value;
-    const password = document.getElementById('password').value;
-    try {
-        await loginUser(email, password);
-        // UI si aggiorna tramite onAuthStateChanged
-    } catch (error) {
-        // Mostra errore all'utente
-    }
-});
-
-// Simula chiamata dopo successo PayPal (da un listener del bottone PayPal)
-async function onPayPalPaymentSuccess(details) {
-     const currentUser = auth.currentUser; // Assumendo 'auth' sia importato o globale
-     if (currentUser) {
-         try {
-             await handlePayPalSuccess(currentUser.uid, details);
-             alert("Pagamento VIP completato!");
-         } catch(error) {
-             alert(`Errore aggiornamento VIP: ${error.message}`);
-         }
-     } else {
-          alert("Devi essere loggato per diventare VIP.");
-     }
-}
-*/
