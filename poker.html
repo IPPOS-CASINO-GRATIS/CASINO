@@ -3,9 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Poker 1v1 - V7 Corretto</title>
-  <!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-J1YN9CKJS2"></script>
+<title>Poker</title>
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-J1YN9CKJS2"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
@@ -13,7 +12,7 @@
 
   gtag('config', 'G-J1YN9CKJS2');
 </script>
-<meta name="description" content="Gioca a Poker Texas Hold'em 1 contro 1 con grafica migliorata e animazioni. Sfida un amico o mettiti alla prova contro il Bot." />
+<meta name="description" content="Gioca a Poker Texas Hold'em 1 contro 1 con grafica migliorata e animazioni. Sfida un amico o mettiti alla prova contro il Bot, con salvataggio online del saldo." />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700&display=swap" rel="stylesheet">
@@ -160,7 +159,7 @@
              <div><label for="theme-toggle">Tema Scuro</label><label class="toggle-switch"><input type="checkbox" id="theme-toggle"><span class="slider"></span></label></div>
              <div><label>Modalità:</label> <span id="game-mode-display">N/D</span></div>
              <div><button onclick="showRules()">Regole Base</button><button id="quit-game-button" onclick="quitGame()">Abbandona</button></div>
-         </div>
+             </div>
 
         <div id="poker-table">
              <div id="player2-info" class="player-info-area">
@@ -208,12 +207,10 @@
                        <button id="pot-bet-button" onclick="setBetAmount('pot')" disabled>Piatto</button>
                        <button id="all-in-button" onclick="setBetAmount('allin')" disabled>All-in</button>
                   </div>
-                  <div id="bet-input-area" style="display: none;">
-                     <label for="bet-amount">Importo Totale:</label>
+                  <div id="bet-input-area" style="display: none;"> <label for="bet-amount">Importo Totale:</label>
                      <input type="number" id="bet-amount" min="1" step="1">
                      <button id="confirm-bet-button" onclick="submitBetRaise()">Conferma</button>
-                     <button onclick="cancelBetRaiseInput()">Annulla</button>
-                  </div>
+                     <button id="cancel-bet-button" onclick="cancelBetRaiseInput()">Annulla</button> </div>
                  <p id="action-amount-display" style="font-weight: bold; margin-top: 10px;">Importo Azione: $0</p>
              </div>
             <div id="buttons">
@@ -230,8 +227,11 @@
     </div>
 </div>
 
-<script>
-// --- INIZIO CODICE JAVASCRIPT (Con Correzione Integrata v7) ---
+<script type="module">
+// MODIFIED: Path to js/firebase-logic.js
+import { auth, onAuthStateChanged, updateSaldoInFirestore, getSaldoFromFirestore } from "./js/firebase-logic.js";
+
+// --- INIZIO CODICE JAVASCRIPT (Con Correzione Integrata v7 + Firebase Integration) ---
 
 // --- Constants and Global Variables ---
 const suits = ['♥', '♦', '♣', '♠'];
@@ -239,11 +239,11 @@ const ranks = ['2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K', 'A'];
 const rankMap = {'2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, '8': 8, '9': 9, 'T': 10, 'J': 11, 'Q': 12, 'K': 13, 'A': 14 };
 const invRankMap = { 2: '2', 3: '3', 4: '4', 5: '5', 6: '6', 7: '7', 8: '8', 9: '9', 10: 'T', 11: 'J', 12: 'Q', 13: 'K', 14: 'A' };
 const themeStorageKey = 'pokerTheme';
-const balanceStorageKeyP1 = 'pokerBalanceP1';
+const balanceStorageKeyP1 = 'pokerBalanceP1'; // Used as fallback or if user not logged in
 const balanceStorageKeyP2 = 'pokerBalanceP2';
 const smallBlindAmt = 10;
 const bigBlindAmt = 20;
-const initialBalance = 1000;
+const initialBalance = 1000; // Default initial balance if nothing else is found
 
 let deck = [];
 let communityCards = [];
@@ -261,7 +261,8 @@ let handOver = true;
 let gameMode = null;
 let actionAmount = 0;
 let communityCardAnimationTimeout = null;
-let resultTimeoutId = null; // << FIX: Variabile per timeout risultato
+let resultTimeoutId = null;
+let currentUID = null; // To store the UID of the logged-in user
 
 // --- DOM Elements ---
 const gameModeSelectionDiv = document.getElementById('game-mode-selection');
@@ -289,10 +290,90 @@ const clearBetButton = document.getElementById('clear-bet-button');
 const potBetButton = document.getElementById('pot-bet-button');
 const allInButton = document.getElementById('all-in-button');
 const actionAmountDisplay = document.getElementById('action-amount-display');
+// const userDisplayElement = document.getElementById('user-display'); // Optional: For showing auth status
+
+// --- Firebase Auth State Change Listener ---
+onAuthStateChanged(auth, async (user) => {
+    if (user) {
+        currentUID = user.uid;
+        console.log("User signed in:", user.email, "UID:", currentUID);
+        // if (userDisplayElement) userDisplayElement.textContent = `Logged in as: ${user.email}`;
+
+        if (gameMode && players[0]) { // If a game mode is already selected and player object exists
+            console.log("Auth state changed: User logged in. Refreshing P1 balance for current game mode.");
+            try {
+                const firestoreBalanceP1 = await getSaldoFromFirestore(currentUID);
+                players[0].balance = firestoreBalanceP1; // Firestore is the source of truth
+                players[0].balance = Math.max(0, players[0].balance); // Ensure non-negative
+                console.log(`P1 balance updated from Firestore: $${players[0].balance}`);
+                // Optionally save to localStorage as well if it's part of your strategy for offline/backup
+                localStorage.setItem(balanceStorageKeyP1, players[0].balance.toString());
+            } catch (error) {
+                console.error("Error refreshing P1 balance from Firestore on auth change, falling back to localStorage/initial:", error);
+                const savedBalanceP1 = localStorage.getItem(balanceStorageKeyP1);
+                players[0].balance = (savedBalanceP1 !== null && !isNaN(parseInt(savedBalanceP1))) ? parseInt(savedBalanceP1) : initialBalance;
+                players[0].balance = Math.max(0, players[0].balance);
+            }
+            updatePlayersUI(); // Refresh UI with new balance
+        } else {
+            console.log("User logged in. Balance will be loaded from Firestore when a game mode is selected.");
+        }
+    } else {
+        currentUID = null;
+        console.log("User signed out.");
+        // if (userDisplayElement) userDisplayElement.textContent = 'Not logged in.';
+
+        if (gameMode && players[0]) { // If a game was in progress with a logged-in user
+            console.log("Auth state changed: User logged out. Reverting P1 balance to localStorage/initial.");
+            const savedBalanceP1 = localStorage.getItem(balanceStorageKeyP1); // Get local fallback
+            players[0].balance = (savedBalanceP1 !== null && !isNaN(parseInt(savedBalanceP1))) ? parseInt(savedBalanceP1) : initialBalance;
+            players[0].balance = Math.max(0, players[0].balance);
+            updatePlayersUI(); // Refresh UI
+        }
+    }
+});
 
 // --- Persistence & Setup ---
-function saveGameState() { try { localStorage.setItem(themeStorageKey, document.body.dataset.theme || 'light'); if (gameMode && players[0] && players[1]) { localStorage.setItem(balanceStorageKeyP1, players[0].balance.toString()); localStorage.setItem(balanceStorageKeyP2, players[1].balance.toString()); } } catch (e) { console.error("Errore saveGameState:", e); } }
-function loadGameState() { try { const savedTheme = localStorage.getItem(themeStorageKey) || 'light'; document.body.dataset.theme = savedTheme; if (themeToggle) { themeToggle.checked = (savedTheme === 'dark'); } } catch (e) { console.error("Errore loadGameState:", e); } }
+async function saveGameState() { // Now async due to Firebase
+    try {
+        localStorage.setItem(themeStorageKey, document.body.dataset.theme || 'light');
+        if (gameMode && players[0] && players[1]) {
+            // Player 1 Balance
+            if (currentUID && players[0]) { // If user logged in, save P1's balance to Firestore
+                try {
+                    await updateSaldoInFirestore(currentUID, players[0].balance);
+                    console.log(`Saved P1 balance to Firestore for user ${currentUID}: $${players[0].balance}`);
+                    localStorage.setItem(balanceStorageKeyP1, players[0].balance.toString()); // Also save to localStorage as backup/for offline
+                } catch (error) {
+                    console.error("Error saving P1 balance to Firestore, saving to localStorage only:", error);
+                    localStorage.setItem(balanceStorageKeyP1, players[0].balance.toString());
+                }
+            } else if (players[0]) { // No user logged in, save P1's balance to localStorage
+                localStorage.setItem(balanceStorageKeyP1, players[0].balance.toString());
+            }
+
+            // Player 2's balance always saved to localStorage
+            if (players[1]) {
+                localStorage.setItem(balanceStorageKeyP2, players[1].balance.toString());
+            }
+        }
+    } catch (e) {
+        console.error("Error in saveGameState:", e);
+    }
+}
+
+function loadGameState() { // Primarily for theme, balance loading is in selectGameMode
+    try {
+        const savedTheme = localStorage.getItem(themeStorageKey) || 'light';
+        document.body.dataset.theme = savedTheme;
+        if (themeToggle) {
+            themeToggle.checked = (savedTheme === 'dark');
+        }
+    } catch (e) {
+        console.error("Error in loadGameState (theme):", e);
+    }
+}
+
 function createCard(suit, rank) { return { suit, rank, id: rank + suit, faceUp: false }; }
 function createDeck() { deck = []; for (const suit of suits) { for (const rank of ranks) { deck.push(createCard(suit, rank)); } } }
 function shuffleDeck() { for (let i = deck.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [deck[i], deck[j]] = [deck[j], deck[i]]; } }
@@ -314,7 +395,6 @@ function displayCard(card, container, hidden = false, isNew = false) {
     const cardFront = document.createElement('div');
     cardFront.classList.add('card-face', 'card-front');
     const rankSpan = document.createElement('span');
-    // << FIX: Usa '10' invece di 'T' per la visualizzazione nel rank della carta
     rankSpan.textContent = (card.rank === 'T') ? '10' : card.rank;
     const suitSpan = document.createElement('span');
     suitSpan.classList.add('suit');
@@ -344,11 +424,11 @@ function displayCard(card, container, hidden = false, isNew = false) {
 
 
 // --- Game Flow & Setup ---
-function selectGameMode(mode) {
+async function selectGameMode(mode) { // Now async due to Firebase
     console.log(`DEBUG: selectGameMode chiamata con mode = ${mode}`);
     console.log(`Selezionata modalità: ${mode}`);
     if(resultElement) resultElement.classList.remove('result-show', 'result-win', 'result-lose', 'result-push');
-    clearTimeout(resultTimeoutId); // << FIX: Pulisci timeout risultato
+    clearTimeout(resultTimeoutId);
 
     players.forEach(p => { p.hand = []; p.currentBet = 0; p.status = 'active'; p.hasActedThisRound = false; p.isDealer = false; });
     communityCards = []; pot = 0; currentPhase = 'pre-deal'; handOver = true; currentPlayerIndex = 0; lastRaiserIndex = -1; actionAmount = 0;
@@ -357,19 +437,33 @@ function selectGameMode(mode) {
     players[1].isBot = (mode === 'PVB');
     players[1].name = (mode === 'PVB') ? "Bot" : "Giocatore 2";
 
-    try {
+    // Balance Loading Logic
+    if (currentUID && players[0]) { // User is logged in, try to load P1 balance from Firestore
+        try {
+            const firestoreBalanceP1 = await getSaldoFromFirestore(currentUID);
+            players[0].balance = firestoreBalanceP1; // Firestore is source of truth
+            console.log(`Logged in user ${currentUID}. Loaded P1 balance from Firestore: $${players[0].balance}`);
+        } catch (error) {
+            console.error("Error loading P1 balance from Firestore in selectGameMode, falling back to localStorage/initial:", error);
+            const savedBalanceP1 = localStorage.getItem(balanceStorageKeyP1);
+            players[0].balance = (savedBalanceP1 !== null && !isNaN(parseInt(savedBalanceP1))) ? parseInt(savedBalanceP1) : initialBalance;
+        }
+    } else if (players[0]) { // No user logged in, use localStorage or initialBalance for Player 1
         const savedBalanceP1 = localStorage.getItem(balanceStorageKeyP1);
-        const savedBalanceP2 = localStorage.getItem(balanceStorageKeyP2);
-        let balance1 = (savedBalanceP1 !== null && !isNaN(parseInt(savedBalanceP1))) ? parseInt(savedBalanceP1) : initialBalance;
-        let balance2 = (savedBalanceP2 !== null && !isNaN(parseInt(savedBalanceP2))) ? parseInt(savedBalanceP2) : initialBalance;
-        players[0].balance = Math.max(0, balance1);
-        players[1].balance = Math.max(0, balance2);
-        console.log(`Saldi ${savedBalanceP1 !== null ? 'caricati' : 'resettati'}: P1=$${players[0].balance}, P2=$${players[1].balance}`);
-    } catch(e) {
-        console.error("Errore caricamento bilanci, reset forzato:", e);
-        players[0].balance = initialBalance;
-        players[1].balance = initialBalance;
+        players[0].balance = (savedBalanceP1 !== null && !isNaN(parseInt(savedBalanceP1))) ? parseInt(savedBalanceP1) : initialBalance;
+        console.log("No user logged in. Loaded P1 balance from localStorage/initial.");
     }
+
+    // Player 2 always uses localStorage or initialBalance
+    if (players[1]) {
+        const savedBalanceP2 = localStorage.getItem(balanceStorageKeyP2);
+        players[1].balance = (savedBalanceP2 !== null && !isNaN(parseInt(savedBalanceP2))) ? parseInt(savedBalanceP2) : initialBalance;
+    }
+
+    if (players[0]) players[0].balance = Math.max(0, players[0].balance); // Ensure non-negative
+    if (players[1]) players[1].balance = Math.max(0, players[1].balance);
+
+    console.log(`Balances after loading: P1=$${players[0]?.balance}, P2=$${players[1]?.balance}`);
 
     const gameModeDisplayEl = document.getElementById('game-mode-display');
     if (gameModeDisplayEl) { gameModeDisplayEl.textContent = mode; }
@@ -410,30 +504,42 @@ function selectGameMode(mode) {
             nextHandButton.textContent = "Nuova Partita";
             nextHandButton.style.display = 'inline-block';
             nextHandButton.disabled = false;
-            nextHandButton.onclick = () => {
+            nextHandButton.onclick = async () => { // Make async for saveGameState
                 console.log("Reset saldi e inizio nuova partita...");
-                localStorage.removeItem(balanceStorageKeyP1);
+                // For logged-out users or P2, reset localStorage
+                localStorage.removeItem(balanceStorageKeyP1); // P1 might get overwritten by Firestore if logged in
                 localStorage.removeItem(balanceStorageKeyP2);
+
                 players[0].balance = initialBalance;
                 players[1].balance = initialBalance;
-                saveGameState();
+
+                // If user is logged in, new initial balance should also be reflected in Firestore
+                if (currentUID && players[0]) {
+                    try {
+                        await updateSaldoInFirestore(currentUID, initialBalance);
+                        console.log(`P1 initial balance ($${initialBalance}) saved to Firestore for reset.`);
+                    } catch (error) {
+                        console.error("Error saving initial balance to Firestore during reset:", error);
+                    }
+                }
+                await saveGameState(); // Save the reset state (will handle localStorage and Firestore)
                 nextHandButton.textContent = "Prossima Mano";
                 nextHandButton.onclick = startNewHand;
-                selectGameMode(gameMode);
+                await selectGameMode(gameMode); // Re-select to reload balances correctly
             };
         }
     }
 
     disableActionButtons();
     if(bettingAreaDiv) bettingAreaDiv.style.display = 'none';
-    saveGameState();
+    await saveGameState(); // Save initial game state (balances)
 }
 
-function quitGame() {
+async function quitGame() { // Now async
     console.log("Uscita dalla partita...");
-    saveGameState();
+    await saveGameState(); // Save before quitting
     gameMode = null; handOver = true;
-    clearTimeout(resultTimeoutId); // << FIX: Pulisci timeout risultato
+    clearTimeout(resultTimeoutId);
     clearTimeout(communityCardAnimationTimeout);
 
     console.log("Pulizia dati partita...");
@@ -487,10 +593,31 @@ function resetTableVisuals() {
      console.log("Table visuals reset complete.");
  }
 
-function startNewHand() {
+async function startNewHand() { // Now async
     console.log("--- startNewHand ---");
-    clearTimeout(resultTimeoutId); // << FIX: Pulisci timeout risultato
+    clearTimeout(resultTimeoutId);
     clearTimeout(communityCardAnimationTimeout);
+
+    // Ensure balances are loaded/up-to-date, especially if startNewHand can be called independently
+    // This might be redundant if selectGameMode always precedes, but good for robustness.
+    if (currentUID && players[0]) {
+        try {
+            const firestoreBalanceP1 = await getSaldoFromFirestore(currentUID);
+            players[0].balance = firestoreBalanceP1;
+            players[0].balance = Math.max(0, players[0].balance);
+        } catch (error) { /* Use existing players[0].balance if Firestore fetch fails */
+             console.warn("startNewHand: Could not refresh P1 balance from Firestore", error);
+        }
+    }
+    // P2 balance is managed by localStorage or session
+    if (players[1]) {
+        const savedBalanceP2 = localStorage.getItem(balanceStorageKeyP2);
+         if (savedBalanceP2 !== null && !isNaN(parseInt(savedBalanceP2))) {
+            players[1].balance = parseInt(savedBalanceP2);
+            players[1].balance = Math.max(0, players[1].balance);
+        } // else it keeps its current balance or initial if first hand.
+    }
+
 
     if (players[0].balance <= 0 || players[1].balance <= 0) {
         const winnerName = players[0].balance > 0 ? players[0].name : players[1].name;
@@ -500,16 +627,25 @@ function startNewHand() {
             nextHandButton.textContent = "Nuova Partita";
             nextHandButton.style.display = 'inline-block';
             nextHandButton.disabled = false;
-            nextHandButton.onclick = () => {
+            nextHandButton.onclick = async () => { // Make async
                 console.log("Reset saldi e inizio nuova partita...");
                 localStorage.removeItem(balanceStorageKeyP1);
                 localStorage.removeItem(balanceStorageKeyP2);
                 players[0].balance = initialBalance;
                 players[1].balance = initialBalance;
-                saveGameState();
+
+                if (currentUID && players[0]) { // Also update Firestore for P1
+                    try {
+                        await updateSaldoInFirestore(currentUID, initialBalance);
+                         console.log(`P1 initial balance ($${initialBalance}) saved to Firestore for reset.`);
+                    } catch (error) {
+                        console.error("Error saving initial balance to Firestore during reset:", error);
+                    }
+                }
+                await saveGameState(); // Save the reset state
                 nextHandButton.textContent = "Prossima Mano";
-                nextHandButton.onclick = startNewHand;
-                selectGameMode(gameMode);
+                nextHandButton.onclick = startNewHand; // This should re-trigger async startNewHand
+                await selectGameMode(gameMode); // Reload game mode to ensure proper setup
             };
         }
         handOver = true;
@@ -531,7 +667,7 @@ function startNewHand() {
     if (players.filter(p => p.status === 'active').length < 2) {
         console.error("Meno di due giocatori attivi all'inizio della mano.");
         handOver = true;
-        quitGame(); return;
+        await quitGame(); return;
     }
 
     communityCards = []; pot = 0; currentBetLevel = 0; actionAmount = 0;
@@ -541,8 +677,15 @@ function startNewHand() {
     let sbIndex = dealerIndex;
     let bbIndex = (dealerIndex + 1) % players.length;
 
-    currentPlayerIndex = sbIndex;
-    lastRaiserIndex = bbIndex;
+    currentPlayerIndex = sbIndex; // Preflop, SB (dealer in 1v1) acts first
+    if (players.length === 2 && currentPhase === 'preflop') { // Specific for 2 players heads-up
+        // Dealer is SB and acts first. BB is second.
+        // Post-flop, player to the left of dealer (BB) acts first.
+        // This is handled by firstToActIndex in progressToNextPhase for post-flop.
+    }
+
+
+    lastRaiserIndex = bbIndex; // BB is effectively the last "raiser" due to blind
 
     createDeck(); shuffleDeck();
 
@@ -560,10 +703,10 @@ function startNewHand() {
 
     const actualSB = postBlind(sbIndex, smallBlindAmt);
     const actualBB = postBlind(bbIndex, bigBlindAmt);
-    currentBetLevel = Math.max(actualBB, bigBlindAmt);
+    currentBetLevel = Math.max(actualBB, bigBlindAmt); // Current bet to match is the big blind
 
     players.forEach(p => {
-        if (p.status === 'active' || p.status === 'all-in') {
+        if (p.status === 'active' || p.status === 'all-in') { // Only deal to players not 'out'
             dealCard(p.hand, false); dealCard(p.hand, false);
         }
     });
@@ -571,53 +714,72 @@ function startNewHand() {
     currentPhase = 'preflop';
     resetTableVisuals(); updatePlayersUI(); updateCommunityAreaUI(); updateUI();
 
-    console.log(`Dealer: ${players[dealerIndex].name}. Turno iniziale di: ${players[currentPlayerIndex].name} (Index: ${currentPlayerIndex})`);
+    console.log(`Dealer: ${players[dealerIndex].name}. SB: ${players[sbIndex].name}, BB: ${players[bbIndex].name}. Turno iniziale di: ${players[currentPlayerIndex].name} (Index: ${currentPlayerIndex})`);
 
     const startingPlayer = players[currentPlayerIndex];
+    // If starting player went all-in posting blind, or only opponent is all-in
     if (startingPlayer.status !== 'active') {
-        console.log(`Giocatore iniziale ${startingPlayer.name} non attivo (status: ${startingPlayer.status}). Si passa il turno.`);
-         const otherPlayerIndex = (currentPlayerIndex + 1) % players.length;
-         if (players[otherPlayerIndex].status === 'all-in' && startingPlayer.status === 'all-in') {
-             console.log("Entrambi all-in dopo blinds. Avanza subito.");
-             setTimeout(() => progressToNextPhase(), 800);
-         } else {
-             console.log("Un giocatore all-in dopo blind, si attende azione/passaggio turno...");
-             // La logica di endTurn gestirà il passaggio se necessario
+        console.log(`Giocatore iniziale ${startingPlayer.name} non attivo (status: ${startingPlayer.status}). Giro potrebbe avanzare o terminare.`);
+         const otherPlayer = players[(currentPlayerIndex + 1) % players.length];
+         if (otherPlayer.status === 'all-in' && startingPlayer.status === 'all-in') {
+             console.log("Entrambi i giocatori all-in dopo i blinds. Si avanza subito alle carte comuni.");
+             // No betting round, proceed to deal all community cards then showdown
+             setTimeout(() => progressToNextPhase(), 800); // progress will handle all-in reveals
+         } else if (startingPlayer.status === 'all-in' && otherPlayer.status === 'active') {
+             console.log(`${startingPlayer.name} all-in con blind. Turno a ${otherPlayer.name}.`);
+             // endTurn will eventually pass to otherPlayer if not already their turn via updateUI
+         } else if (otherPlayer.status === 'all-in' && startingPlayer.status === 'active') {
+             console.log(`${otherPlayer.name} all-in con blind. Turno a ${startingPlayer.name}.`);
          }
+         // UpdateUI will be called, and if current player is bot it will act, or enable human buttons.
+         // If current player is all-in, endTurn logic will handle it.
     }
+    await saveGameState();
 }
 
 // --- Azioni Giocatore Umano ---
 function playerAction(action) {
     const player = players[currentPlayerIndex];
-    // Controllo per assicurare che solo l'umano possa agire in PVB e il giocatore corretto in PVP
-    if (handOver || !player || player.status !== 'active' || (gameMode === 'PVB' && player.isBot) || (gameMode === 'PVP' && player.id !== currentPlayerIndex + 1)) {
-        console.warn(`playerAction (${action}) bloccata: handOver=${handOver}, playerID=${player?.id}, currIdx=${currentPlayerIndex}, isBot=${player?.isBot}, status=${player?.status}, gameMode=${gameMode}`);
+    // Ensure it's a human player's turn
+    if (handOver || !player || player.status !== 'active' || (gameMode === 'PVB' && player.isBot)) {
+        console.warn(`playerAction (${action}) bloccata: handOver=${handOver}, playerID=${player?.id}, isBot=${player?.isBot}, status=${player?.status}, gameMode=${gameMode}`);
         return;
     }
-    console.log(`Azione: ${player.name} (${currentPlayerIndex}) sceglie ${action}`);
+     // PVP specific check: ensure correct human player is acting (not strictly necessary if UI is well-managed)
+     // if (gameMode === 'PVP' && player.id !== (currentPlayerIndex + 1) ) { console.warn("PVP wrong player"); return; }
 
+
+    console.log(`Azione UMANA: ${player.name} (${currentPlayerIndex}) sceglie ${action}`);
+
+    // Set hasActedThisRound. For bet/raise, it's set in submitBetRaise upon successful validation.
     if (action === 'fold' || action === 'check' || action === 'call') {
          player.hasActedThisRound = true;
+         cancelBetRaiseInput(); // Close input area if open
     } else {
-         player.hasActedThisRound = false; // Impostato in submitBetRaise
+        // For 'bet' or 'raise', hasActedThisRound is set in submitBetRaise after validation
+        player.hasActedThisRound = false;
     }
 
-    if (action === 'fold' || action === 'check' || action === 'call') {
-        cancelBetRaiseInput();
-    }
 
     switch (action) {
         case 'fold':
             player.status = 'folded'; endTurn(); break;
         case 'check':
-            if (player.currentBet < currentBetLevel) { alert(`Non puoi Check, devi Call $${currentBetLevel - player.currentBet} o Raise.`); player.hasActedThisRound = false; return; }
+            if (player.currentBet < currentBetLevel) {
+                 alert(`Non puoi Check, devi Call $${currentBetLevel - player.currentBet} o Raise.`);
+                 player.hasActedThisRound = false; // Reset because action was invalid
+                 return;
+            }
             console.log(`${player.name} fa Check`); endTurn(); break;
         case 'call':
             const amountToCall = Math.min(currentBetLevel - player.currentBet, player.balance);
-            if (amountToCall <= 0) {
-                 if (player.currentBet >= currentBetLevel) { console.log(`${player.name} fa Check (Call $0)`); endTurn(); }
-                 else { console.warn(`Call $0 ma currentBet (${player.currentBet}) < currentBetLevel (${currentBetLevel})?`); player.hasActedThisRound = false; }
+            if (amountToCall <= 0) { // This implies currentBet >= currentBetLevel
+                 if (player.currentBet >= currentBetLevel) { // Effectively a check if bets are already matched
+                    console.log(`${player.name} fa Check (Call $0)`); endTurn();
+                 } else { // Should not happen if logic is right: amountToCall is 0 but currentBet < currentBetLevel
+                    console.warn(`Call $0 ma currentBet (${player.currentBet}) < currentBetLevel (${currentBetLevel})? Controllare logica. `);
+                    player.hasActedThisRound = false; // Reset as action might be invalid or misinterpreted
+                 }
                 return;
             }
             player.balance -= amountToCall; player.currentBet += amountToCall; pot += amountToCall;
@@ -625,10 +787,16 @@ function playerAction(action) {
             if (player.balance === 0) { player.status = 'all-in'; console.log(`${player.name} è All-in!`); }
             endTurn(); break;
         case 'bet':
-            if(currentBetLevel > 0) { alert("Usa 'Raise' o 'Call'."); player.hasActedThisRound = false; return; }
+            if(currentBetLevel > 0) {
+                alert("C'è già una puntata. Usa 'Raise' o 'Call'.");
+                player.hasActedThisRound = false; return;
+            }
             showBetRaiseInput('bet'); break;
         case 'raise':
-             if(currentBetLevel === 0) { alert("Usa 'Bet'."); player.hasActedThisRound = false; return; }
+             if(currentBetLevel === 0) {
+                 alert("Non ci sono puntate da rilanciare. Usa 'Bet'.");
+                 player.hasActedThisRound = false; return;
+             }
             showBetRaiseInput('raise'); break;
         default:
             console.error("Azione non riconosciuta:", action); player.hasActedThisRound = false;
@@ -638,70 +806,124 @@ function playerAction(action) {
 // --- Gestione Input Bet/Raise ---
 function showBetRaiseInput(actionType) {
     const player = players[currentPlayerIndex];
-    if (!player || player.balance <= 0) { console.warn("Saldo 0 o giocatore non valido."); return; }
-
-    const minBetRaiseTotal = calculateMinBetRaise();
-    const maxBetRaiseTotal = player.balance + player.currentBet;
-
-    if (minBetRaiseTotal >= maxBetRaiseTotal) {
-        console.log("Unica opzione è All-in."); setBetAmount('allin'); submitBetRaise(); return;
+    if (!player || player.status !== 'active') { console.warn("Giocatore non valido o non attivo per bet/raise."); return; }
+    if (player.balance <= 0 && actionType !== 'allin_implicit') { // Allow showing input if only all-in is possible
+         // (allin_implicit is not a real type, just for thought process)
+        alert("Non hai saldo per puntare o rilanciare."); return;
     }
 
-    clearActionAmount();
-    betAmountInput.min = minBetRaiseTotal; betAmountInput.max = maxBetRaiseTotal;
-    betAmountInput.placeholder = minBetRaiseTotal; betAmountInput.value = '';
+
+    const minBetRaiseTotal = calculateMinBetRaise(); // Min total amount player's bet needs to be
+    const maxBetRaiseTotal = player.balance + player.currentBet; // All-in
+
+    // If the only valid action is to go all-in (min raise/bet IS all-in)
+    if (minBetRaiseTotal >= maxBetRaiseTotal && player.balance > 0) {
+        console.log("L'unica opzione valida è andare All-in. Procedo con All-in.");
+        setBetAmount('allin'); // This sets actionAmount
+        submitBetRaise(); // This will use actionAmount
+        return;
+    }
+    // If player has 0 balance, they cannot initiate a bet/raise.
+    // (This check is partly covered above, but more specific here)
+    if (player.balance === 0 && (actionType === 'bet' || actionType === 'raise')) {
+        alert("Non hai saldo per puntare o rilanciare.");
+        return;
+    }
+
+
+    clearActionAmount(); // Reset actionAmount and input field
+    betAmountInput.min = minBetRaiseTotal;
+    betAmountInput.max = maxBetRaiseTotal;
+    betAmountInput.placeholder = minBetRaiseTotal; // Suggest min valid total amount
+    betAmountInput.value = ''; // Clear previous manual input
+
     confirmBetButton.textContent = actionType === 'bet' ? 'Punta' : 'Rilancia';
-    confirmBetButton.dataset.actionType = actionType;
+    confirmBetButton.dataset.actionType = actionType; // Store action type for submitBetRaise
 
     if(document.getElementById('buttons')) document.getElementById('buttons').style.display = 'none';
     if(bettingAreaDiv) bettingAreaDiv.style.display = 'flex';
-    if(betInputAreaDiv) betInputAreaDiv.style.display = 'flex';
+    if(betInputAreaDiv) betInputAreaDiv.style.display = 'flex'; // Ensure this is visible
 
-    updateActionAmountButtons();
+    updateActionAmountButtons(); // Update state of chip buttons, confirm button etc.
 }
 function cancelBetRaiseInput() {
     if(betInputAreaDiv) betInputAreaDiv.style.display = 'none';
     if(bettingAreaDiv) bettingAreaDiv.style.display = 'none';
     if(document.getElementById('buttons')) document.getElementById('buttons').style.display = 'flex';
     clearActionAmount();
-    updateActionButtons(); // Assicura che i bottoni base si aggiornino
+    updateActionButtons(); // Re-enable/show base action buttons
 }
 function submitBetRaise() {
     const player = players[currentPlayerIndex];
     if (!player) return;
 
-    let totalBetAmount = actionAmount;
-    const inputValue = parseInt(betAmountInput.value);
-    if (!isNaN(inputValue) && (actionAmount === 0 || inputValue !== actionAmount)) { totalBetAmount = inputValue; console.log("Usando valore da input:", totalBetAmount); }
-    else if (actionAmount > 0 && isNaN(inputValue)) { console.log("Usando valore da fiches:", actionAmount); }
-    else if (actionAmount === 0 && isNaN(inputValue)){ alert("Inserisci un importo valido o usa le fiches."); return; }
+    let totalBetAmountFromInput = parseInt(betAmountInput.value);
+    let totalBetAmountToUse;
 
-    const actionType = confirmBetButton.dataset.actionType;
-    const minValidTotalAmount = calculateMinBetRaise();
-    const maxValidTotalAmount = player.balance + player.currentBet;
-
-    console.log(`Submit: ActionAmount=${actionAmount}, InputValue=${betAmountInput.value}, TotalBetAttempt=${totalBetAmount}, MinTotal=${minValidTotalAmount}, MaxTotal=${maxValidTotalAmount}`);
-
-    if (isNaN(totalBetAmount) || totalBetAmount < minValidTotalAmount || totalBetAmount > maxValidTotalAmount) {
-        alert(`Importo non valido ($${totalBetAmount}). Min: $${minValidTotalAmount}, Max: $${maxValidTotalAmount}.`); return;
+    if (!isNaN(totalBetAmountFromInput) && totalBetAmountFromInput > 0) {
+        totalBetAmountToUse = totalBetAmountFromInput;
+        console.log("Usando valore da input manuale:", totalBetAmountToUse);
+    } else if (actionAmount > 0) {
+        totalBetAmountToUse = actionAmount; // Use amount from chip clicks if input is invalid/empty
+        console.log("Usando valore da fiches:", totalBetAmountToUse);
+    } else {
+        alert("Inserisci un importo valido o usa le fiches."); return;
     }
-    if (actionType === 'raise' && totalBetAmount <= currentBetLevel) {
-        alert(`Per rilanciare devi puntare > $${currentBetLevel}. Min totale: $${minValidTotalAmount}.`); return;
+
+
+    const actionType = confirmBetButton.dataset.actionType; // 'bet' or 'raise'
+    const minValidTotalAmount = calculateMinBetRaise(); // Min total this bet/raise must be
+    const maxValidTotalAmount = player.balance + player.currentBet; // Player's all-in amount
+
+    console.log(`SubmitBetRaise: Tentativo=${totalBetAmountToUse}, ActionType=${actionType}, MinTotal=${minValidTotalAmount}, MaxTotal=${maxValidTotalAmount}, CurrentBetLevel=${currentBetLevel}`);
+
+
+    if (isNaN(totalBetAmountToUse) || totalBetAmountToUse <= 0) {
+        alert("L'importo deve essere un numero positivo."); return;
     }
-    if (actionType === 'bet' && currentBetLevel > 0) { console.error("Tentativo 'Bet' con puntata esistente."); return; }
+    if (totalBetAmountToUse > maxValidTotalAmount) {
+        alert(`Non puoi puntare più di quanto hai! Max: $${maxValidTotalAmount}`); return;
+    }
+    if (totalBetAmountToUse < minValidTotalAmount && totalBetAmountToUse < maxValidTotalAmount) {
+         // Allow all-in for less than minValidTotalAmount if that's all they have
+        alert(`Importo troppo basso. Minimo: $${minValidTotalAmount} (o all-in per $${maxValidTotalAmount}).`); return;
+    }
 
-    const amountToAdd = totalBetAmount - player.currentBet;
-    if (amountToAdd < 0) { console.error("Errore: amountToAdd negativo", amountToAdd); return; }
-    if (amountToAdd === 0 && totalBetAmount === currentBetLevel) { alert("L'importo corrisponde al Call. Usa 'Call'."); return; }
 
-    player.balance -= amountToAdd; player.currentBet = totalBetAmount; pot += amountToAdd;
-    currentBetLevel = player.currentBet; lastRaiserIndex = currentPlayerIndex;
-    player.hasActedThisRound = true; // *** Azione confermata ***
+    if (actionType === 'bet') {
+        if (currentBetLevel > 0) { alert("Errore: Azione 'bet' non permessa se c'è già una puntata."); return; }
+        // For a 'bet', totalBetAmountToUse is the new currentBetLevel
+    } else if (actionType === 'raise') {
+        if (currentBetLevel === 0) { alert("Errore: Azione 'raise' non permessa se non ci sono puntate da rilanciare."); return; }
+        if (totalBetAmountToUse <= currentBetLevel) {
+            alert(`Per rilanciare, l'importo totale ($${totalBetAmountToUse}) deve superare la puntata attuale ($${currentBetLevel}). Minimo rilancio totale: $${minValidTotalAmount}.`); return;
+        }
+        // For a 'raise', totalBetAmountToUse is the new currentBetLevel
+    }
+
+
+    const amountToAdd = totalBetAmountToUse - player.currentBet;
+    if (amountToAdd < 0) { console.error("Errore critico: amountToAdd negativo.", {totalBetAmountToUse, currentBet: player.currentBet}); return; }
+
+    // If player is essentially calling with the bet/raise interface
+    if (amountToAdd === 0 && totalBetAmountToUse === currentBetLevel && currentBetLevel > 0) {
+        alert("L'importo inserito corrisponde al Call. Per favore, usa il bottone 'Call'.");
+        return;
+    }
+
+
+    player.balance -= amountToAdd;
+    player.currentBet = totalBetAmountToUse; // This is the total amount player has in front of them for this round
+    pot += amountToAdd;
+    currentBetLevel = player.currentBet; // The new level to be matched
+    lastRaiserIndex = currentPlayerIndex; // This player made the last aggressive action
+    player.hasActedThisRound = true; // Action successfully submitted
 
      if (player.balance === 0) { player.status = 'all-in'; console.log(`${player.name} è All-in!`); }
-     console.log(`${player.name} ${actionType === 'bet' ? 'punta' : 'rilancia'} a ${totalBetAmount} (+${amountToAdd})`);
+     console.log(`${player.name} ${actionType} a $${player.currentBet} (aggiungendo $${amountToAdd}). Nuovo CurrentBetLevel: $${currentBetLevel}`);
 
-     cancelBetRaiseInput(); endTurn();
+     cancelBetRaiseInput(); // Close input area, reset amounts
+     endTurn();
  }
 
 // --- Gestione Fiches e Bottoni Area Betting ---
@@ -710,44 +932,85 @@ document.addEventListener('DOMContentLoaded', () => {
     chipButtons.forEach(button => {
         button.addEventListener('click', () => { if (!button.disabled) addChipValueToAction(button.dataset.value); });
     });
+
+    // Add listener for the cancel button in bet input area
+    const cancelBetBtn = document.getElementById('cancel-bet-button');
+    if (cancelBetBtn) {
+        cancelBetBtn.addEventListener('click', cancelBetRaiseInput);
+    } else {
+        console.warn("Cancel bet button not found for event listener setup.");
+    }
 });
 function addChipValueToAction(value) {
     const player = players[currentPlayerIndex];
     if(!player || player.status !== 'active') return;
     const numericValue = parseInt(value);
     if (isNaN(numericValue)) return;
-    let newAmount = actionAmount + numericValue;
+
+    let currentInputValue = parseInt(betAmountInput.value);
+    let baseAmount = 0;
+    if (!isNaN(currentInputValue) && currentInputValue > 0) { // If input field has a value, add to it
+        baseAmount = currentInputValue;
+    } else { // Else, add to current chip total (actionAmount)
+        baseAmount = actionAmount;
+    }
+
+    let newAmount = baseAmount + numericValue;
     const maxBetRaiseTotal = player.balance + player.currentBet;
     if (newAmount > maxBetRaiseTotal) newAmount = maxBetRaiseTotal;
-    actionAmount = newAmount;
-    if(betAmountInput) betAmountInput.value = actionAmount;
+
+    actionAmount = newAmount; // Update internal chip total for reference
+    if(betAmountInput) betAmountInput.value = actionAmount; // Update input field with new total
     updateActionAmountButtons();
 }
-function clearActionAmount() { actionAmount = 0; if(betAmountInput) betAmountInput.value = ''; updateActionAmountButtons(); }
+function clearActionAmount() {
+    actionAmount = 0;
+    if(betAmountInput) betAmountInput.value = ''; // Clear input field as well
+    updateActionAmountButtons();
+}
 function setBetAmount(type) {
     const player = players[currentPlayerIndex];
     if (!player || player.status !== 'active') return;
-    const minBetRaiseTotal = calculateMinBetRaise();
-    let targetAmount = minBetRaiseTotal;
-    const maxBetRaiseTotal = player.balance + player.currentBet;
+
+    const minBetRaiseTotal = calculateMinBetRaise(); // Min total amount player's bet needs to be
+    let targetAmount = minBetRaiseTotal; // Default to min
+    const maxBetRaiseTotal = player.balance + player.currentBet; // All-in
+
     switch (type) {
         case 'pot':
-            const callAmount = Math.max(0, currentBetLevel - player.currentBet);
-            const currentPotSize = pot;
-            const potRaiseSize = currentPotSize + (2 * callAmount);
-            targetAmount = player.currentBet + callAmount + potRaiseSize; break;
-        case 'allin': targetAmount = maxBetRaiseTotal; break;
+            const amountNeededToCall = Math.max(0, currentBetLevel - player.currentBet);
+            // Pot size for raise calculation: current pot + all bets on table (including your call)
+            // Pot size = current pot + (currentBetLevel - p1.currentBet) + (currentBetLevel - p2.currentBet IF p2 also has bet out)
+            // Simplified for 2 players: pot + amountNeededToCall (from current player) + currentBetLevel (opponent's part of current level)
+            // No, more standard: A pot-sized raise is your call PLUS the amount of the pot after your call.
+            // 1. Amount to call: `amountNeededToCall`
+            // 2. Size of pot after you call: `pot + amountNeededToCall`
+            // 3. Your raise amount (on top of call): `pot + amountNeededToCall`
+            // 4. Total bet: `player.currentBet + amountNeededToCall + (pot + amountNeededToCall)`
+            // This simplifies to: `player.currentBet + pot + 2 * amountNeededToCall`.
+            // Or, if `currentBetLevel` is 0 (first to bet): `player.currentBet (0) + pot + 0` => so bet `pot`.
+            targetAmount = player.currentBet + amountNeededToCall + (pot + amountNeededToCall);
+            break;
+        case 'allin':
+            targetAmount = maxBetRaiseTotal;
+            break;
     }
+    // Ensure target amount is within valid min/max bounds
     targetAmount = Math.max(minBetRaiseTotal, Math.min(targetAmount, maxBetRaiseTotal));
     actionAmount = Math.floor(targetAmount);
-    if(betAmountInput) betAmountInput.value = actionAmount;
+    if(betAmountInput) betAmountInput.value = actionAmount; // Update input field
     console.log(`SetBetAmount (${type}): actionAmount = ${actionAmount}`);
     updateActionAmountButtons();
 }
 function updateActionAmountButtons() {
-    if(!actionAmountDisplay || !bettingAreaDiv || !clickableChipsContainer || !clearBetButton || !potBetButton || !allInButton || !confirmBetButton || !betAmountInput) { console.warn("Elementi area betting non trovati"); return; }
+    if(!actionAmountDisplay || !bettingAreaDiv || !clickableChipsContainer || !clearBetButton || !potBetButton || !allInButton || !confirmBetButton || !betAmountInput) { console.warn("Elementi area betting non trovati per updateActionAmountButtons"); return; }
 
-    actionAmountDisplay.textContent = `Importo Azione: $${actionAmount}`;
+    // Get value from input field if it's a valid number, otherwise use actionAmount (from chips)
+    let currentInputFieldValue = parseInt(betAmountInput.value);
+    let displayedAmount = (!isNaN(currentInputFieldValue) && currentInputFieldValue > 0) ? currentInputFieldValue : actionAmount;
+    actionAmountDisplay.textContent = `Importo Azione: $${displayedAmount}`;
+
+
     const bettingVisible = bettingAreaDiv.style.display === 'flex';
     const player = players[currentPlayerIndex];
 
@@ -757,83 +1020,190 @@ function updateActionAmountButtons() {
         return;
     }
 
-    const minBetRaiseTotal = calculateMinBetRaise();
-    const maxBetRaiseTotal = player.balance + player.currentBet;
+    const minValidTotalBet = calculateMinBetRaise();
+    const maxPossibleTotalBet = player.balance + player.currentBet; // All-in
 
+    // Enable/disable chip buttons
     clickableChipsContainer.querySelectorAll('.chip-button').forEach(b => {
-        const value = parseInt(b.dataset.value); b.disabled = (actionAmount + value > maxBetRaiseTotal);
+        const chipVal = parseInt(b.dataset.value);
+        // Disable if adding this chip to current input/actionAmount would exceed all-in
+        b.disabled = (displayedAmount + chipVal > maxPossibleTotalBet && displayedAmount < maxPossibleTotalBet);
     });
-    clearBetButton.disabled = (actionAmount === 0);
-    allInButton.disabled = (actionAmount === maxBetRaiseTotal || player.balance === 0);
 
-    const callAmountForPot = Math.max(0, currentBetLevel - player.currentBet);
-    const currentPotSizeForPot = pot;
-    const potRaiseSize = currentPotSizeForPot + (2 * callAmountForPot);
-    const potentialPotBetTotal = player.currentBet + callAmountForPot + potRaiseSize;
-    const potBetIsInvalid = potentialPotBetTotal < minBetRaiseTotal || potentialPotBetTotal > maxBetRaiseTotal || player.balance === 0;
-    const potBetIsRedundant = potentialPotBetTotal <= actionAmount;
+    clearBetButton.disabled = (displayedAmount === 0);
+    allInButton.disabled = (displayedAmount === maxPossibleTotalBet || player.balance === 0);
+
+
+    const amountToCallForPotCalc = Math.max(0, currentBetLevel - player.currentBet);
+    const potRaiseTarget = player.currentBet + amountToCallForPotCalc + (pot + amountToCallForPotCalc);
+    const potBetIsInvalid = potRaiseTarget < minValidTotalBet || potRaiseTarget > maxPossibleTotalBet || player.balance === 0;
+    const potBetIsRedundant = displayedAmount >= potRaiseTarget && potRaiseTarget > 0;
     potBetButton.disabled = potBetIsInvalid || potBetIsRedundant;
 
-    betAmountInput.disabled = false; betAmountInput.min = minBetRaiseTotal; betAmountInput.max = maxBetRaiseTotal; betAmountInput.placeholder = minBetRaiseTotal;
 
-    let currentInputValue = parseInt(betAmountInput.value);
-    let isInputValueValid = !isNaN(currentInputValue) && currentInputValue >= minBetRaiseTotal && currentInputValue <= maxBetRaiseTotal;
-    let isActionAmountValid = actionAmount > 0 && actionAmount >= minBetRaiseTotal && actionAmount <= maxBetRaiseTotal;
-    let finalAmountToCheck = isInputValueValid ? currentInputValue : (isActionAmountValid ? actionAmount : -1);
-    let isValidRaise = (confirmBetButton.dataset.actionType === 'raise' && finalAmountToCheck > currentBetLevel);
-    let isValidBet = (confirmBetButton.dataset.actionType === 'bet' && currentBetLevel === 0);
-     confirmBetButton.disabled = !(finalAmountToCheck > 0 && finalAmountToCheck >= minBetRaiseTotal && finalAmountToCheck <= maxBetRaiseTotal && (isValidBet || isValidRaise));
+    betAmountInput.disabled = false;
+    betAmountInput.min = minValidTotalBet; // These are for validation, not for disabling
+    betAmountInput.max = maxPossibleTotalBet;
+    betAmountInput.placeholder = minValidTotalBet;
+
+
+    let finalAmountForValidation = displayedAmount; // Use combined value from input/chips
+
+    let isValidRaise = (confirmBetButton.dataset.actionType === 'raise' && finalAmountForValidation > currentBetLevel);
+    let isValidBet = (confirmBetButton.dataset.actionType === 'bet' && currentBetLevel === 0 && finalAmountForValidation >= minValidTotalBet);
+
+    // Confirm button is enabled if:
+    // 1. The final amount is at least the minimum valid bet/raise total
+    // 2. The final amount is not more than what the player can go all-in for
+    // 3. It's a valid 'bet' action OR a valid 'raise' action
+    confirmBetButton.disabled = !(
+        finalAmountForValidation >= minValidTotalBet &&
+        finalAmountForValidation <= maxPossibleTotalBet &&
+        (isValidBet || isValidRaise)
+    );
  }
 
 // --- Turn Management & Phase Progression ---
-function endTurn() {
-    console.log(`--- endTurn: Inizio per ${players[currentPlayerIndex]?.name} (${currentPlayerIndex}), Azione completata? ${players[currentPlayerIndex]?.hasActedThisRound} ---`);
+async function endTurn() { // now async
+    console.log(`--- endTurn: Inizio per ${players[currentPlayerIndex]?.name} (${currentPlayerIndex}), Azione completata? ${players[currentPlayerIndex]?.hasActedThisRound}, CurrentBet: ${players[currentPlayerIndex]?.currentBet}, BetLevel: ${currentBetLevel} ---`);
     updatePlayersUI(); updateCommunityAreaUI();
+    await saveGameState();
 
     const nonFoldedPlayers = players.filter(p => p.status !== 'folded');
-    if (nonFoldedPlayers.length <= 1 && currentPhase !== 'pre-deal') {
-        console.log(">> endTurn: Mano finita - Fold/Eliminazione."); setTimeout(() => endHand(false), 600); return;
+    if (nonFoldedPlayers.length <= 1 && currentPhase !== 'pre-deal' && currentPhase !== 'showdown' && currentPhase !== 'hand-over') { // Allow showdown to proceed if already in that phase
+        console.log(">> endTurn: Mano finita - Fold/Eliminazione. Chiamo endHand.");
+        setTimeout(() => endHand(false), 600); // false for no showdown (winner by default)
+        return;
     }
 
     let bettingRoundOver = false;
-    const p1 = players[0]; const p2 = players[1];
-    const p1CannotAct = p1.status === 'all-in' || p1.status === 'folded';
-    const p2CannotAct = p2.status === 'all-in' || p2.status === 'folded';
+    const pAll = players.filter(p => p.status === 'active' || p.status === 'all-in'); // Players still in the hand
 
-    if (p1CannotAct && p2CannotAct) { bettingRoundOver = true; console.log(">> endTurn: Entrambi non possono agire. Giro finito."); }
-    else if ((p1.status === 'active' && p2CannotAct) || (p2.status === 'active' && p1CannotAct)) {
-        const activeP = (p1.status === 'active') ? p1 : p2;
-        const needsToCallUncoverable = activeP.currentBet < currentBetLevel && activeP.balance < (currentBetLevel - activeP.currentBet);
-        if (activeP.hasActedThisRound || needsToCallUncoverable) { bettingRoundOver = true; console.log(`>> endTurn: Solo ${activeP.name} attivo e ha agito/non può coprire. Giro finito.`); }
-        else { console.log(`>> endTurn: Solo ${activeP.name} attivo, deve ancora agire. Turno rimane.`); }
+    if (pAll.length < 2 && nonFoldedPlayers.length > 1) { // e.g. P1 active, P2 all-in. P1 bets, P2 can't act.
+         bettingRoundOver = true; // Or if P1 checks, round also over.
+         console.log(">> endTurn: Meno di due giocatori possono agire attivamente. Giro finito.");
+    } else if (pAll.every(p => p.status === 'all-in') && pAll.length > 1) {
+        bettingRoundOver = true;
+        console.log(">> endTurn: Tutti i giocatori rimanenti sono all-in. Giro finito.");
+    } else {
+        const activePlayers = players.filter(p => p.status === 'active');
+        if (activePlayers.length === 0 && nonFoldedPlayers.length > 1) { // All non-folded are all-in
+             bettingRoundOver = true; console.log(">> endTurn: Nessun giocatore attivo, tutti i non-foldati sono all-in. Giro finito.");
+        } else if (activePlayers.length === 1) { // One player active, other(s) all-in or folded
+            const singleActivePlayer = activePlayers[0];
+            // If this single active player has acted OR if their current bet matches the level (e.g. they called an all-in)
+            if (singleActivePlayer.hasActedThisRound || singleActivePlayer.currentBet === currentBetLevel) {
+                bettingRoundOver = true;
+                console.log(`>> endTurn: Solo ${singleActivePlayer.name} attivo e ha agito o pareggiato. Giro finito.`);
+            } else {
+                 console.log(`>> endTurn: Solo ${singleActivePlayer.name} attivo, ma deve ancora agire. Turno rimane su di lui/lei.`);
+                 // currentPlayerIndex should already be this player. updateUI will handle.
+            }
+        } else if (activePlayers.length >= 2) { // Both players are active (standard betting)
+            // Round is over if all active players have acted AND their current bets are equal.
+            // Or if (simplified for 2 players): current player acted, and bets are equal.
+            const p1 = players[0]; const p2 = players[1]; // Assuming always 2 players for this part of logic
+            const betsEqual = p1.currentBet === p2.currentBet;
+
+            // In heads-up preflop, BB (player who posted BB) can still act if SB (player who posted SB) just calls.
+            // currentPlayerIndex is the player who just acted.
+            const justActedPlayer = players[currentPlayerIndex];
+            const otherPlayer = players[(currentPlayerIndex + 1) % 2];
+
+            if (betsEqual) {
+                if (currentPhase === 'preflop' &&
+                    ((justActedPlayer.isDealer && !otherPlayer.hasActedThisRound && otherPlayer.currentBet === bigBlindAmt) || // SB (dealer) just called, BB (other) option
+                    (!justActedPlayer.isDealer && !otherPlayer.hasActedThisRound && otherPlayer.currentBet === bigBlindAmt && otherPlayer.isDealer)) // BB just called (completed SB), SB (dealer) option
+                   ) {
+                    // This logic is tricky for BB option. A simpler way for 2 players:
+                    // If preflop, and current player is BB, and they haven't acted since SB completed/raised.
+                    // Let's use lastRaiserIndex. If bets are equal, and the player whose turn it *would* be
+                    // is not the lastRaiserIndex (or if no raise, the BB), the round is over.
+                    // More simply: if bets are equal and both players have had a chance to voluntarily act at this bet level.
+                    if (justActedPlayer.hasActedThisRound && otherPlayer.hasActedThisRound && justActedPlayer.currentBet === otherPlayer.currentBet) {
+                        bettingRoundOver = true;
+                        console.log(">> endTurn: Bets equal e entrambi i giocatori attivi hanno agito. Giro finito.");
+                    } else if (currentPhase === 'preflop' && justActedPlayer.currentBet === bigBlindAmt && otherPlayer.currentBet === bigBlindAmt &&
+                               ( (players[dealerIndex].id === justActedPlayer.id && !players[(dealerIndex+1)%2].hasActedThisRound ) || // Dealer (SB) called, BB option
+                                 (players[(dealerIndex+1)%2].id === justActedPlayer.id && !players[dealerIndex].hasActedThisRound && players[dealerIndex].status==='active') // BB completed, SB (if active) option again
+                               )
+                              ) {
+                        bettingRoundOver = false; // BB/SB option scenario
+                        console.log(">> endTurn: Preflop, opzione per il Big Blind (o Small Blind se BB completa). Giro continua.");
+                    } else if (justActedPlayer.hasActedThisRound && otherPlayer.status !== 'active') { // other player is all-in/folded
+                        bettingRoundOver = true; console.log(">> endTurn: Giocatore ha agito, altro non attivo. Giro finito.");
+                    }
+                    else if (justActedPlayer.hasActedThisRound && otherPlayer.hasActedThisRound) { // Both acted and bets are equal.
+                        bettingRoundOver = true; console.log(">> endTurn: Entrambi agito e bets equal. Giro finito.");
+                    }
+                     else {
+                        // Bets are equal, but not everyone has acted on this equality yet.
+                        // e.g. P1 bets, P2 calls. P2 (justActedPlayer) has acted. P1 has not acted since P2's call.
+                        // This shouldn't be the case if currentPlayerIndex is always the one who *just* acted.
+                        // This implies that if bets are equal, and the current player just acted to make them equal, the round is over.
+                        // Exception is BB option preflop.
+                         bettingRoundOver = true; // Default to true if bets are equal and current player acted
+                         if (currentPhase === 'preflop' && players[bbIndex].id === otherPlayer.id && !otherPlayer.hasActedThisRound && currentBetLevel === bigBlindAmt) {
+                             bettingRoundOver = false; // BB option
+                             console.log(">> endTurn: Preflop, BB ha l'opzione. Giro continua.");
+                         } else {
+                            console.log(">> endTurn: Bets equal, giocatore ha agito. Giro finito (assumendo no opzione BB speciale).");
+                         }
+
+                    }
+                } else { // Bets not equal
+                    bettingRoundOver = false;
+                    console.log(`>> endTurn: Bets NON equal ($${p1.currentBet} vs $${p2.currentBet}). Giro continua.`);
+                }
+            } else { // Should only be one active player, or both all-in.
+                 // This case should be covered by activePlayers.length checks.
+                 bettingRoundOver = true;
+                 console.log(">> endTurn: Caso non standard con giocatori attivi. Giro finito per sicurezza.");
+            }
+        }
     }
-    else if (p1.status === 'active' && p2.status === 'active') {
-        const betsAreEqual = p1.currentBet === p2.currentBet;
-        const p1Acted = p1.hasActedThisRound; const p2Acted = p2.hasActedThisRound;
-        if (betsAreEqual && p1Acted && p2Acted) { bettingRoundOver = true; console.log(">> endTurn: Bets equal e entrambi attivi hanno agito. Giro finito."); }
-        else { bettingRoundOver = false; console.log(`>> endTurn: Giro continua. Bets Equal:${betsAreEqual}, P1 Acted:${p1Acted}, P2 Acted:${p2Acted}`); }
-    }
+
 
     if (bettingRoundOver) {
         console.log(">> endTurn: *** BETTING ROUND OVER *** Avanzando...");
-        players.forEach(p => p.currentBet = 0); currentBetLevel = 0;
+        // Reset currentBet for all players for the next round (pot has been updated)
+        // Keep hasActedThisRound as is, it's reset at start of new betting round in progressToNextPhase
+        players.forEach(p => {
+            p.currentBet = 0; // Bets are "in the pot" conceptually
+            // p.hasActedThisRound = false; // This is done in progressToNextPhase
+        });
+        currentBetLevel = 0; // Reset for the new betting round
+        lastRaiserIndex = -1; // Reset for new round
+        //currentPlayerIndex = dealerIndex; // Post-flop, SB/dealer acts first (or left of dealer) - this is set in progressToNextPhase
         setTimeout(progressToNextPhase, 800);
     } else {
+        // Determine next player
         let nextPlayerIndex = (currentPlayerIndex + 1) % players.length;
         let loopGuard = 0;
+        // Find next player who is 'active' (can still bet/fold etc.)
         while(players[nextPlayerIndex].status !== 'active' && loopGuard < players.length * 2) {
-             console.log(`Skipping player ${nextPlayerIndex + 1} (Status: ${players[nextPlayerIndex].status})`);
+             console.log(`Skipping player ${players[nextPlayerIndex].name} (Index ${nextPlayerIndex}, Status: ${players[nextPlayerIndex].status}) in endTurn`);
              nextPlayerIndex = (nextPlayerIndex + 1) % players.length; loopGuard++;
-             if (loopGuard >= players.length * 2) { console.error("! Loop infinito endTurn. Fine mano forzata."); endHand(true); return; }
+             if (loopGuard >= players.length * 2) {
+                 console.error("! Loop infinito in endTurn cercando nextPlayerIndex. Fine mano forzata.");
+                 endHand(true); // true for showdown if possible
+                 return;
+             }
         }
+
+        // If no active player found (e.g. one active, one all-in, active player just acted)
+        // This should have been caught by bettingRoundOver logic.
          if(players[nextPlayerIndex].status !== 'active') {
-             console.warn("!!! endTurn: Nessun giocatore attivo trovato ma bettingRoundOver=false. Forzatura fine giro.");
-             bettingRoundOver = true; players.forEach(p => p.currentBet = 0); currentBetLevel = 0;
-             setTimeout(progressToNextPhase, 800); return;
+             console.warn("!!! endTurn: Nessun giocatore 'active' trovato per il prossimo turno, ma bettingRoundOver era false. Forzatura fine giro.");
+             // This implies the round should be over.
+             players.forEach(p => {p.currentBet = 0;}); currentBetLevel = 0; lastRaiserIndex = -1;
+             setTimeout(progressToNextPhase, 800);
+             return;
          }
+
         currentPlayerIndex = nextPlayerIndex;
         console.log(`>> endTurn: Turno passa a: ${players[currentPlayerIndex].name} (Index: ${currentPlayerIndex})`);
-        updateUI(); // Aggiorna UI e gestisce bot/bottoni
+        updateUI(); // Update UI for the next player (will trigger bot or enable human buttons)
     }
     console.log("--- endTurn: Fine ---");
 }
@@ -841,353 +1211,677 @@ function endTurn() {
 function progressToNextPhase() {
     console.log(`--- progressToNextPhase: Inizio (da ${currentPhase}) ---`);
     clearTimeout(communityCardAnimationTimeout);
-    players.forEach(p => { if (p.status === 'active') p.hasActedThisRound = false; });
-    lastRaiserIndex = -1;
-    players.forEach(p => { const betEl = document.getElementById(`${p.elementPrefix}-bet`); if (betEl) betEl.textContent = '0'; });
 
-    const activePlayers = players.filter(p => p.status === 'active');
+    players.forEach(p => {
+        if (p.status === 'active') p.hasActedThisRound = false; // Reset for the new betting round
+        // Bets are already conceptually in pot, UI for player currentBet reset by endTurn.
+        const betEl = document.getElementById(`${p.elementPrefix}-bet`);
+        if (betEl) betEl.textContent = '0'; // Visual reset of player's bet for the round
+    });
+    lastRaiserIndex = -1; // Reset for the new round
+
     const nonFoldedPlayers = players.filter(p => p.status !== 'folded');
+    const activeAndCanBetPlayers = players.filter(p => p.status === 'active'); // Players who can still make decisions
 
-    if (activePlayers.length <= 1 && nonFoldedPlayers.length > 1) {
-         console.log(">> progressToNextPhase: All-in/Max 1 attivo. Vai alla fine.");
+    if (nonFoldedPlayers.length <= 1) {
+        console.log(">> progressToNextPhase: Meno di 2 non foldati. Fine mano.");
+        setTimeout(() => endHand(false), 500); // Winner by default
+        return;
+    }
+
+    // If only one player can bet (others are all-in or folded), or no one can bet (all remaining are all-in)
+    if (activeAndCanBetPlayers.length <= 1 && nonFoldedPlayers.length > 1) {
+         console.log(">> progressToNextPhase: Max 1 giocatore può ancora puntare (o nessuno se tutti all-in). Avanza direttamente girando le carte.");
           const cardsToDealCount = 5 - communityCards.length;
-          if (cardsToDealCount > 0) { console.log(`Dealing ${cardsToDealCount} community cards.`); dealCommunityCard(cardsToDealCount, true); }
-          else { console.log("Carte comuni già distribuite. Showdown forzato."); setTimeout(() => endHand(true), 1000); }
+          if (cardsToDealCount > 0) {
+              console.log(`Dealing ${cardsToDealCount} community cards immediately.`);
+              dealCommunityCard(cardsToDealCount, true); // true for revealImmediately, will lead to showdown
+          } else { // All cards already dealt
+              console.log("Carte comuni già distribuite. Showdown forzato.");
+              currentPhase = 'showdown';
+              updateCommunityAreaUI();
+              setTimeout(() => endHand(true), 1000); // Proceed to showdown
+          }
           return;
-     } else if (nonFoldedPlayers.length <=1) {
-          console.log(">> progressToNextPhase: Meno di 2 non foldati. Fine mano forzata."); setTimeout(() => endHand(false), 500); return;
      }
 
-    let firstToActIndex = dealerIndex; let loopCheck = 0;
-     while(players[firstToActIndex].status !== 'active' && loopCheck < players.length * 2) {
-         firstToActIndex = (firstToActIndex + 1) % players.length; loopCheck++;
-         if (loopCheck >= players.length * 2) { console.error("! Loop infinito progressToNextPhase."); endHand(nonFoldedPlayers.length > 1); return; }
-     }
-     if (players[firstToActIndex].status !== 'active') { console.error("! Nessun giocatore attivo trovato post-flop!"); endHand(nonFoldedPlayers.length > 1); return; }
-    currentPlayerIndex = firstToActIndex;
 
-    let phaseChanged = true; let nextPhase = ''; let cardsToDeal = 0;
+    // Determine who acts first post-flop (player to the left of dealer, which is BB in 2-player)
+    // In 2-player, dealer (SB) acts first pre-flop. Non-dealer (BB) acts first post-flop.
+    let firstToActIdx;
+    if (players.length === 2) {
+        firstToActIdx = (dealerIndex + 1) % 2; // Player to the left of the dealer
+    } else { // More complex for >2 players, but this game is 1v1
+        firstToActIdx = (dealerIndex + 1) % players.length;
+    }
+
+    // Ensure first to act is active, otherwise find next active player
+    let loopCheck = 0;
+    while (players[firstToActIdx].status !== 'active' && loopCheck < players.length * 2) {
+        firstToActIdx = (firstToActIdx + 1) % players.length;
+        loopCheck++;
+        if (loopCheck >= players.length * 2) {
+            console.error("! Loop infinito in progressToNextPhase cercando firstToActIdx. Fine mano.");
+            endHand(nonFoldedPlayers.length > 1); return;
+        }
+    }
+    // If after loop, still no active player (should be caught by activeAndCanBetPlayers check above)
+    if (players[firstToActIdx].status !== 'active') {
+        console.error("! Nessun giocatore attivo trovato per iniziare il giro post-flop! (Questo non dovrebbe accadere). Fine mano.");
+        endHand(nonFoldedPlayers.length > 1); return;
+    }
+    currentPlayerIndex = firstToActIdx;
+
+
+    let nextPhaseStr = ''; let cardsToDealThisPhase = 0;
     switch (currentPhase) {
-        case 'preflop': nextPhase = 'flop'; cardsToDeal = 3; break;
-        case 'flop': nextPhase = 'turn'; cardsToDeal = 1; break;
-        case 'turn': nextPhase = 'river'; cardsToDeal = 1; break;
-        case 'river': nextPhase = 'showdown'; console.log(">> progressToNextPhase: Fine puntate River. Showdown."); setTimeout(() => endHand(true), 500); return;
-         default: phaseChanged = false; console.error("Fase sconosciuta:", currentPhase); handOver = true; updateUI(); return;
+        case 'preflop': nextPhaseStr = 'flop'; cardsToDealThisPhase = 3; break;
+        case 'flop':    nextPhaseStr = 'turn'; cardsToDealThisPhase = 1; break;
+        case 'turn':    nextPhaseStr = 'river'; cardsToDealThisPhase = 1; break;
+        case 'river':
+            nextPhaseStr = 'showdown';
+            console.log(">> progressToNextPhase: Fine puntate River. Showdown imminente.");
+            currentPhase = 'showdown'; // Set phase before calling endHand
+            updateCommunityAreaUI();
+            setTimeout(() => endHand(true), 500); // true for showdown
+            return;
+         default:
+            console.error("Fase sconosciuta in progressToNextPhase:", currentPhase);
+            handOver = true; updateUI(); return;
     }
 
-    if (phaseChanged && cardsToDeal > 0) {
-        currentPhase = nextPhase;
-        console.log(`>> progressToNextPhase: Fase ${currentPhase}. Dealing ${cardsToDeal}. Parla: ${players[currentPlayerIndex].name}`);
-        updateCommunityAreaUI(); dealCommunityCard(cardsToDeal);
+    if (cardsToDealThisPhase > 0) {
+        currentPhase = nextPhaseStr;
+        console.log(`>> progressToNextPhase: Nuova Fase ${currentPhase}. Dealing ${cardsToDealThisPhase} carte. Turno di: ${players[currentPlayerIndex].name}`);
+        updateCommunityAreaUI(); // Update phase display in UI
+        dealCommunityCard(cardsToDealThisPhase); // This will eventually call activateNextTurn
     }
-    console.log(`--- progressToNextPhase: Fine (fase ${currentPhase}) ---`);
+    // If cardsToDealThisPhase is 0 but nextPhaseStr is 'showdown', it's handled by 'river' case.
+
+    console.log(`--- progressToNextPhase: Fine (transizione a ${currentPhase}) ---`);
 }
 
 function dealCommunityCard(count, revealImmediately = false) {
-    console.log(`--- dealCommunityCard: Dealing ${count} cards ${revealImmediately ? '(reveal)' : ''} ---`);
+    console.log(`--- dealCommunityCard: Dealing ${count} cards ${revealImmediately ? '(reveal immediately)' : ''} ---`);
     clearTimeout(communityCardAnimationTimeout);
-    let delayBetweenCards = revealImmediately ? 50 : 400;
-    let totalRevealDelay = 0;
+    let delayBetweenCards = revealImmediately ? 50 : 400; // Animation delay for each card flip
+    let totalRevealDelayAccumulator = 0; // Used to stagger card reveals
 
-    function revealCardWithDelay(cardData, cardElement, isLastCard) {
-        const currentCardDelay = totalRevealDelay;
-        totalRevealDelay += delayBetweenCards;
+    function scheduleCardReveal(cardData, cardElement, isLastCardInGroup) {
+        const currentCardIndividualDelay = totalRevealDelayAccumulator;
+        totalRevealDelayAccumulator += delayBetweenCards; // Increment for the *next* card
+
         communityCardAnimationTimeout = setTimeout(() => {
             if (cardElement && document.body.contains(cardElement)) {
-                console.log(`Revealing ${cardData.id} after ${currentCardDelay}ms`);
-                cardData.faceUp = true; cardElement.classList.remove('hidden'); cardElement.classList.add('flipped');
-            } else { console.warn(`Card element ${cardData.id} non trovato.`); }
-            if (isLastCard) {
-                console.log("Ultima carta comune gruppo rivelata.");
-                if (!revealImmediately) { setTimeout(activateNextTurn, 300); }
-                else { console.log("Rivelazione immediata finita, showdown."); currentPhase = 'showdown'; updateCommunityAreaUI(); setTimeout(() => endHand(true), 1000); }
+                console.log(`Revealing ${cardData.id} (community) after ${currentCardIndividualDelay}ms delay.`);
+                cardData.faceUp = true;
+                cardElement.classList.remove('hidden');
+                cardElement.classList.add('flipped');
+            } else {
+                console.warn(`Card element ${cardData.id} non trovato o rimosso dal DOM in scheduleCardReveal.`);
             }
-        }, currentCardDelay);
+
+            if (isLastCardInGroup) {
+                console.log("Ultima carta del gruppo di community cards rivelata.");
+                if (!revealImmediately) {
+                    setTimeout(activateNextTurn, 300);
+                } else {
+                    console.log("Rivelazione immediata completata, procedendo allo showdown.");
+                    currentPhase = 'showdown';
+                    updateCommunityAreaUI();
+                    setTimeout(() => endHand(true), 1000);
+                }
+            }
+        }, currentCardIndividualDelay);
     }
 
-     const needsBurn = deck.length > 0 && communityCards.length >= 3 && communityCards.length < 5 && count > 0;
-     if (needsBurn) { const burned = deck.pop(); console.log(`Bruciata 1 carta prima ${currentPhase}: ${burned ? burned.id : 'N/D'}`); }
+     const burnBeforeTurnOrRiver = (currentPhase === 'turn' || currentPhase === 'river') && count === 1;
+     if (burnBeforeTurnOrRiver && deck.length > 0) {
+         const burnedCard = deck.pop();
+         console.log(`Bruciata 1 carta prima del ${currentPhase}: ${burnedCard ? burnedCard.id : 'N/D'}`);
+     }
+
 
     for (let i = 0; i < count; i++) {
         if (deck.length > 0 && communityCards.length < 5) {
-            const card = dealCard(null, false);
+            const card = dealCard(null, false); // Deal face down initially
             if (card) {
                 communityCards.push(card);
-                const cardIdToFind = card.id;
-                displayCard(card, communityCardsContainer, true, true);
-                const addedCardElements = communityCardsContainer.querySelectorAll(`.card[data-card-id='${cardIdToFind}']`);
-                const addedCardElement = addedCardElements[addedCardElements.length - 1];
-                if (addedCardElement) { revealCardWithDelay(card, addedCardElement, i === count - 1); }
-                else { console.error(`Elemento carta ${card.id} non trovato!`); if (i === count - 1) { console.error("Errore ultima carta, recupero."); if (!revealImmediately) setTimeout(activateNextTurn, 300); else setTimeout(() => endHand(true), 500); } }
+                displayCard(card, communityCardsContainer, true, true); // hidden = true, isNew = true
+
+                const addedCardElements = communityCardsContainer.querySelectorAll(`.card[data-card-id='${card.id}']`);
+                const addedCardElement = addedCardElements[addedCardElements.length - 1]; // Get the last one added
+
+                if (addedCardElement) {
+                    scheduleCardReveal(card, addedCardElement, i === count - 1);
+                } else {
+                    console.error(`Elemento carta ${card.id} non trovato nel DOM dopo displayCard!`);
+                    if (i === count - 1) { // If error on last card, try to recover flow
+                        console.error("Errore critico con l'ultima carta comune, tentativo di recupero.");
+                        if (!revealImmediately) setTimeout(activateNextTurn, 300);
+                        else setTimeout(() => { currentPhase = 'showdown'; updateCommunityAreaUI(); endHand(true); }, 500);
+                    }
+                }
             }
         } else {
-             console.warn("Mazzo finito o limite carte comuni.");
-             if (i === count - 1 || count === 0) { console.log("Attivazione step dopo mazzo/limite."); if (!revealImmediately) setTimeout(activateNextTurn, 300); else setTimeout(() => endHand(true), 500); }
+             console.warn("Mazzo finito o limite carte comuni (5) raggiunto durante dealCommunityCard.");
+             if (i === count - 1 || count === 0) { // If this was supposed to be the last card or no cards to deal
+                 console.log("Attivazione del prossimo step (mazzo finito/limite/nessuna carta da girare).");
+                 if (!revealImmediately) setTimeout(activateNextTurn, 300);
+                 else setTimeout(() => { currentPhase = 'showdown'; updateCommunityAreaUI(); endHand(true); }, 500);
+             }
              break;
         }
     }
-    if (count <= 0 && !revealImmediately) { console.log("Nessuna carta da distribuire, attivazione."); setTimeout(activateNextTurn, 100); }
-    console.log(`--- dealCommunityCard: Fine ---`);
+    if (count <= 0 && !revealImmediately) { // Should not happen if progressToNextPhase logic is correct
+        console.log("Nessuna carta comune da distribuire, attivazione del prossimo turno/fase.");
+        setTimeout(activateNextTurn, 100);
+    }
+    console.log(`--- dealCommunityCard: Fine programmazione rivelazioni ---`);
 }
 
 function activateNextTurn() {
      console.log("--- activateNextTurn ---");
-     if (handOver) { console.log("activateNextTurn: Mano finita."); return; }
-     const activePlayer = players[currentPlayerIndex];
-     if (!activePlayer || activePlayer.status !== 'active') {
-          console.warn(`activateNextTurn: Giocatore ${currentPlayerIndex+1} non attivo (${activePlayer?.status}). Chiama endTurn.`); endTurn(); return;
+     if (handOver) { console.log("activateNextTurn: Mano già finita, non attivare turno."); return; }
+
+     const activePlayerForTurn = players[currentPlayerIndex];
+     // If current player is not 'active' (e.g. all-in, folded), endTurn should be called to find next active or end round
+     if (!activePlayerForTurn || activePlayerForTurn.status !== 'active') {
+          console.warn(`activateNextTurn: Giocatore corrente ${currentPlayerIndex+1} (${activePlayerForTurn?.name}) non è 'active' (status: ${activePlayerForTurn?.status}). Chiamo endTurn.`);
+          endTurn();
+          return;
      }
+
      const nonAllInActivePlayers = players.filter(p => p.status === 'active');
-     if (nonAllInActivePlayers.length <= 1) {
-          console.log("activateNextTurn: Meno di 2 attivi non all-in. Procedi.");
-          players.forEach(p => p.currentBet = 0); currentBetLevel = 0; progressToNextPhase(); return;
+     if (nonAllInActivePlayers.length <= 1 && players.filter(p => p.status !== 'folded').length > 1) {
+          console.log("activateNextTurn: Max 1 giocatore può puntare (altri all-in). Avanza alla prossima fase/showdown.");
+          players.forEach(p => {p.currentBet = 0; if(p.status === 'active') p.hasActedThisRound = false;});
+          currentBetLevel = 0; lastRaiserIndex = -1;
+          progressToNextPhase(); // This will deal remaining cards immediately if needed
+          return;
      }
-     console.log(`Attivazione turno per ${activePlayer.name}`); updateUI();
+     console.log(`Attivazione turno per ${activePlayerForTurn.name} (Index: ${currentPlayerIndex})`);
+     updateUI(); // This will enable buttons for human or trigger bot
 }
 
 // --- Fine Mano e Showdown ---
 let winnerInfoGlobal = { winners: [], winningHand: null, message: "" };
-function endHand(showdown) {
-     if (handOver && resultElement && resultElement.classList.contains('result-show')) { console.warn("endHand chiamata ma mano già finita."); return; }
-     console.log(`--- Fine Mano (Showdown: ${showdown}) ---`);
-     clearTimeout(resultTimeoutId); // << FIX: Pulisci timeout risultato
+async function endHand(showdown) { // now async
+     if (handOver && resultElement && resultElement.classList.contains('result-show')) { console.warn("endHand chiamata ma mano già finita e risultato mostrato."); return; }
+     console.log(`--- Fine Mano (Richiesto Showdown: ${showdown}) ---`);
+     clearTimeout(resultTimeoutId);
      clearTimeout(communityCardAnimationTimeout);
      handOver = true; disableActionButtons();
      if(bettingAreaDiv) bettingAreaDiv.style.display = 'none';
 
      const nonFoldedPlayers = players.filter(p => p.status !== 'folded');
      winnerInfoGlobal = { winners: [], winningHand: null, message: "" };
-     const performShowdown = showdown && nonFoldedPlayers.length > 1;
 
-     if (performShowdown) {
-          currentPhase = 'showdown'; console.log("Showdown!");
-          nonFoldedPlayers.forEach(p => { p.hand.forEach(card => card.faceUp = true); });
-          updatePlayersUI();
-          setTimeout(() => {
+     // Determine if an actual showdown (comparison of hands) should occur
+     const performActualShowdown = showdown && nonFoldedPlayers.length > 1;
+
+     if (performActualShowdown) {
+          currentPhase = 'showdown'; // Set phase for UI
+          console.log("Showdown! Valutazione mani...");
+          nonFoldedPlayers.forEach(p => { // Reveal cards of players in showdown
+              if (p.hand && p.hand.length > 0) p.hand.forEach(card => card.faceUp = true);
+          });
+          updatePlayersUI(); // Show player cards immediately
+          updateCommunityAreaUI(); // Update phase display
+          setTimeout(async () => {
                winnerInfoGlobal = determineWinner(nonFoldedPlayers);
-               finalizeHandResults(winnerInfoGlobal, true);
-          }, 1600);
-     } else if (nonFoldedPlayers.length === 1) {
-          currentPhase = 'hand-over'; const winner = nonFoldedPlayers[0];
-          winnerInfoGlobal.winners = [winner]; winnerInfoGlobal.message = `${winner.name} vince (avversario/i foldato/i)`;
-          console.log(winnerInfoGlobal.message);
-          winner.hand.forEach(card => card.faceUp = true);
-          updatePlayersUI(); finalizeHandResults(winnerInfoGlobal, false);
-     } else {
+               await finalizeHandResults(winnerInfoGlobal, true); // true for wasShowdown
+          }, 1600); // Delay for players to see cards before result
+     } else if (nonFoldedPlayers.length === 1) { // Winner by default (others folded)
           currentPhase = 'hand-over';
-          if (pot > 0){ console.warn("Nessun giocatore non-foldato con piatto? Push."); winnerInfoGlobal.message = "Push."; }
-          else { console.log("Nessun non-foldato e nessun piatto."); winnerInfoGlobal.message = "Mano conclusa senza vincitori."; }
-          finalizeHandResults(winnerInfoGlobal, false);
+          const winner = nonFoldedPlayers[0];
+          winnerInfoGlobal.winners = [winner];
+          winnerInfoGlobal.message = `${winner.name} vince (avversario/i foldato/i)`;
+          console.log(winnerInfoGlobal.message);
+          if (winner.hand && winner.hand.length > 0) { // Reveal winner's cards
+            winner.hand.forEach(card => card.faceUp = true);
+          }
+          updatePlayersUI();
+          updateCommunityAreaUI();
+          await finalizeHandResults(winnerInfoGlobal, false); // false for wasShowdown
+     } else { // No non-folded players or other edge case (e.g., error, or game ended before cards dealt fully)
+          currentPhase = 'hand-over';
+          if (pot > 0 && nonFoldedPlayers.length === 0){ // Pot exists but no one to claim it (e.g. simultaneous folds, error)
+            console.warn("Situazione anomala: Piatto presente ma nessun giocatore non-foldato. Il piatto resta? (Non gestito, push implicito).");
+            winnerInfoGlobal.message = "Push (Nessun vincitore valido).";
+          } else if (nonFoldedPlayers.length === 0) {
+             winnerInfoGlobal.message = "Mano conclusa senza vincitori (tutti foldati?).";
+          } else { // Should be caught by other conditions, but as a fallback
+             winnerInfoGlobal.message = "Mano conclusa.";
+             console.log("Mano conclusa, situazione non standard per vincitore.");
+          }
+          updateCommunityAreaUI();
+          await finalizeHandResults(winnerInfoGlobal, false);
      }
-     updateCommunityAreaUI();
  }
 
-function finalizeHandResults(winnerInfo, wasShowdown) {
+async function finalizeHandResults(winnerInfo, wasShowdown) { // now async
     let finalMessage = winnerInfo.message || "";
-    let outcomeType = 'push';
+    let outcomeType = 'push'; // Default for P1
 
-    if (winnerInfo.winners.length > 0) {
-        const potPerWinner = Math.floor(pot / winnerInfo.winners.length);
-        const remainder = pot % winnerInfo.winners.length;
-        console.log(`Distribuendo piatto $${pot} tra ${winnerInfo.winners.length} vincitori.`);
-        winnerInfo.winners.forEach((winner, index) => {
-            if(winner.status !== 'folded') {
+    if (winnerInfo.winners && winnerInfo.winners.length > 0) {
+        const validWinnersToAwardPot = winnerInfo.winners.filter(w => w.status !== 'folded');
+        if (validWinnersToAwardPot.length > 0) {
+            const potPerWinner = Math.floor(pot / validWinnersToAwardPot.length);
+            const remainder = pot % validWinnersToAwardPot.length;
+            console.log(`Distribuendo piatto $${pot} tra ${validWinnersToAwardPot.length} vincitori.`);
+
+            validWinnersToAwardPot.forEach((winner, index) => {
                 const amountWon = potPerWinner + (index === 0 ? remainder : 0);
-                winner.balance += amountWon; console.log(`${winner.name} vince $${amountWon} -> Saldo: $${winner.balance}`);
-            } else { console.warn(`Tentativo assegna piatto a foldato: ${winner.name}`); }
-        });
+                winner.balance += amountWon;
+                console.log(`${winner.name} vince $${amountWon} -> Saldo: $${winner.balance}`);
+            });
 
-        const winnerNames = winnerInfo.winners.filter(w => w.status !== 'folded').map(w => w.name).join(' e ');
-        if (winnerNames && pot > 0) { finalMessage = `${winnerNames} vince${winnerInfo.winners.filter(w=>w.status !== 'folded').length > 1 ? 'no' : ''} il piatto di $${pot}.`; }
-        else if (!finalMessage && winnerNames) { finalMessage = `${winnerNames} vince.`; }
-        else if (!winnerNames && pot > 0) { finalMessage = "Push anomalo."; console.warn("Nessun vincitore non foldato?"); }
+            const winnerNames = validWinnersToAwardPot.map(w => w.name).join(' e ');
+            if (pot > 0) { // If there was a pot to win
+                finalMessage = `${winnerNames} vince${validWinnersToAwardPot.length > 1 ? 'no' : ''} il piatto di $${pot}.`;
+            } else if (validWinnersToAwardPot.length > 0 && !finalMessage) { // Pot was 0, but still a winner by default
+                 finalMessage = `${winnerNames} vince.`;
+            }
 
-        const p1Won = winnerInfo.winners.some(w => w.id === 1 && w.status !== 'folded');
-        const p2Won = winnerInfo.winners.some(w => w.id === 2 && w.status !== 'folded');
-        if (p1Won && !p2Won) outcomeType = 'win'; else if (!p1Won && p2Won) outcomeType = 'lose'; else outcomeType = 'push';
 
-        // Usa la descrizione dalla valutazione mano se c'è stata showdown
-        if (wasShowdown && winnerInfo.winningHand && winnerInfo.winningHand.rank >= 0) {
-            finalMessage += `\nCon: ${winnerInfo.winningHand.description}`;
+            const p1WasWinner = validWinnersToAwardPot.some(w => w.id === 1);
+            const p2WasWinner = validWinnersToAwardPot.some(w => w.id === 2);
+
+            if (p1WasWinner && !p2WasWinner) outcomeType = 'win';
+            else if (!p1WasWinner && p2WasWinner) outcomeType = 'lose';
+            else if (p1WasWinner && p2WasWinner) outcomeType = 'push'; // Both won (split pot)
+            else outcomeType = 'push'; // Neither P1 nor P2 won but others did (not applicable in 1v1) or other push
+
+
+            if (wasShowdown && winnerInfo.winningHand && winnerInfo.winningHand.rank >= 0) {
+                finalMessage += `\nCon: ${winnerInfo.winningHand.description}`;
+            } else if (!wasShowdown && p1WasWinner && validWinnersToAwardPot.length === 1 && validWinnersToAwardPot[0].id === 1) {
+                 const player1 = players.find(p=>p.id===1);
+                 if (player1 && player1.hand.length >= 2 && player1.status !== 'folded') {
+                      const player1Eval = evaluateHand(player1.hand, communityCards);
+                      if (player1Eval && player1Eval.rank >= 0) {
+                           finalMessage += `\nLa tua mano: ${player1Eval.description}`;
+                      }
+                 }
+            }
+        } else {
+            if (!finalMessage) finalMessage = "Nessun vincitore valido per il piatto. Push.";
+            console.warn("Nessun vincitore non foldato trovato per l'assegnazione del piatto.");
+            outcomeType = 'push';
         }
-         // Se vince P1 perché P2 ha foldato, mostra comunque la mano di P1 (se non foldata)
-         else if (!wasShowdown && p1Won && winnerInfo.winners.filter(w => w.id === 1 && w.status !== 'folded').length === 1) {
-             const player1Hand = players[0];
-             if (player1Hand && player1Hand.hand && player1Hand.hand.length >= 2 && player1Hand.status !== 'folded') {
-                  const player1Eval = evaluateHand(player1Hand.hand, communityCards);
-                  if (player1Eval && player1Eval.rank >= 0) {
-                       finalMessage += `\nLa tua mano: ${player1Eval.description}`;
-                  }
-             }
-         }
     } else {
-        if (!finalMessage) finalMessage = "Nessun vincitore. Push."; console.warn("Nessun vincitore valido."); outcomeType = 'push';
+        if (!finalMessage) finalMessage = "Nessun vincitore. Push.";
+        console.warn("Nessun vincitore determinato. Il piatto (se esistente) non viene assegnato.");
+        outcomeType = 'push';
     }
     pot = 0;
-    showResult(finalMessage, outcomeType); // Mostra il messaggio (che ora ha il timeout)
-    updatePlayersUI(); updateCommunityAreaUI(); saveGameState();
+    showResult(finalMessage, outcomeType);
+    updatePlayersUI(); updateCommunityAreaUI();
+    await saveGameState(); // Save final balances
  }
 
-// --- Hand Evaluation ---
-// << FIX: Helper per ottenere rank display (10 invece di T)
+// --- Hand Evaluation (simplified, focused on 5-card hands) ---
 function getRankDisplayString(rankValue) {
-    if (!rankValue) return '?'; // Gestisci valore nullo o undefined
+    if (rankValue === undefined || rankValue === null) return '?';
     const display = invRankMap[rankValue];
     return display === 'T' ? '10' : display;
 }
 
-function evaluateHand(playerCards, communityCards) {
+function evaluateHand(playerCards, currentCommunityCards) {
     if (!playerCards || playerCards.length < 2) return { rank: -1, description: "Mano Incompleta (Giocatore)", cards: [], value: -1 };
-    const allCards = [...playerCards, ...(communityCards || [])];
-    if (allCards.length < 2) return { rank: -1, description: "Mano Incompleta", cards: [], value: -1 };
+    const allCardsInput = [...playerCards, ...(currentCommunityCards || [])];
+    if (allCardsInput.length < 2) return { rank: -1, description: "Mano Incompleta (Totale)", cards: [], value: -1 };
 
-    let bestHandRank = -1; let bestHandValue = -1; let bestHandDescription = "Errore Valutazione";
-    const combinations = (allCards.length >= 5) ? getCombinations(allCards, 5) : [allCards];
+    let bestHandDetails = { rank: -1, value: -1, description: "Carta Alta (default)", cards: [] };
 
-    combinations.forEach(currentCards => {
-        const cardsToEval = currentCards.length > 5 ? currentCards.slice(0, 5) : currentCards;
-        if (cardsToEval.length < 1) return;
+    // Generate all 5-card combinations from allCardsInput (if >= 5 cards)
+    // If less than 5 cards total, evaluate that single combination
+    const cardCombinations = allCardsInput.length >= 5 ? getCombinations(allCardsInput, 5) : [allCardsInput];
 
-        const numericRanks = cardsToEval.map(c => rankMap[c.rank]).sort((a, b) => b - a);
-        const suits = cardsToEval.map(c => c.suit);
-        const rankCounts = {}; numericRanks.forEach(r => rankCounts[r] = (rankCounts[r] || 0) + 1);
-        const counts = Object.values(rankCounts).sort((a, b) => b - a);
-        const isFlush = cardsToEval.length >= 5 && new Set(suits).size === 1;
-        let isStraight = false; let straightHighCard = 0;
-        if (cardsToEval.length >= 5) {
-            const uniqueSortedRanks = [...new Set(numericRanks)].sort((a,b) => a-b);
-            if (uniqueSortedRanks.length >= 5) {
-                 for(let i = uniqueSortedRanks.length - 1; i >= 4; i--) {
-                     const subArray = uniqueSortedRanks.slice(i - 4, i + 1);
-                     const isSeq = subArray.every((rank, j) => j === 0 || rank === subArray[j-1] + 1);
-                     if (isSeq) { isStraight = true; straightHighCard = subArray[4]; break; }
-                 }
-                 if (!isStraight && uniqueSortedRanks.includes(14) && uniqueSortedRanks.includes(2) && uniqueSortedRanks.includes(3) && uniqueSortedRanks.includes(4) && uniqueSortedRanks.includes(5)) {
-                     isStraight = true; straightHighCard = 5; // Wheel
-                 }
+    if (cardCombinations.length === 0 && allCardsInput.length > 0) { // Should only happen if getCombinations fails or k > arr.length
+        cardCombinations.push(allCardsInput.slice(0,5)); // Fallback: use first 5 or fewer
+    }
+     if (cardCombinations.length === 0 && allCardsInput.length === 0) {
+        return { rank: -1, description: "Nessuna carta", cards: [], value: -1 };
+    }
+
+
+    cardCombinations.forEach(fiveCardCombo => {
+        if (fiveCardCombo.length === 0) return;
+
+        const numericRanks = fiveCardCombo.map(c => rankMap[c.rank]).sort((a, b) => b - a); // Sort high to low
+        const suitsInCombo = fiveCardCombo.map(c => c.suit);
+
+        const rankCounts = {};
+        numericRanks.forEach(r => rankCounts[r] = (rankCounts[r] || 0) + 1);
+        const countsOfRanks = Object.values(rankCounts).sort((a, b) => b - a); // e.g., [3,1,1] for trips
+
+        // Flush Check (only if 5 cards)
+        let isFlush = false;
+        if (fiveCardCombo.length === 5) {
+            isFlush = new Set(suitsInCombo).size === 1;
+        }
+
+        // Straight Check (only if 5 cards)
+        let isStraight = false;
+        let straightHighCard = 0;
+        if (fiveCardCombo.length === 5) {
+            const uniqueSortedRanksAsc = [...new Set(numericRanks)].sort((a, b) => a - b); // Ace (14) is high
+            if (uniqueSortedRanksAsc.length >= 5) { // Need 5 distinct ranks for a straight
+                for (let i = uniqueSortedRanksAsc.length - 1; i >= 4; i--) {
+                    if (uniqueSortedRanksAsc[i] - uniqueSortedRanksAsc[i - 4] === 4) {
+                        isStraight = true; straightHighCard = uniqueSortedRanksAsc[i]; break;
+                    }
+                }
+            }
+            // A-2-3-4-5 (Wheel) check: Ace (14), 5, 4, 3, 2
+            if (!isStraight && uniqueSortedRanksAsc.includes(14) && uniqueSortedRanksAsc.includes(2) && uniqueSortedRanksAsc.includes(3) && uniqueSortedRanksAsc.includes(4) && uniqueSortedRanksAsc.includes(5)) {
+                isStraight = true; straightHighCard = 5; // Ace is low (5-high straight)
             }
         }
-        const isStraightFlush = isFlush && isStraight;
-        let currentRank = 0; let currentDescription = "";
-        let current5CardRanks = numericRanks.slice(0, Math.min(5, numericRanks.length));
 
-        // << FIX: Usa getRankDisplayString per le descrizioni testuali
-        if (isStraightFlush) { currentRank = 8; currentDescription = `Scala Colore (Alta ${getRankDisplayString(straightHighCard)})`; if(straightHighCard === 14) currentDescription = "Scala Reale"; current5CardRanks = [straightHighCard]; }
-        else if (counts[0] === 4) { currentRank = 7; const fourRank = parseInt(Object.keys(rankCounts).find(k => rankCounts[k] === 4)); const kicker = numericRanks.find(r => r !== fourRank) || 0; currentDescription = `Poker (di ${getRankDisplayString(fourRank)})`; current5CardRanks = [fourRank, kicker]; }
-        else if (counts[0] === 3 && counts[1] >= 2) { currentRank = 6; const threeRank = parseInt(Object.keys(rankCounts).find(k => rankCounts[k] === 3)); const pairRankVal = Object.keys(rankCounts).filter(k => rankCounts[k] >= 2 && parseInt(k) !== threeRank).sort((a,b) => b-a)[0]; const pairRank = pairRankVal ? parseInt(pairRankVal) : 0; currentDescription = `Full House (${getRankDisplayString(threeRank)} su ${getRankDisplayString(pairRank)})`; current5CardRanks = [threeRank, pairRank]; }
-        else if (isFlush) { currentRank = 5; currentDescription = `Colore (Alta ${getRankDisplayString(numericRanks[0])})`; current5CardRanks = numericRanks.slice(0, 5); }
-        else if (isStraight) { currentRank = 4; currentDescription = `Scala (Alta ${getRankDisplayString(straightHighCard)})`; current5CardRanks = [straightHighCard]; }
-        else if (counts[0] === 3) { currentRank = 3; const threeRank = parseInt(Object.keys(rankCounts).find(k => rankCounts[k] === 3)); const kickers = numericRanks.filter(r => r !== threeRank).slice(0, 2); currentDescription = `Tris (di ${getRankDisplayString(threeRank)})`; current5CardRanks = [threeRank, ...(kickers.length > 0 ? kickers : [0, 0]).slice(0,2)]; }
-        else if (counts[0] === 2 && counts[1] >= 2) { currentRank = 2; const pairsRanks = Object.keys(rankCounts).filter(k => rankCounts[k] >= 2).map(r => parseInt(r)).sort((a, b) => b - a); const kicker = numericRanks.find(r => r !== pairsRanks[0] && r !== pairsRanks[1]) || 0; currentDescription = `Doppia Coppia (${getRankDisplayString(pairsRanks[0])} e ${getRankDisplayString(pairsRanks[1])})`; current5CardRanks = [pairsRanks[0], pairsRanks[1], kicker]; }
-        else if (counts[0] === 2) { currentRank = 1; const pairRank = parseInt(Object.keys(rankCounts).find(k => rankCounts[k] === 2)); const kickers = numericRanks.filter(r => r !== pairRank).slice(0, 3); currentDescription = `Coppia (di ${getRankDisplayString(pairRank)})`; current5CardRanks = [pairRank, ...(kickers.length > 0 ? kickers : [0,0,0]).slice(0,3)]; }
-        else { currentRank = 0; currentDescription = `Carta Alta (${getRankDisplayString(numericRanks[0])})`; current5CardRanks = numericRanks.slice(0, Math.min(5, numericRanks.length)); }
+        let currentRankVal = 0;
+        let currentDescriptionStr = "";
+        let significantCardRanks = []; // For tie-breaking, ordered by importance
 
-        let finalValue = currentRank * Math.pow(15, 5);
-        for (let i = 0; i < current5CardRanks.length && i < 5; i++) { finalValue += (current5CardRanks[i] || 0) * Math.pow(15, 4 - i); }
+        if (isStraight && isFlush) { // Straight Flush / Royal Flush
+            currentRankVal = 8;
+            currentDescriptionStr = (straightHighCard === 14) ? "Scala Reale" : `Scala Colore (Alta ${getRankDisplayString(straightHighCard)})`;
+            significantCardRanks = [straightHighCard];
+        } else if (countsOfRanks[0] === 4) { // Four of a Kind
+            currentRankVal = 7;
+            const fourRank = parseInt(Object.keys(rankCounts).find(k => rankCounts[k] === 4));
+            const kicker = numericRanks.find(r => r !== fourRank) || 0;
+            currentDescriptionStr = `Poker di ${getRankDisplayString(fourRank)}`;
+            significantCardRanks = [fourRank, kicker];
+        } else if (countsOfRanks[0] === 3 && countsOfRanks[1] >= 2) { // Full House
+            currentRankVal = 6;
+            const threeRank = parseInt(Object.keys(rankCounts).find(k => rankCounts[k] === 3));
+            const pairRank = parseInt(Object.keys(rankCounts).find(k => rankCounts[k] >= 2 && parseInt(k) !== threeRank));
+            currentDescriptionStr = `Full House (${getRankDisplayString(threeRank)} su ${getRankDisplayString(pairRank)})`;
+            significantCardRanks = [threeRank, pairRank];
+        } else if (isFlush) { // Flush
+            currentRankVal = 5;
+            currentDescriptionStr = `Colore (Alta ${getRankDisplayString(numericRanks[0])})`;
+            significantCardRanks = numericRanks.slice(0, 5); // Top 5 cards of the flush
+        } else if (isStraight) { // Straight
+            currentRankVal = 4;
+            currentDescriptionStr = `Scala (Alta ${getRankDisplayString(straightHighCard)})`;
+            significantCardRanks = [straightHighCard];
+        } else if (countsOfRanks[0] === 3) { // Three of a Kind
+            currentRankVal = 3;
+            const threeRank = parseInt(Object.keys(rankCounts).find(k => rankCounts[k] === 3));
+            const kickers = numericRanks.filter(r => r !== threeRank).slice(0, 2);
+            currentDescriptionStr = `Tris di ${getRankDisplayString(threeRank)}`;
+            significantCardRanks = [threeRank, ...kickers, 0, 0].slice(0,3); // Ensure 3 ranks for tie-break
+        } else if (countsOfRanks[0] === 2 && countsOfRanks[1] >= 2) { // Two Pair
+            currentRankVal = 2;
+            const pairRanks = Object.keys(rankCounts).filter(k => rankCounts[k] >= 2).map(r => parseInt(r)).sort((a,b)=>b-a);
+            const kicker = numericRanks.find(r => r !== pairRanks[0] && r !== pairRanks[1]) || 0;
+            currentDescriptionStr = `Doppia Coppia (${getRankDisplayString(pairRanks[0])} e ${getRankDisplayString(pairRanks[1])})`;
+            significantCardRanks = [pairRanks[0], pairRanks[1], kicker];
+        } else if (countsOfRanks[0] === 2) { // One Pair
+            currentRankVal = 1;
+            const pairRank = parseInt(Object.keys(rankCounts).find(k => rankCounts[k] === 2));
+            const kickers = numericRanks.filter(r => r !== pairRank).slice(0, 3);
+            currentDescriptionStr = `Coppia di ${getRankDisplayString(pairRank)}`;
+            significantCardRanks = [pairRank, ...kickers, 0, 0, 0].slice(0,4);  // Ensure 4 ranks for tie-break
+        } else { // High Card
+            currentRankVal = 0;
+            if (numericRanks.length > 0) {
+                currentDescriptionStr = `Carta Alta (${getRankDisplayString(numericRanks[0])})`;
+                significantCardRanks = numericRanks.slice(0, Math.min(5, numericRanks.length));
+            } else { // Should not happen if fiveCardCombo has cards
+                currentDescriptionStr = "Nessuna mano valida";
+                significantCardRanks = [0,0,0,0,0];
+            }
+        }
 
-        if (finalValue > bestHandValue) { bestHandRank = currentRank; bestHandValue = finalValue; bestHandDescription = currentDescription; }
+        // Calculate numerical hand value for comparison
+        let calculatedValue = currentRankVal;
+        for (let i = 0; i < 5; i++) { // Max 5 kickers for tie-breaking value
+            calculatedValue = calculatedValue * 15 + (significantCardRanks[i] || 0);
+        }
+
+        if (calculatedValue > bestHandDetails.value) {
+            bestHandDetails.rank = currentRankVal;
+            bestHandDetails.value = calculatedValue;
+            bestHandDetails.description = currentDescriptionStr;
+            bestHandDetails.cards = fiveCardCombo; // The 5 cards forming this hand
+        }
     });
-    return { rank: bestHandRank, description: bestHandDescription, cards: [], value: bestHandValue };
+    return bestHandDetails;
 }
 
 function getCombinations(arr, k) {
-    if (k > arr.length || k <= 0) return []; if (k === arr.length) return [arr]; if (k === 1) return arr.map(e => [e]);
-    const combs = []; arr.forEach((e, i) => { const smallerCombs = getCombinations(arr.slice(i + 1), k - 1); smallerCombs.forEach(sc => combs.push([e].concat(sc))); }); return combs;
+    if (k < 0 || k > arr.length) return [];
+    if (k === 0) return [[]];
+    if (arr.length === k) return [arr];
+    if (k === 1) return arr.map(item => [item]);
+
+    let combinations = [];
+    for (let i = 0; i <= arr.length - k; i++) {
+        let firstElement = arr[i];
+        let smallerArray = arr.slice(i + 1);
+        let subCombinations = getCombinations(smallerArray, k - 1);
+        for (let subCombo of subCombinations) {
+            combinations.push([firstElement].concat(subCombo));
+        }
+    }
+    return combinations;
 }
 
-function determineWinner(activePlayers) {
-    let bestHandOverall = { rank: -2, value: -2, description: "N/D" }; let winners = [];
+function determineWinner(playersInShowdown) {
+    let bestEval = { rank: -1, value: -1, description: "N/D", cards:[] };
+    let currentWinners = []; // Can be multiple in case of a tie
+
     console.log("--- Valutazione Mani Showdown ---");
-    activePlayers.forEach(player => {
-        if (player.status === 'folded') { player.evaluatedHand = { rank: -1, description: "Foldato", value: -1}; console.log(`${player.name} ha: Foldato`); return; }
-        player.evaluatedHand = evaluateHand(player.hand, communityCards);
-        console.log(`${player.name} ha: ${player.evaluatedHand.description} (Val: ${player.evaluatedHand.value})`);
-        if (player.evaluatedHand.value > bestHandOverall.value) { bestHandOverall = player.evaluatedHand; winners = [player]; console.log(`   -> Nuova mano migliore: ${bestHandOverall.description}`); }
-        else if (player.evaluatedHand.value === bestHandOverall.value && player.evaluatedHand.rank >= 0) { if (!winners.some(w => w.id === player.id)) { winners.push(player); console.log(`   -> Pareggio con ${player.name} (${player.evaluatedHand.description})`); } }
+    playersInShowdown.forEach(player => {
+        if (player.status === 'folded') {
+            player.evaluatedHand = { rank: -1, description: "Foldato", value: -1, cards: [] };
+            console.log(`${player.name}: Foldato (non dovrebbe essere in showdown).`);
+            return;
+        }
+        player.evaluatedHand = evaluateHand(player.hand, communityCards); // evaluateHand now returns {rank, value, description, cards}
+        console.log(`${player.name} (${player.hand.map(c=>c.id).join(',')}) Community: (${communityCards.map(c=>c.id).join(',')}) -> ${player.evaluatedHand.description} (Val: ${player.evaluatedHand.value.toFixed(0)})`);
+
+        if (player.evaluatedHand.value > bestEval.value) {
+            bestEval = player.evaluatedHand;
+            currentWinners = [player]; // New best hand, so new winner list
+            console.log(`   -> Nuova mano migliore: ${bestEval.description} da ${player.name}`);
+        } else if (player.evaluatedHand.value === bestEval.value && player.evaluatedHand.rank >= 0) {
+            // Tie in hand value, add player to current winners
+             if (!currentWinners.some(w => w.id === player.id)) { // Avoid duplicates
+                currentWinners.push(player);
+                console.log(`   -> Pareggio con ${player.name} (${player.evaluatedHand.description})`);
+            }
+        }
     });
     console.log("---------------------------------");
-    const nonFoldedWinners = winners.filter(w => w.status !== 'folded');
-    return { winners: nonFoldedWinners, winningHand: bestHandOverall, message: "" };
+    return { winners: currentWinners, winningHand: bestEval, message: "" };
 }
 
-// --- Bot Logic ---
+
+// --- Bot Logic (V6 - Refined from V5) ---
 function handleBotTurn() {
-    console.log("--- handleBotTurn (V5 Logic): Inizio ---");
+    console.log("--- handleBotTurn (V6 Logic): Inizio ---");
     try {
         const bot = players[currentPlayerIndex];
-        // Controlli iniziali più robusti
+        // Robust initial checks
         if (handOver || !bot || !bot.isBot || bot.status !== 'active' || currentPlayerIndex !== bot.id - 1) {
-            console.log(`handleBotTurn: Skip. handOver=${handOver}, bot=${!!bot}, isBot=${bot?.isBot}, status=${bot?.status}, isCurrent=${currentPlayerIndex === bot?.id - 1}`);
-            // Se la mano non è finita, ma il bot non è attivo, passa il turno
+            console.log(`handleBotTurn: Skip. handOver=${handOver}, botValid=${!!bot}, isBot=${bot?.isBot}, status=${bot?.status}, isCurrentTurn=${currentPlayerIndex === bot?.id - 1}`);
             if (!handOver && bot && bot.id === currentPlayerIndex + 1 && bot.status !== 'active') {
-                console.log("handleBotTurn: Bot non attivo, chiamando endTurn.");
-                endTurn();
+                console.log("handleBotTurn: Bot non attivo (e.g. all-in), chiamando endTurn per gestire il flusso.");
+                endTurn(); // Let endTurn progress if bot is all-in etc.
             }
             return;
         }
 
-        console.log(`handleBotTurn: Esecuzione per ${bot.name}`);
+        console.log(`handleBotTurn: Esecuzione per ${bot.name}. Fase: ${currentPhase}`);
         const opponent = players[(currentPlayerIndex + 1) % players.length];
         const amountToCall = Math.max(0, currentBetLevel - bot.currentBet);
         let action = 'fold'; let betRaiseTotalAmount = 0;
-        const currentEval = evaluateHand(bot.hand, communityCards);
-        const aggressionFactor = 0.2 + Math.random() * 0.4;
 
-        // Logica decisionale (invariata da V5/V6)
+        const botEval = evaluateHand(bot.hand, communityCards); // Full evaluation
+        const aggression = 0.2 + Math.random() * 0.3; // 0.2 to 0.5
+
+        // Preflop Strategy (Chen Formula-inspired, simplified)
         if (currentPhase === 'preflop') {
-            const rank1 = rankMap[bot.hand[0].rank]; const rank2 = rankMap[bot.hand[1].rank];
-            const highRank = Math.max(rank1, rank2); const lowRank = Math.min(rank1, rank2);
-            const suited = bot.hand[0].suit === bot.hand[1].suit; const connector = highRank - lowRank === 1 || (highRank === 14 && lowRank === 2); const pair = rank1 === rank2;
-            let strength = 0; if (pair) strength = highRank + 6; else strength = Math.max(0, highRank - 4); if (suited) strength += 2; if (connector) strength += 1; if (!pair && !connector && highRank - lowRank <= 4) strength += 0.5;
-            console.log(`Bot Preflop Strength (V5): ${strength.toFixed(1)} (Pair:${pair}, Suited:${suited}, Conn:${connector}, High:${highRank})`);
-            const strongHandThreshold = 11; const mediumHandThreshold = 7; const weakHandThreshold = 4;
-            if (amountToCall <= 0) { action = (strength >= mediumHandThreshold && Math.random() < 0.7 + aggressionFactor) ? 'bet' : 'check'; if(action === 'bet') betRaiseTotalAmount = Math.max(calculateMinBetRaise(), Math.floor(pot * (0.5 + Math.random()*0.5))); }
-            else { const callCostPerc = (bot.balance + amountToCall) > 0 ? amountToCall / (bot.balance + amountToCall) : 1;
-                if (strength >= strongHandThreshold || (strength >= mediumHandThreshold && callCostPerc < 0.5) || (strength >= weakHandThreshold && callCostPerc < 0.2)) {
-                     if (strength >= strongHandThreshold + 2 || (strength >= strongHandThreshold && Math.random() < 0.6 + aggressionFactor)) { action = 'raise'; let raiseMultiplier = 2 + Math.random() * 1.5; let raiseSize = Math.max(bigBlindAmt, amountToCall) * raiseMultiplier; betRaiseTotalAmount = currentBetLevel + raiseSize; }
-                     else { action = 'call'; }
-                } else { action = 'fold'; }
-            }
-        } else { const rank = currentEval.rank;
-            if (amountToCall <= 0) {
-                 if (rank >= 2 || (rank === 1 && Math.random() < 0.65 + aggressionFactor) || (rank < 1 && Math.random() < 0.20 + aggressionFactor * 0.4)) { action = 'bet'; let betSizePerc = (rank >= 2) ? (0.5 + Math.random() * 0.6) : (0.33 + Math.random() * 0.4); betRaiseTotalAmount = Math.floor(pot * betSizePerc); }
-                 else { action = 'check'; }
-            } else { const potOdds = (pot + amountToCall) > 0 ? amountToCall / (pot + amountToCall) : 1;
-                if (rank >= 3) { action = (Math.random() < 0.9) ? 'raise' : 'call'; let raiseSize = amountToCall + pot * (0.7 + aggressionFactor * 0.8); betRaiseTotalAmount = currentBetLevel + raiseSize; }
-                else if (rank >= 1) { if (potOdds < 0.35 || (potOdds < 0.55 && Math.random() < 0.90)) { if (rank === 2 && Math.random() < 0.25 + aggressionFactor*0.25) { action = 'raise'; let raiseSize = amountToCall + pot * (0.5 + aggressionFactor * 0.5); betRaiseTotalAmount = currentBetLevel + raiseSize; } else { action = 'call'; } } else if (Math.random() < aggressionFactor * 0.15) { action = 'raise'; let raiseSize = amountToCall + pot * (0.4 + aggressionFactor * 0.6); betRaiseTotalAmount = currentBetLevel + raiseSize; } else { action = 'fold'; } }
-                else { if (potOdds < 0.2 && Math.random() < 0.6) { action = 'call'; } else if (Math.random() < aggressionFactor * 0.30) { action = 'raise'; let raiseSize = amountToCall + pot * (0.6 + aggressionFactor * 0.6); betRaiseTotalAmount = currentBetLevel + raiseSize; } else { action = 'fold'; } }
-            }
-        }
-        if (action === 'bet' || action === 'raise') {
-             const minValidTotal = calculateMinBetRaise(); const maxValidTotal = bot.balance + bot.currentBet;
-             betRaiseTotalAmount = Math.max(minValidTotal, Math.min(Math.floor(betRaiseTotalAmount), maxValidTotal));
-             if (action === 'raise' && betRaiseTotalAmount <= currentBetLevel) { action = (amountToCall > 0 && bot.balance >= amountToCall) ? 'call' : 'fold'; console.log(`Bot action adjusted to ${action} (raise <= bet).`); }
-             else if (action === 'bet' && betRaiseTotalAmount < minValidTotal) { action = (amountToCall <= 0) ? 'check' : 'fold'; console.log(`Bot action adjusted to ${action} (bet < min).`); }
-             if(betRaiseTotalAmount === maxValidTotal && bot.balance > 0) { console.log("Bot action results in All-in."); }
-        }
-        console.log(`Bot (${bot.name}) Eval:${currentEval.rank}, Chose: ${action.toUpperCase()}` + (action === 'bet' || action === 'raise' ? ` to $${betRaiseTotalAmount}` : (action === 'call' ? ` ($${amountToCall})`: '')));
+            const [card1, card2] = bot.hand;
+            let score = 0;
+            const r1 = rankMap[card1.rank], r2 = rankMap[card2.rank];
+            const high = Math.max(r1, r2), low = Math.min(r1,r2);
 
-        // Timeout per eseguire l'azione
+            // Score for high card
+            if (high === rankMap.A) score = 10; else if (high === rankMap.K) score = 8;
+            else if (high === rankMap.Q) score = 7; else if (high === rankMap.J) score = 6;
+            else score = high / 2; // For T and below
+
+            if (r1 === r2) score *= 2; // Pairs are strong, double the score (min 5 for 22)
+            if (card1.suit === card2.suit) score += 2; // Suited bonus
+            const gap = Math.abs(r1 - r2);
+            if (gap === 1 && r1 !== r2) score += 1; // Connector bonus (non-pair)
+            else if (gap === 2) score -=1; else if (gap === 3) score -=2;
+            else if (gap === 4) score -=4; else if (gap > 4) score -=5;
+
+            if (gap < 2 && high < rankMap.Q && r1 !== r2) score +=1; // Bonus for low connectors/one-gappers below Q
+
+            console.log(`Bot Preflop: ${card1.id}-${card2.id}. Score: ${score.toFixed(1)}.`);
+
+            const raiseThreshold = 10 + aggression * 10; // Higher score needed to raise
+            const callThreshold = 6 + aggression * 5;   // Medium score to call
+            const playThreshold = 3;                     // Minimum to consider playing cheap
+
+            if (amountToCall === 0) { // Can check or bet
+                if (score >= callThreshold) {
+                    action = 'bet';
+                    let betPct = 0.33 + (score / 30) * 0.5 + aggression * 0.2; // Bet 33% to ~100% pot
+                    betRaiseTotalAmount = Math.floor(Math.max(pot, bigBlindAmt) * Math.min(1, betPct) );
+                } else action = 'check';
+            } else { // Must call, raise, or fold
+                const potOdds = amountToCall / (pot + amountToCall + bot.currentBet); // Approximate
+                if (score >= raiseThreshold) {
+                    action = 'raise';
+                    let raisePct = 2 + (score / 20) * 2 + aggression; // Raise 2x to ~5x call amount
+                    betRaiseTotalAmount = currentBetLevel + Math.floor(amountToCall * Math.max(1.5, raisePct));
+                } else if (score >= callThreshold || (score >= playThreshold && potOdds < (0.3 - aggression * 0.2))) {
+                    action = 'call';
+                } else {
+                    action = 'fold';
+                }
+            }
+        } else { // Postflop Strategy
+            console.log(`Bot Postflop Eval: ${botEval.description} (Rank ${botEval.rank}, Value ${botEval.value.toFixed(0)})`);
+            const handStrength = botEval.rank + (botEval.value / Math.pow(15,6)); // Normalize value somewhat (0-8.x)
+
+            if (amountToCall === 0) { // Can check or bet
+                if (handStrength > 1.5 || (handStrength > 0.5 && Math.random() < (0.3 + aggression))) { // Pair+ or decent bluff
+                    action = 'bet';
+                    let betPct = 0.25 + handStrength * 0.1 + aggression * 0.3;
+                    betRaiseTotalAmount = Math.floor(pot * Math.min(1.2, betPct)); // Bet 25% to 120% pot
+                } else {
+                    action = 'check';
+                }
+            } else { // Must call, raise, or fold
+                const potOdds = amountToCall / (pot + amountToCall + bot.currentBet);
+                if (handStrength > 3.5) { // Strong hand (Tris+)
+                    action = (Math.random() < (0.6 + aggression)) ? 'raise' : 'call';
+                    let raisePct = 1.5 + handStrength * 0.2 + aggression;
+                    betRaiseTotalAmount = currentBetLevel + Math.floor(amountToCall * Math.max(1, raisePct));
+                } else if (handStrength > 1.5) { // Decent hand (Pair, Two Pair)
+                    if (potOdds < (0.4 - handStrength*0.05 - aggression * 0.1)) {
+                        action = (Math.random() < (0.2 + aggression + handStrength*0.05) && handStrength > 2) ? 'raise' : 'call';
+                        let raisePct = 1.2 + handStrength * 0.15 + aggression;
+                        betRaiseTotalAmount = currentBetLevel + Math.floor(amountToCall * Math.max(1, raisePct));
+                    } else action = 'fold';
+                } else { // Weak hand (High card, maybe weak pair)
+                    if (potOdds < (0.2 - aggression * 0.15) && Math.random() < (0.4 + aggression)) { // Good odds for cheap bluff catch
+                        action = 'call';
+                    } else if (Math.random() < aggression * 0.3) { // Occasional bluff raise
+                        action = 'raise'; betRaiseTotalAmount = currentBetLevel + Math.floor(amountToCall * (1.5 + aggression*2));
+                    }
+                    else action = 'fold';
+                }
+            }
+        }
+
+        // Finalize bet/raise amount
+        if (action === 'bet' || action === 'raise') {
+            const minTotalValid = calculateMinBetRaise();
+            const maxTotalBotCanBet = bot.balance + bot.currentBet;
+
+            betRaiseTotalAmount = Math.max(bigBlindAmt, Math.floor(betRaiseTotalAmount)); // Ensure at least BB if not already all-in
+            betRaiseTotalAmount = Math.max(minTotalValid, betRaiseTotalAmount); // Must be at least min valid raise/bet
+            betRaiseTotalAmount = Math.min(maxTotalBotCanBet, betRaiseTotalAmount); // Cannot bet more than stack
+
+            if (action === 'raise' && betRaiseTotalAmount <= currentBetLevel) { // Not a valid raise
+                action = (bot.balance >= amountToCall && amountToCall > 0) ? 'call' : 'fold';
+                 console.log(`Bot Invalid Raise: Adjusted to ${action}. (Attempted: ${betRaiseTotalAmount}, CurrentBetLevel: ${currentBetLevel})`);
+            } else if (action === 'bet' && betRaiseTotalAmount < minTotalValid && maxTotalBotCanBet > betRaiseTotalAmount) { // Bet less than min (and not all-in for less)
+                action = 'check'; // Should have been check if amountToCall was 0
+                 console.log(`Bot Invalid Bet: Adjusted to ${action}. (Attempted: ${betRaiseTotalAmount}, MinValid: ${minTotalValid})`);
+            }
+            if(betRaiseTotalAmount >= maxTotalBotCanBet && bot.balance > 0) { console.log("Bot action is All-in."); }
+        }
+
+        console.log(`Bot (${bot.name}) Final Decision: ${action.toUpperCase()}` +
+                    (action === 'bet' || action === 'raise' ? ` to $${betRaiseTotalAmount}` :
+                    (action === 'call' ? ` ($${Math.min(amountToCall, bot.balance)})`: '')));
+
+        // Execute action with delay
         setTimeout(() => {
             try {
-                // Ricontrolla lo stato prima di eseguire l'azione
+                // Re-check state before executing, as things might change during timeout
                 if (handOver || currentPlayerIndex !== bot.id - 1 || !players[currentPlayerIndex] || players[currentPlayerIndex].status !== 'active') {
-                    console.log(`Azione Bot ${action} annullata (stato cambiato durante timeout).`);
+                    console.log(`Azione Bot ${action} ANNULLATA (stato cambiato o non più turno del bot).`);
                     return;
                 }
-                console.log(`Bot ESEGUENDO: ${action.toUpperCase()}`); bot.hasActedThisRound = true;
+                console.log(`Bot ESEGUENDO: ${action.toUpperCase()}`);
+                bot.hasActedThisRound = true;
+
                 switch (action) {
                     case 'fold': bot.status = 'folded'; break;
-                    case 'check': if (bot.currentBet < currentBetLevel) { console.warn("Bot Check invalido (timeout). Fold forzato."); bot.status = 'folded'; } break;
-                    case 'call': const actualCallAmount = Math.min(amountToCall, bot.balance); if (actualCallAmount >= 0) { if(actualCallAmount > 0) { bot.balance -= actualCallAmount; pot += actualCallAmount; } bot.currentBet += actualCallAmount; if (bot.balance === 0 && actualCallAmount > 0) { bot.status = 'all-in'; console.log(`Bot All-in call $${actualCallAmount}`); } } else { console.warn("Bot call amount negativo?", actualCallAmount); } break;
-                    case 'bet': case 'raise': const amountToAdd = betRaiseTotalAmount - bot.currentBet; if (amountToAdd >= 0 && amountToAdd <= bot.balance) { if (amountToAdd > 0) { bot.balance -= amountToAdd; pot += amountToAdd; } bot.currentBet = betRaiseTotalAmount; if (betRaiseTotalAmount > currentBetLevel) { currentBetLevel = bot.currentBet; lastRaiserIndex = currentPlayerIndex; } if (bot.balance === 0 && amountToAdd > 0) { bot.status = 'all-in'; console.log(`Bot All-in ${action} to ${betRaiseTotalAmount}`); } } else { console.error(`Bot ${action} amountToAdd ($${amountToAdd}) invalido vs balance ($${bot.balance}). All-in forzato.`); const allInAmountToAdd = bot.balance; const totalAllInBet = bot.currentBet + allInAmountToAdd; if(allInAmountToAdd > 0) { bot.balance = 0; pot += allInAmountToAdd; } bot.currentBet = totalAllInBet; if (totalAllInBet > currentBetLevel) { currentBetLevel = totalAllInBet; lastRaiserIndex = currentPlayerIndex; } bot.status = 'all-in'; } break;
+                    case 'check':
+                        if (bot.currentBet < currentBetLevel) {
+                            console.warn("Bot Check invalido (timeout). Fold forzato."); bot.status = 'folded';
+                        }
+                        break;
+                    case 'call':
+                        const actualCall = Math.min(amountToCall, bot.balance);
+                        if (actualCall > 0) { bot.balance -= actualCall; pot += actualCall; }
+                        bot.currentBet += actualCall;
+                        if (bot.balance === 0 && actualCall > 0) { bot.status = 'all-in'; console.log(`Bot All-in call $${actualCall}`); }
+                        break;
+                    case 'bet': case 'raise':
+                        const amountAdded = betRaiseTotalAmount - bot.currentBet;
+                        if (amountAdded > 0) { bot.balance -= amountAdded; pot += amountAdded; }
+                        bot.currentBet = betRaiseTotalAmount;
+                        if (betRaiseTotalAmount > currentBetLevel) { // Check if it's a real bet/raise
+                            currentBetLevel = bot.currentBet;
+                            lastRaiserIndex = currentPlayerIndex;
+                        }
+                        if (bot.balance === 0 && amountAdded > 0) { bot.status = 'all-in'; console.log(`Bot All-in ${action} to ${betRaiseTotalAmount}`); }
+                        break;
                      default: console.error(`Azione bot sconosciuta (timeout): ${action}`); bot.status = 'folded';
                 }
-                endTurn(); // Chiama endTurn DOPO che l'azione è stata applicata
-            } catch (innerError) { console.error("ERRORE esecuzione azione Bot (timeout):", innerError); const currentBot = players[currentPlayerIndex]; if (currentBot && currentBot.isBot && currentPlayerIndex === currentBot.id - 1 && !handOver) { console.log("Recupero: Fold forzato Bot."); currentBot.status = 'folded'; currentBot.hasActedThisRound = true; endTurn(); } }
-        }, 1200 + Math.random() * 800); // Delay esecuzione azione Bot
-    } catch (outerError) { console.error("ERRORE CRITICO decisione Bot:", outerError); const bot = players[currentPlayerIndex]; if (bot && bot.isBot && currentPlayerIndex === bot.id - 1 && !handOver && bot.status === 'active') { console.log("Recupero: Fold forzato Bot."); bot.status = 'folded'; bot.hasActedThisRound = true; endTurn(); } }
-    console.log("--- handleBotTurn (V5 Logic): Fine (Azione schedulata) ---");
+                endTurn();
+            } catch (innerErr) {
+                console.error("ERRORE esecuzione azione Bot (timeout):", innerErr);
+                const botInErr = players[currentPlayerIndex];
+                if (botInErr && botInErr.isBot && !handOver) {
+                    console.log("Recupero: Fold forzato Bot causa errore interno."); botInErr.status = 'folded'; botInErr.hasActedThisRound = true; endTurn();
+                }
+            }
+        }, 1000 + Math.random() * 700); // Bot "thinking" time
+    } catch (outerErr) {
+        console.error("ERRORE CRITICO decisione Bot:", outerErr);
+        const botInErr = players[currentPlayerIndex];
+        if (botInErr && botInErr.isBot && !handOver && botInErr.status === 'active') {
+            console.log("Recupero: Fold forzato Bot causa errore esterno."); botInErr.status = 'folded'; botInErr.hasActedThisRound = true; endTurn();
+        }
+    }
+    console.log("--- handleBotTurn (V6 Logic): Fine (Azione schedulata) ---");
 }
 
 
@@ -1197,31 +1891,36 @@ function updateUI() {
     updateCommunityAreaUI();
 
     const currentPlayer = players[currentPlayerIndex];
-    const isHandActive = !handOver && currentPhase !== 'pre-deal' && currentPhase !== 'showdown' && currentPhase !== 'hand-over';
-    console.log(`updateUI: Player=${currentPlayerIndex}, Mode=${gameMode}, isHandActive=${isHandActive}, isBot=${currentPlayer?.isBot}, Status=${currentPlayer?.status}`);
+    const isHandActiveAndPlayerTurn = !handOver &&
+                                   currentPhase !== 'pre-deal' &&
+                                   currentPhase !== 'showdown' &&
+                                   currentPhase !== 'hand-over' &&
+                                   currentPlayer &&
+                                   currentPlayer.status === 'active';
 
-    if (isHandActive && currentPlayer && currentPlayer.status === 'active') {
-        if (gameMode === 'PVB') {
-            if (currentPlayer.isBot) {
-                console.log(">> updateUI: Disabling buttons and scheduling Bot's turn.");
+    console.log(`updateUI: Player=${currentPlayerIndex} (${currentPlayer?.name}), Mode=${gameMode}, isHandActive&Turn=${isHandActiveAndPlayerTurn}, isBot=${currentPlayer?.isBot}, Status=${currentPlayer?.status}`);
+
+    if (isHandActiveAndPlayerTurn) {
+        if (bettingAreaDiv.style.display === 'flex') {
+            console.log(">> updateUI: Betting area open, updating its buttons, base buttons disabled.");
+            disableActionButtons();
+            updateActionAmountButtons();
+        } else {
+            if (gameMode === 'PVB' && currentPlayer.isBot) {
+                console.log(">> updateUI: PVB - Bot's turn. Disabling buttons, scheduling Bot action.");
                 disableActionButtons();
-                // *** FIX: Chiama handleBotTurn per avviare la logica del bot ***
-                setTimeout(handleBotTurn, 500 + Math.random() * 500); // Ritardo breve per chiamare la logica del bot
-            } else {
-                console.log(">> updateUI: Enabling buttons for Human's turn (PVB).");
+                // setTimeout(handleBotTurn, 500 + Math.random() * 500); // Bot turn initiated by endTurn/activateNextTurn now
+                 handleBotTurn(); // Call directly as it's bot's turn
+            } else { // PVB Human's turn or PVP turn
+                console.log(`>> updateUI: ${gameMode === 'PVB' ? "PVB - Human's turn" : `PVP - Player ${currentPlayer.id}'s turn`}. Enabling/updating base action buttons.`);
                 updateActionButtons();
             }
-        } else if (gameMode === 'PVP') {
-            // Logica PVP corretta in V6 (abilita per P1 o P2)
-            console.log(`>> updateUI: Enabling/updating buttons for Player ${currentPlayer.id}'s turn (PVP).`);
-            updateActionButtons();
         }
-        updateActionAmountButtons(); // Aggiorna stato area betting
     } else {
-        console.log(">> updateUI: Disabling buttons (hand over or inactive player).");
+        console.log(">> updateUI: Disabling action buttons (hand over, not turn, or inactive player).");
         disableActionButtons();
-        if(bettingAreaDiv && bettingAreaDiv.style.display === 'flex'){
-             updateActionAmountButtons(); // Disabilita anche area betting
+        if (bettingAreaDiv.style.display === 'flex'){
+             updateActionAmountButtons();
          }
     }
 }
@@ -1244,27 +1943,40 @@ function updatePlayersUI() {
             'all-in': 'All-in',
             out:      'Eliminato'
         })[player.status] || player.status;
-        if (dealerButtonEl)
-            dealerButtonEl.style.display = (player.isDealer && !handOver && currentPhase !== 'pre-deal')
+
+        if (dealerButtonEl) {
+            dealerButtonEl.style.display = (player.isDealer && !handOver && currentPhase !== 'pre-deal' && currentPhase !== 'showdown' && currentPhase !== 'hand-over')
                                           ? 'flex' : 'none';
+        }
 
         if (cardsContainer) {
             cardsContainer.innerHTML = '';
             player.hand.forEach(card => {
-                // === nuova logica di visibilità ===
-                // se siamo in showdown o mano finita => mostra sempre
-                let shouldBeHidden = false;
-                if (!handOver && currentPhase !== 'showdown') {
-                    // durante la mano: nascondi se non è il giocatore corrente
-                    const currentPlayerId = players[currentPlayerIndex].id;
-                    shouldBeHidden = (player.id !== currentPlayerId);
-                }
-                // se il giocatore ha foldato, le sue carte restano girate
+                let hideThisCard = true; // Default to hidden
+
                 if (player.status === 'folded') {
-                    shouldBeHidden = true;
+                    hideThisCard = true; // Folded players' cards are always hidden
+                } else if (handOver || currentPhase === 'showdown') {
+                    hideThisCard = false; // At the end of the hand or showdown, reveal all non-folded players' cards
+                } else {
+                    // --- Active hand, not showdown ---
+                    if (gameMode === 'PVB') {
+                        if (player.id === 1) { // Player 1 (Human) in PVB mode
+                            hideThisCard = false;
+                        } else { // Player 2 (Bot) in PVB mode
+                            hideThisCard = true; // Bot's cards are hidden from Human
+                        }
+                    } else if (gameMode === 'PVP') {
+                        // In PVP, only the current player sees their cards. Opponent's cards are hidden.
+                        if (player.id === players[currentPlayerIndex].id) {
+                            hideThisCard = false; // It's this player's turn, show their cards
+                        } else {
+                            hideThisCard = true; // It's not this player's turn, hide their cards
+                        }
+                    }
                 }
-                card.faceUp = !shouldBeHidden;
-                displayCard(card, cardsContainer, shouldBeHidden, false);
+                card.faceUp = !hideThisCard; // Update the card object's state
+                displayCard(card, cardsContainer, hideThisCard, false); // Pass 'hideThisCard' to displayCard
             });
         } else {
             console.error(`Contenitore carte non trovato per ${prefix}`);
@@ -1274,89 +1986,150 @@ function updatePlayersUI() {
 
 function updateCommunityAreaUI() {
      if (potAmountSpan) potAmountSpan.textContent = pot; else console.error("potAmountSpan non trovato");
-     let phaseText = '-'; switch(currentPhase) { case 'pre-deal': phaseText = 'In Attesa'; break; case 'preflop': phaseText = 'Pre-Flop'; break; case 'flop': phaseText = 'Flop'; break; case 'turn': phaseText = 'Turn'; break; case 'river': phaseText = 'River'; break; case 'showdown': phaseText = 'Showdown'; break; case 'hand-over': phaseText = 'Mano Finita'; break; default: phaseText = currentPhase; }
+     let phaseText = '-';
+     switch(currentPhase) {
+         case 'pre-deal': phaseText = 'In Attesa'; break;
+         case 'preflop': phaseText = 'Pre-Flop'; break;
+         case 'flop': phaseText = 'Flop'; break;
+         case 'turn': phaseText = 'Turn'; break;
+         case 'river': phaseText = 'River'; break;
+         case 'showdown': phaseText = 'Showdown'; break;
+         case 'hand-over': phaseText = 'Mano Finita'; break;
+         default: phaseText = currentPhase;
+     }
      if (gamePhaseSpan) gamePhaseSpan.textContent = phaseText; else console.error("gamePhaseSpan non trovato");
 
      if(turnIndicator && turnIndicatorSpan) {
          const turnPlayer = players[currentPlayerIndex];
-         const isTurnPhase = !handOver && currentPhase !== 'pre-deal' && currentPhase !== 'showdown' && currentPhase !== 'hand-over';
-         const isPlayerTurnActive = isTurnPhase && turnPlayer && turnPlayer.status === 'active';
-         const playerName = isPlayerTurnActive ? turnPlayer.name : '-';
-         turnIndicatorSpan.textContent = playerName;
-         const highlightTurn = isPlayerTurnActive && turnPlayer.id === 2;
-         if (highlightTurn) { turnIndicator.classList.add('player2-turn'); if(turnIndicator.firstChild) turnIndicator.firstChild.textContent = 'È il turno di: '; }
-         else { turnIndicator.classList.remove('player2-turn'); if(turnIndicator.firstChild) turnIndicator.firstChild.textContent = 'Turno di: '; }
-     } else { if(!turnIndicator) console.error("turnIndicator non trovato"); if(!turnIndicatorSpan) console.error("turnIndicatorSpan non trovato"); }
+         const isGameActiveForTurn = !handOver && currentPhase !== 'pre-deal' && currentPhase !== 'showdown' && currentPhase !== 'hand-over';
+         const isPlayerAbleToAct = turnPlayer && turnPlayer.status === 'active';
+         const playerNameForTurn = (isGameActiveForTurn && isPlayerAbleToAct) ? turnPlayer.name : '-';
+
+         turnIndicatorSpan.textContent = playerNameForTurn;
+
+         const shouldHighlightP2 = isGameActiveForTurn && isPlayerAbleToAct && turnPlayer.id === 2;
+         if (shouldHighlightP2) {
+             turnIndicator.classList.add('player2-turn');
+             if(turnIndicator.firstChild && turnIndicator.firstChild.nodeType === Node.TEXT_NODE) turnIndicator.firstChild.textContent = 'È il turno di: ';
+         } else {
+             turnIndicator.classList.remove('player2-turn');
+             if(turnIndicator.firstChild && turnIndicator.firstChild.nodeType === Node.TEXT_NODE) turnIndicator.firstChild.textContent = 'Turno di: ';
+         }
+     } else {
+         if(!turnIndicator) console.warn("turnIndicator non trovato");
+         if(!turnIndicatorSpan) console.warn("turnIndicatorSpan non trovato");
+     }
  }
 
 function updateActionButtons() {
      const player = players[currentPlayerIndex];
-     console.log(`--- updateActionButtons: Start for Player ${player?.id} (Index ${currentPlayerIndex}) ---`);
-      if (!foldButton || !checkButton || !callButton || !betButton || !raiseButton || !callAmountSpan || !document.getElementById('buttons')) { console.error("Elementi bottoni azione non trovati!"); return; }
+     console.log(`--- updateActionButtons: Start for Player ${player?.id} (${player?.name}) Status: ${player?.status} ---`);
+      if (!foldButton || !checkButton || !callButton || !betButton || !raiseButton || !callAmountSpan || !document.getElementById('buttons')) {
+          console.error("Elementi bottoni azione principali non trovati!"); return;
+      }
       const buttonsContainer = document.getElementById('buttons');
 
-     if (bettingAreaDiv && bettingAreaDiv.style.display === 'flex') { console.log(">> updateActionButtons: Betting area visible, hiding base."); buttonsContainer.style.display = 'none'; disableActionButtons(); return; }
-     else { buttonsContainer.style.display = 'flex'; }
+     if (bettingAreaDiv && bettingAreaDiv.style.display === 'flex') {
+         console.log(">> updateActionButtons: Area betting visibile, nascondi/disabilita bottoni base.");
+         buttonsContainer.style.display = 'none';
+         disableActionButtons();
+         return;
+     } else {
+         buttonsContainer.style.display = 'flex';
+     }
 
-     const canAct = !handOver && player && player.status === 'active';
-     if (!canAct) { console.log(">> updateActionButtons: Cannot act. Disabling all."); disableActionButtons(); return; }
-     console.log(`>> updateActionButtons: Player ${player.id} can act.`);
+     const canPlayerAct = !handOver && player && player.status === 'active';
+     if (!canPlayerAct) {
+         console.log(">> updateActionButtons: Il giocatore non può agire. Disabilito tutto.");
+         disableActionButtons();
+         // Fold button should also be disabled if player cannot act (e.g. not their turn or hand over)
+         // It's enabled below only if it IS their turn and they are active.
+         return;
+     }
+     console.log(`>> updateActionButtons: Giocatore ${player.id} (${player.name}) può agire.`);
 
      const amountToCall = Math.max(0, currentBetLevel - player.currentBet);
      const canCheck = amountToCall <= 0;
      const canCall = amountToCall > 0 && player.balance > 0;
-     const canBet = currentBetLevel === 0 && player.balance > 0;
-     const minRaiseTotal = calculateMinBetRaise();
-     const canAffordMinRaiseOrBet = player.balance + player.currentBet >= minRaiseTotal;
-     const hasMoreThanCall = player.balance > amountToCall;
-     const canRaise = currentBetLevel > 0 && hasMoreThanCall && canAffordMinRaiseOrBet;
-     const canAffordBet = canBet && canAffordMinRaiseOrBet;
 
-     console.log(`>> updateActionButtons: Check:${canCheck}, Call:${canCall}($${Math.min(amountToCall, player.balance)}), Bet:${canAffordBet}, Raise:${canRaise} (MinTotal:${minRaiseTotal})`);
+     const canInitiateBet = currentBetLevel === 0 && player.balance > 0;
+     const minTotalForAction = calculateMinBetRaise(); // Min total bet for a bet or raise
+     const canAffordMinAction = player.balance + player.currentBet >= minTotalForAction;
 
-     foldButton.disabled = false; checkButton.disabled = !canCheck; callButton.disabled = !canCall; betButton.disabled = !canAffordBet; raiseButton.disabled = !canRaise;
+     const canBet = canInitiateBet && canAffordMinAction;
+     // Can raise if: there's a bet to raise, player has more balance than just the call amount, AND can afford min raise size
+     const canRaise = currentBetLevel > 0 && player.balance > amountToCall && canAffordMinAction;
 
-     if (canCall) { callAmountSpan.textContent = Math.min(amountToCall, player.balance); } else { callAmountSpan.textContent = '0'; }
+
+     console.log(`>> updateActionButtons: Bal: ${player.balance}, CurrBet: ${player.currentBet}, BetLvl: ${currentBetLevel}, AmtToCall: $${amountToCall}, MinTotalAct: $${minTotalForAction}`);
+     console.log(`   CanCheck: ${canCheck}, CanCall: ${canCall}, CanBet: ${canBet}, CanRaise: ${canRaise}`);
+
+
+     foldButton.disabled = false; // Always available if player can act
+     checkButton.disabled = !canCheck;
+     callButton.disabled = !canCall;
+     betButton.disabled = !canBet;
+     raiseButton.disabled = !canRaise;
+
+     if (canCall) {
+         callAmountSpan.textContent = Math.min(amountToCall, player.balance);
+     } else {
+         callAmountSpan.textContent = '0';
+     }
 
      checkButton.style.display = canCheck ? 'inline-block' : 'none';
-     betButton.style.display = canAffordBet ? 'inline-block' : 'none';
+     betButton.style.display = canBet ? 'inline-block' : 'none';
      callButton.style.display = canCall ? 'inline-block' : 'none';
      raiseButton.style.display = canRaise ? 'inline-block' : 'none';
+     foldButton.style.display = 'inline-block';
+
      console.log("--- updateActionButtons: Finish ---");
  }
 
 function disableActionButtons() {
     if(foldButton) foldButton.disabled = true;
     if(checkButton) { checkButton.disabled = true; checkButton.style.display = 'none'; }
-    if(callButton) { callButton.disabled = true; callButton.style.display = 'none'; }
+    if(callButton) { callButton.disabled = true; callButton.style.display = 'none'; if(callAmountSpan) callAmountSpan.textContent = '0';}
     if(betButton) { betButton.disabled = true; betButton.style.display = 'none'; }
     if(raiseButton) { raiseButton.disabled = true; raiseButton.style.display = 'none'; }
-    if(foldButton) foldButton.style.display = 'inline-block';
+    if(foldButton) foldButton.style.display = 'inline-block'; // Keep fold button visible, but disabled
 }
 
 function calculateMinBetRaise() {
     const player = players[currentPlayerIndex];
     if (!player) return bigBlindAmt;
-    const maxTotalPlayerCanReach = player.balance + player.currentBet;
-    const minIncrement = bigBlindAmt;
-    let minTotalBetRequired;
-    if (currentBetLevel > 0) { minTotalBetRequired = currentBetLevel + minIncrement; }
-    else { minTotalBetRequired = bigBlindAmt; }
-    let minValidAmount = Math.min(minTotalBetRequired, maxTotalPlayerCanReach);
-    if (maxTotalPlayerCanReach > minValidAmount) { minValidAmount = Math.max(minValidAmount, bigBlindAmt); }
-    return Math.floor(minValidAmount);
+
+    const maxPlayerCanBetTotal = player.balance + player.currentBet;
+    const minBetIncrement = bigBlindAmt; // Standard minimum increment
+
+    let minTotalBet; // The minimum total amount this player's bet must be
+
+    if (currentBetLevel > 0) { // There is a bet to call or raise
+        // Min raise must be current bet + at least the minimum increment
+        minTotalBet = currentBetLevel + minBetIncrement;
+    } else { // No bet yet, opening bet
+        minTotalBet = minBetIncrement; // Min opening bet is Big Blind
+    }
+
+    // Player cannot be forced to bet more than they have (all-in)
+    // If minTotalBet is more than they can afford, their min action is all-in
+    // If they can afford minTotalBet, that's their minimum.
+    if (maxPlayerCanBetTotal < minTotalBet) {
+        return Math.floor(maxPlayerCanBetTotal); // All-in for less
+    }
+    return Math.floor(minTotalBet);
 }
 
-function showResult(message, outcomeType = 'push') {
-     console.log(`Mostrando risultato: ${message}, Tipo: ${outcomeType}`);
+function showResult(message, outcomeType = 'push') { // outcomeType for P1: 'win', 'lose', 'push'
+     console.log(`Mostrando risultato: ${message}, Tipo (per P1): ${outcomeType}`);
      clearTimeout(communityCardAnimationTimeout);
-     clearTimeout(resultTimeoutId); // << FIX: Pulisci timeout precedente
+     clearTimeout(resultTimeoutId);
      if (!resultElement) { console.error("Elemento #result non trovato!"); return; }
 
      resultElement.textContent = message;
-     resultElement.className = 'result';
-     resultElement.classList.add(`result-${outcomeType}`);
-     resultElement.classList.add('result-show');
+     resultElement.className = 'result'; // Reset classes
+     resultElement.classList.add(`result-${outcomeType}`); // Apply specific outcome style for P1
+     resultElement.classList.add('result-show'); // Make it visible
 
      if (nextHandButton) {
          nextHandButton.style.display = 'inline-block';
@@ -1366,59 +2139,92 @@ function showResult(message, outcomeType = 'push') {
      disableActionButtons();
      if (bettingAreaDiv) bettingAreaDiv.style.display = 'none';
 
-     // << FIX: Imposta timeout per nascondere il risultato
+
      resultTimeoutId = setTimeout(() => {
          if (resultElement) {
-             resultElement.classList.remove('result-show');
+             resultElement.classList.remove('result-show', 'result-win', 'result-lose', 'result-push');
          }
-     }, 3500); // 3.5 secondi
+     }, 4500); // Increased display time to 4.5 seconds
 }
 
 // --- Gestione Tema ---
-function toggleTheme() {
+async function toggleTheme() { // now async
     const currentTheme = document.body.dataset.theme;
     const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
     document.body.dataset.theme = newTheme;
     if (themeToggle) themeToggle.checked = (newTheme === 'dark');
-    saveGameState();
+    await saveGameState(); // Save theme preference
 }
 
-// --- Event Listeners ---
-if (themeToggle) themeToggle.addEventListener('change', toggleTheme); else console.warn("themeToggle non trovato");
+// --- Event Listeners (attached to DOM elements directly or via window.onload) ---
+// Note: onclick attributes in HTML are already linking to global functions.
+// For buttons created dynamically or for better practice, use addEventListener.
+
+// Expose functions to global scope for HTML onclick handlers to work with type="module"
+window.selectGameMode = selectGameMode;
+window.quitGame = quitGame;
+window.showRules = showRules;
+window.changeGame = changeGame;
+window.playerAction = playerAction; // Expose if called from HTML, though better to use listeners
+window.startNewHand = startNewHand; // For Next Hand button
+window.submitBetRaise = submitBetRaise; // For confirm bet button
+window.cancelBetRaiseInput = cancelBetRaiseInput; // For cancel bet button
+window.clearActionAmount = clearActionAmount; // For clear bet button
+window.setBetAmount = setBetAmount; // For pot/all-in buttons
+
 
 window.onload = () => {
-    console.log("Window loaded.");
+    console.log("Window loaded. Initializing UI and event listeners.");
     try {
-        if(typeof loadGameState === 'function') loadGameState(); else console.error("loadGameState non definita");
-        if (gameAreaDiv) gameAreaDiv.style.display = 'none'; else console.error("gameAreaDiv non trovato");
-        if (gameModeSelectionDiv) gameModeSelectionDiv.style.display = 'block'; else console.error("gameModeSelectionDiv non trovato");
-        if (betInputAreaDiv) betInputAreaDiv.style.display = 'none'; else console.error("betInputAreaDiv non trovato");
-        if (bettingAreaDiv) bettingAreaDiv.style.display = 'none'; else console.error("bettingAreaDiv non trovato");
-        if (nextHandButton) nextHandButton.style.display = 'none'; else console.error("nextHandButton non trovato");
+        loadGameState(); // Load theme
 
-        const chipButtons = document.querySelectorAll('#clickable-chips .chip-button');
-         chipButtons.forEach(button => {
-             button.addEventListener('click', () => { if (!button.disabled) addChipValueToAction(button.dataset.value); });
-             button.removeAttribute('onclick');
-         });
+        // Initial UI state
+        if (gameAreaDiv) gameAreaDiv.style.display = 'none';
+        if (gameModeSelectionDiv) gameModeSelectionDiv.style.display = 'block';
+        if (betInputAreaDiv) betInputAreaDiv.style.display = 'none';
+        if (bettingAreaDiv) bettingAreaDiv.style.display = 'none';
+        if (nextHandButton) nextHandButton.style.display = 'none';
 
-        if(typeof resetTableVisuals === 'function') resetTableVisuals(); else console.error("resetTableVisuals non definita");
-        if(typeof disableActionButtons === 'function') disableActionButtons(); else console.error("disableActionButtons non definita");
-        console.log("Initial UI state set.");
-    } catch (e) { console.error("ERRORE CRITICO window.onload:", e); alert("Errore caricamento pagina. Controlla console (F12)."); }
+        // Event listeners for static buttons that are always present
+        if (themeToggle) themeToggle.addEventListener('change', toggleTheme);
+        // Player action buttons (fold, check, call, bet, raise) have onclick in HTML,
+        // but their availability is managed by updateActionButtons.
+        // Chip buttons already have listeners via DOMContentLoaded.
+
+        resetTableVisuals();
+        disableActionButtons();
+        console.log("Initial UI state set. Firebase services initialized via module import.");
+        // onAuthStateChanged listener is active from the top of the script.
+    } catch (e) {
+        console.error("ERRORE CRITICO window.onload:", e);
+        alert("Errore caricamento pagina. Controlla console (F12).");
+    }
 };
 
-function showRules() { alert("Regole Base Texas Hold'em (1v1 Semplificato):\n\n1. Blinds: Il giocatore col bottone (D) paga lo Small Blind (SB, $"+smallBlindAmt+"), l'altro il Big Blind (BB, $"+bigBlindAmt+"). In 1v1, il Dealer è SB e agisce per primo pre-flop, ma per secondo post-flop.\n2. Pre-Flop: Ricevi 2 carte private. Giro di puntate iniziando dal SB.\n3. Flop: 3 carte comuni scoperte. Giro di puntate iniziando dal SB (Dealer).\n4. Turn: 1 carta comune scoperta. Giro di puntate.\n5. River: 1 carta comune scoperta. Ultimo giro di puntate.\n6. Showdown: Se più giocatori rimangono dopo il River, si mostrano le carte. Vince la miglior mano di 5 carte (usando qualsiasi combinazione delle 2 private + 5 comuni).\n\nAzioni:\n- Fold: Abbandoni la mano.\n- Check: Passi il turno (solo se non ci sono puntate da chiamare).\n- Call: Pareggi la puntata attuale.\n- Bet: Fai la prima puntata del giro (se nessuno ha ancora puntato).\n- Raise: Aumenti la puntata attuale (se qualcuno ha già puntato).\n- All-in: Punti tutte le tue fiches rimanenti."); }
+function showRules() {
+    alert("Regole Base Texas Hold'em (1v1 Semplificato):\n\n" +
+          `1. Blinds: Il giocatore col bottone (D) paga lo Small Blind (SB, $${smallBlindAmt}), l'altro il Big Blind (BB, $${bigBlindAmt}). ` +
+          "In 1v1, il Dealer è SB e agisce per primo pre-flop, ma per secondo post-flop.\n" +
+          "2. Pre-Flop: Ricevi 2 carte private. Giro di puntate iniziando dal SB.\n" +
+          "3. Flop: 3 carte comuni scoperte. Giro di puntate iniziando dal non-Dealer (BB).\n" + // Corrected: Post-flop, non-dealer (BB in 1v1) acts first.
+          "4. Turn: 1 carta comune scoperta. Giro di puntate.\n" +
+          "5. River: 1 carta comune scoperta. Ultimo giro di puntate.\n" +
+          "6. Showdown: Se più giocatori rimangono dopo il River, si mostrano le carte. Vince la miglior mano di 5 carte (usando qualsiasi combinazione delle 2 private + 5 comuni).\n\n" +
+          "Azioni:\n" +
+          "- Fold: Abbandoni la mano.\n" +
+          "- Check: Passi il turno (solo se non ci sono puntate da chiamare).\n" +
+          "- Call: Pareggi la puntata attuale.\n" +
+          "- Bet: Fai la prima puntata del giro (se nessuno ha ancora puntato).\n" +
+          "- Raise: Aumenti la puntata attuale (se qualcuno ha già puntato).\n" +
+          "- All-in: Punti tutte le tue fiches rimanenti.");
+}
 
 function changeGame() {
-        console.log("Tentativo di reindirizzamento a 'index.html'");
-        // Assicurati che 'index.html' sia il nome corretto e il percorso giusto.
-        // Se si trova nella stessa cartella, questo dovrebbe funzionare:
-        window.location.href = 'index.html';
-        // Se si trova in una cartella diversa, adegua il percorso, es: '../schermata iniziale.html' o '/path/to/schermata iniziale.html'
-    }
+    console.log("Tentativo di reindirizzamento a 'index.html' (o pagina selezione giochi)");
+    window.location.href = 'index.html'; // Assumes index.html is in the same directory
+}
 
+// --- FINE CODICE JAVASCRIPT ---
 </script>
-
 </body>
 </html>
