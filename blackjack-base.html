@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Blackjack</title>
+<title>Blackjack base</title>
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-J1YN9CKJS2"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
@@ -13,7 +13,7 @@
   gtag('config', 'G-J1YN9CKJS2');
 </script>
 <meta name="google-adsense-account" content="ca-pub-9456850571765688">
-<meta name="description" content="Gioca a Blackjack online con tavoli a limiti diversi, sfide giornaliere multiple (anche Premium) e funzionalità avanzate!" />
+<meta name="description" content="Gioca a Blackjack online con salvataggio del saldo e stato Premium tramite Firebase, tavoli a limiti diversi, sfide giornaliere e funzionalità avanzate!" />
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;700&display=swap');
   :root {
@@ -52,6 +52,7 @@
     --chip-color-5000: #f06292; --chip-text-5000: white; --chip-border-5000: #e91e63;
     --challenge-item-bg: rgba(255, 255, 255, 0.05);
     --challenge-border: rgba(255, 255, 255, 0.1);
+    --auth-status-bg: rgba(0, 0, 0, 0.2);
   }
 
   body[data-theme="dark"] {
@@ -79,6 +80,7 @@
     --chip-color-1000: #ffeb3b; --chip-text-1000: #3e2723; --chip-border-1000: #fbc02d;
     --challenge-item-bg: rgba(0, 0, 0, 0.15);
     --challenge-border: rgba(0, 0, 0, 0.25);
+    --auth-status-bg: rgba(255, 255, 255, 0.05);
   }
 
   /* --- General Styles --- */
@@ -87,7 +89,7 @@
     text-align: center;
     background-color: var(--bg-color);
     color: var(--text-color);
-    padding-top: 15px; /* Adjusted for balance display */
+    padding-top: 60px; /* Increased for auth status and balance */
     margin: 0;
     transition: background-color 0.3s, color 0.3s, background-image 0.3s;
     background-image: none;
@@ -105,11 +107,26 @@
   h1 { margin-bottom: 15px; }
   h2 { margin-bottom: 10px; font-size: 1.5em; text-transform: uppercase; letter-spacing: 1px;}
 
-   /* --- Balance Display (Top Right) --- */
+   /* --- Auth Status & Balance Display (Top Right) --- */
+    #top-bar-info {
+        position: absolute;
+        top: 10px;
+        right: 15px;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 5px;
+        z-index: 10;
+    }
+   #auth-status-display {
+       background-color: var(--auth-status-bg);
+       color: var(--text-color);
+       padding: 6px 10px;
+       border-radius: 6px;
+       font-size: 0.8em;
+       border: 1px solid var(--border-color);
+   }
    #balance-display {
-       position: absolute;
-       top: 15px;
-       right: 20px;
        background-color: var(--panel-bg);
        color: var(--highlight-color);
        padding: 8px 15px;
@@ -118,7 +135,6 @@
        font-weight: bold;
        border: 1px solid var(--border-color);
        box-shadow: 0 2px 4px rgba(0,0,0,0.3);
-       z-index: 10; /* Ensure it's above most elements */
        transition: background-color 0.3s, color 0.3s;
    }
 
@@ -459,7 +475,9 @@
 
   /* --- Responsiveness --- */
   @media (max-width: 768px) {
-      #balance-display { font-size: 1em; padding: 6px 10px; top: 10px; right: 15px; }
+      #top-bar-info { right: 10px; }
+      #auth-status-display { font-size: 0.75em; padding: 4px 8px;}
+      #balance-display { font-size: 1em; padding: 6px 10px; }
       .card { width: 60px; height: 90px; border-radius: 6px;}
       .card-front { font-size: 20px; }
       .card .suit { font-size: 16px; /* Adjusted */ }
@@ -483,10 +501,12 @@
   }
 
    @media (max-width: 480px) {
-      body { padding-top: 50px; /* Increased padding for balance */ }
-      #balance-display { top: 10px; right: 10px; font-size: 0.9em; padding: 5px 8px; }
+      body { padding-top: 55px; /* Adjusted for auth & balance */ }
+      #top-bar-info { right: 5px; }
+      #auth-status-display { font-size: 0.7em; padding: 3px 6px;}
+      #balance-display { top: 28px; /* Position balance below auth */ right: 5px; font-size: 0.9em; padding: 5px 8px; }
       .game-container { padding: 10px; }
-      h1 { font-size: 1.6em; margin-top: 25px; /* Push h1 down slightly */ }
+      h1 { font-size: 1.6em; margin-top: 20px; }
       .cards { min-height: 100px; gap: 8px;}
       .card { width: 50px; height: 75px; border-radius: 4px; margin: 2px;}
       .card-front { font-size: 18px; /* Adjusted */ padding: 5px 3px; /* Adjusted */ }
@@ -518,8 +538,7 @@
 </head>
 <body data-theme="light">
 
-<div id="premium-popup-overlay" onclick="closePremiumPopup()"></div>
-<div id="premium-popup">
+<div id="premium-popup-overlay"></div> <div id="premium-popup">
     <h3>🌟 Sblocca i Vantaggi Premium! 🌟</h3>
     <div id="premium-message">
         <p>Passa a Premium per accedere a funzionalità esclusive:</p>
@@ -533,14 +552,17 @@
         </ul>
     </div>
     <div class="popup-buttons">
-        <button onclick="closePremiumPopup()">Più Tardi</button>
-        <button onclick="activatePremiumPlaceholder()">Passa a Premium</button>
+        <button id="close-premium-popup-button">Più Tardi</button>
+        <button id="activate-premium-button">Passa a Premium</button>
     </div>
 </div>
 
 <div class="game-container">
     <h1>Blackjack Premium Trainer</h1>
-    <div id="balance-display">Saldo: €1000</div>
+    <div id="top-bar-info">
+        <div id="auth-status-display">Non collegato</div>
+        <div id="balance-display">Saldo: €1000</div>
+    </div>
 
     <details id="utility-controls">
         <summary>Utilità e Opzioni</summary>
@@ -567,7 +589,7 @@
                 </label>
             </div>
             <div style="margin-top: 15px; text-align: center;">
-                <button id="change-game-button" onclick="changeGame()">Cambia Gioco</button>
+                <button id="change-game-button">Cambia Gioco</button>
             </div>
         </div>
     </details>
@@ -577,7 +599,7 @@
         <div class="content-wrapper" id="trainer-controls-content">
              <h3 id="trainer-title">
                 Contatore Carte (Hi-Lo)
-                <button id="hilo-info-button" onclick="showHiLoInfo()" aria-label="Informazioni sul conteggio Hi-Lo" title="Cos'è il conteggio Hi-Lo?">?</button>
+                <button id="hilo-info-button" aria-label="Informazioni sul conteggio Hi-Lo" title="Cos'è il conteggio Hi-Lo?">?</button>
              </h3>
              <div><span>Conteggio Corrente (Running Count):</span> <span id="running-count">0</span></div>
              <div><span>Mazzi Rimanenti (stimati):</span> <span id="decks-remaining">0.0</span></div>
@@ -595,7 +617,7 @@
              <div><span>Pareggi:</span> <span id="stats-pushes">0</span></div>
             <div><span>Blackjack Vinti:</span> <span id="stats-bjs">0</span></div>
             <div><span>Win Rate (V/V+S):</span> <span id="stats-win-rate">N/A</span></div>
-            <button id="reset-stats-button" onclick="resetStats()">Azzera Statistiche</button>
+            <button id="reset-stats-button">Azzera Statistiche</button>
         </div>
     </details>
 
@@ -626,9 +648,9 @@
         <div id="clickable-chips">
             </div>
         <div id="betting-buttons">
-            <button id="deal-button" onclick="deal()">Distribuisci</button>
-            <button id="rebet-button" onclick="rebet()" style="display: none;">Stessa Puntata</button>
-            <button id="clear-bet-button" onclick="clearProposedBet()">Azzera Puntata</button>
+            <button id="deal-button">Distribuisci</button>
+            <button id="rebet-button" style="display: none;">Stessa Puntata</button>
+            <button id="clear-bet-button">Azzera Puntata</button>
         </div>
     </div>
 
@@ -645,24 +667,39 @@
         </div>
 
         <div id="buttons">
-            <button id="hit-button" onclick="hit()">Carta</button>
-            <button id="stand-button" onclick="stand()">Stai</button>
-            <button id="double-button" onclick="doubleDown()">Raddoppia</button>
-            <button id="split-button" onclick="split()">Dividi</button>
+            <button id="hit-button">Carta</button>
+            <button id="stand-button">Stai</button>
+            <button id="double-button">Raddoppia</button>
+            <button id="split-button">Dividi</button>
         </div>
     </div>
 
     <div id="result"></div>
 </div>
 
-<script>
+<script type="module">
+    // Firebase imports (MODIFIED PATH)
+    import {
+        auth,
+        db, // db might not be directly used here if all Firestore ops are in firebase-logic
+        onAuthStateChanged,
+        updateSaldoInFirestore,
+        getSaldoFromFirestore,
+        setUserVIPStatus,
+        checkUserVIPStatus
+        // Non importare registerUser, loginUser, logoutUser qui,
+        // verranno gestite da uno script separato per l'autenticazione (es. auth.js)
+        // o tramite un'interfaccia utente per il login/registrazione.
+        // Per ora, questo script si concentrerà sulla logica del gioco dopo l'autenticazione.
+    } from "./js/firebase-logic.js"; // ASSUMING firebase-logic.js IS IN A 'js' SUBFOLDER
+
     // --- DOM Elements ---
     const playerMoneyElement = document.getElementById('player-money'); // Inside game area
     const balanceDisplayElement = document.getElementById('balance-display'); // Top right display
+    const authStatusDisplayElement = document.getElementById('auth-status-display');
     const dealerCardsElement = document.getElementById('dealer-cards');
     const playerHandsContainer = document.getElementById('player-hands-container');
-    const dealerScoreElement = document.getElementById('dealer-score'); // <-- Added dealer score display element
-    // playerScoreElement is handled per hand
+    const dealerScoreElement = document.getElementById('dealer-score');
     const hitButton = document.getElementById('hit-button');
     const standButton = document.getElementById('stand-button');
     const doubleButton = document.getElementById('double-button');
@@ -692,28 +729,31 @@
     const premiumPopupOverlay = document.getElementById('premium-popup-overlay');
     const premiumFeatureSections = document.querySelectorAll('.premium-feature-section');
     const premiumFeatureInputs = document.querySelectorAll('.premium-feature-input');
-    // premiumChipButtons selection needs to happen dynamically in setupChipButtons
     const trainerControls = document.getElementById('trainer-controls');
     const sessionStats = document.getElementById('session-stats');
     const utilityControls = document.getElementById('utility-controls');
     const tableSelect = document.getElementById('table-select');
-    // Daily Challenge Elements
-    const dailyChallengesDetails = document.getElementById('daily-challenges-details'); // The <details> element
-    const dailyChallengesContainer = document.getElementById('daily-challenges-container'); // Div inside details
+    const dailyChallengesDetails = document.getElementById('daily-challenges-details');
+    const dailyChallengesContainer = document.getElementById('daily-challenges-container');
     const challengesLoading = document.getElementById('challenges-loading');
+    const changeGameButton = document.getElementById('change-game-button');
+    const hiloInfoButton = document.getElementById('hilo-info-button');
+    const closePremiumPopupButton = document.getElementById('close-premium-popup-button');
+    const activatePremiumButton = document.getElementById('activate-premium-button');
+
 
     // --- Game Variables ---
     let deck = [];
     let playerHands = [];
     let dealerHand = [];
     let currentHandIndex = 0;
-    let playerMoney = 1000;
-    let currentBet = 0;
-    let initialBet = 0;
+    let playerMoney = 1000; // Default if not logged in or no Firestore data
+    let currentBet = 0;     // Bet for the current active hand in a split scenario
+    let initialBet = 0;   // Total bet placed at the start of the round for the first hand
     let lastBet = 0;
     let proposedBet = 0;
     let isGameOver = true;
-    let isPremium = false;
+    let isPremium = false; // Will be updated from Firestore
     let runningCount = 0;
     let decksInShoe = 6;
     let cardsDealt = 0;
@@ -721,13 +761,10 @@
     let trainingModeActive = false;
     let showHintsActive = false;
     let isSplitRound = false;
-    let dailyChallenges = []; // <-- Changed to array for multiple challenges
-    let dailyBonusInfo = { // Combined bonus and streak info
-        collectedToday: false,
-        lastLoginTimestamp: 0,
-        consecutiveDays: 0
-    };
-    let cardClearTimeout = null; // Timeout ID for clearing cards
+    let dailyChallenges = [];
+    let dailyBonusInfo = { collectedToday: false, lastLoginTimestamp: 0, consecutiveDays: 0 };
+    let cardClearTimeout = null;
+    let currentUID = null; // Store logged-in user's UID
 
     const SUITS = ["C", "D", "H", "S"];
     const VALUES = ["2", "3", "4", "5", "6", "7", "8", "9", "T", "J", "Q", "K", "A"];
@@ -738,12 +775,49 @@
         whale: { min: 500, max: 10000, chips: [100, 500, 1000, 5000], premium: true }
     };
     let currentTableLimits = TABLE_LIMITS.low;
-    const DAILY_CHALLENGE_COUNT = 3; // Number of daily challenges
-    const PREMIUM_CHALLENGE_INDEX = 2; // Which challenge index is premium (0-based)
+    const DAILY_CHALLENGE_COUNT = 3;
+    const PREMIUM_CHALLENGE_INDEX = 2;
     const PREMIUM_CHALLENGE_REWARD = 1000;
     const NORMAL_CHALLENGE_REWARD_BASE = 100;
+    const DEFAULT_PLAYER_MONEY = 1000; // Default money for non-logged-in or new Firebase users
 
-    // --- Game Logic Functions ---
+    // --- Firebase Auth Listener ---
+    onAuthStateChanged(auth, async (user) => {
+        if (user) {
+            currentUID = user.uid;
+            authStatusDisplayElement.textContent = `Connesso: ${user.email.split('@')[0]}`; // Show part of email
+            console.log("User signed in:", user.uid, user.email);
+            try {
+                const firestoreSaldo = await getSaldoFromFirestore(user.uid);
+                playerMoney = (firestoreSaldo !== undefined && firestoreSaldo !== null) ? firestoreSaldo : DEFAULT_PLAYER_MONEY;
+                console.log(`Saldo caricato da Firestore per ${user.uid}: €${playerMoney}`);
+
+                isPremium = await checkUserVIPStatus(user.uid);
+                localStorage.setItem('blackjackPremium', isPremium ? 'true' : 'false'); // Keep local sync
+                console.log(`Stato Premium caricato da Firestore per ${user.uid}: ${isPremium}`);
+
+            } catch (error) {
+                console.error("Errore nel caricare dati utente da Firestore:", error);
+                playerMoney = DEFAULT_PLAYER_MONEY; // Fallback
+                isPremium = false; // Fallback
+            }
+        } else {
+            currentUID = null;
+            authStatusDisplayElement.textContent = "Non collegato";
+            console.log("User signed out or not logged in.");
+            playerMoney = parseInt(localStorage.getItem('blackjackPlayerMoney_local') || DEFAULT_PLAYER_MONEY.toString());
+            isPremium = localStorage.getItem('blackjackPremium_local') === 'true'; // Fallback to local premium
+        }
+        // Update UI based on auth state
+        applyPremiumFeatures(); // This also handles UI for non-premium
+        updatePlayerMoneyDisplay(); // Update all money displays
+        updateBettingUI(); // Update chips based on possibly changed premium status/money
+        checkDailyBonusAndStreak(); // Check bonus after knowing user status
+        loadDailyChallenges();      // Load or generate challenges after knowing user status
+    });
+
+
+    // --- Game Logic Functions (Main Blackjack logic mostly unchanged, save for Firebase interactions) ---
 
     function createDeck() {
         let newDeck = [];
@@ -757,14 +831,14 @@
         return newDeck;
     }
 
-    function shuffleDeck(deck) {
-        for (let i = deck.length - 1; i > 0; i--) {
+    function shuffleDeck(deckToShuffle) { // Renamed parameter to avoid conflict
+        for (let i = deckToShuffle.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
-            [deck[i], deck[j]] = [deck[j], deck[i]];
+            [deckToShuffle[i], deckToShuffle[j]] = [deckToShuffle[j], deckToShuffle[i]];
         }
         runningCount = 0;
         cardsDealt = 0;
-        console.log(`Deck shuffled (${deck.length} cards)`);
+        console.log(`Deck shuffled (${deckToShuffle.length} cards)`);
         updateTrainerDisplay();
     }
 
@@ -809,31 +883,29 @@
     function updateTrainerDisplay() {
         if (!trainerControls.open || !trainingModeActive) return;
         const cardsRemainingInShoe = deck.length;
-        // Estimate decks remaining, ensuring minimum 0.25 decks for calculation stability
         const decksRemaining = Math.max(0.25, cardsRemainingInShoe / 52).toFixed(1);
-        const trueCount = (decksRemaining > 0) ? (runningCount / decksRemaining).toFixed(1) : 0;
+        const trueCount = (parseFloat(decksRemaining) > 0) ? (runningCount / parseFloat(decksRemaining)).toFixed(1) : "0.0"; // Ensure float division
         runningCountElement.textContent = runningCount;
         decksRemainingElement.textContent = decksRemaining;
         trueCountElement.textContent = trueCount;
     }
 
     function dealCard(targetHand, isHidden = false) {
-        // Reshuffle if penetration reaches ~50% or less (adjustable)
-        if (deck.length < (decksInShoe * 52 * 0.5)) {
+        if (deck.length < (decksInShoe * 52 * 0.25)) { // Reshuffle if ~25% penetration
             console.log("Reshuffling deck (low penetration)...");
             deck = createDeck();
             shuffleDeck(deck);
         }
         if (deck.length === 0) {
              console.error("Deck is empty! Cannot deal card.");
-             deck = createDeck(); // Create a new deck if somehow empty
+             deck = createDeck();
              shuffleDeck(deck);
         }
         const card = deck.pop();
         card.hidden = isHidden;
         targetHand.push(card);
         if (!isHidden) {
-            updateRunningCount(card); // Update count for visible cards
+            updateRunningCount(card);
         }
         return card;
     }
@@ -849,15 +921,6 @@
 
         const cardFront = document.createElement('div');
         cardFront.classList.add('card-face', 'card-front');
-        if (card.hidden) {
-             // Start showing back if hidden
-             // cardDiv class 'flipped' now controls rotation, remove it initially for back face
-        } else {
-            cardDiv.classList.add('flipped'); // Add flipped class to show front face initially
-             // setTimeout(() => cardDiv.style.transform = 'rotateY(0deg)', 10); // Ensure transform for animation - Removed, CSS handles flip
-        }
-
-        // Flip animation handled by adding/removing 'flipped' class dynamically later
 
         const displayValue = card.value === 'T' ? '10' : card.value;
         const valueSpan = document.createElement('span');
@@ -879,41 +942,35 @@
 
         cardFront.appendChild(valueSpan);
         cardFront.appendChild(suitSpan);
-        cardInner.appendChild(cardBack); // Back first in DOM
-        cardInner.appendChild(cardFront); // Front second
+        cardInner.appendChild(cardBack);
+        cardInner.appendChild(cardFront);
         cardDiv.appendChild(cardInner);
-        // If card should be revealed (not hidden), trigger flip after slight delay
-        if (!card.hidden) {
-             setTimeout(() => { cardDiv.classList.add('flipped'); }, 100);
-        }
 
+        if (!card.hidden) {
+             setTimeout(() => { cardDiv.classList.add('flipped'); }, 50); // Slight delay for entry
+        }
         return cardDiv;
     }
 
     function renderHand(hand, element) {
-        element.innerHTML = ''; // Clear previous cards in the element
+        element.innerHTML = '';
         hand.forEach((card, index) => {
             const cardElement = createCardElement(card);
-            // Apply animation delay for dealing effect
-            cardElement.style.transitionDelay = `${index * 0.1}s`; // Delay for card itself
+            cardElement.style.transitionDelay = `${index * 0.05}s`; // Reduced delay for faster dealing
             element.appendChild(cardElement);
-            // Trigger flip slightly after append (if not hidden)
-            if(!card.hidden) {
-                 setTimeout(() => cardElement.classList.add('flipped'), 50 + index * 100);
-            }
         });
     }
 
-     function createPlayerHandElement(index, initialBet) {
+     function createPlayerHandElement(index, handBet) { // Changed initialBet to handBet for clarity
         const handDiv = document.createElement('div');
         handDiv.classList.add('player-hand');
         handDiv.id = `player-hand-${index}`;
 
         const title = document.createElement('h3');
-        title.textContent = `Mano ${index + 1} - Punta: €${initialBet}`;
+        title.textContent = `Mano ${index + 1} - Punta: €${handBet}`;
         handDiv.appendChild(title);
         const cardsDiv = document.createElement('div');
-        cardsDiv.classList.add('cards'); // Use 'cards' class for consistency
+        cardsDiv.classList.add('cards');
         handDiv.appendChild(cardsDiv);
 
         const scoreDiv = document.createElement('div');
@@ -935,139 +992,104 @@
         const scoreElement = handData.element.querySelector('.player-score');
         const statusElement = handData.element.querySelector('.hand-status');
 
-        renderHand(handData.cards, cardsElement); // Re-render cards in the hand's card container
+        renderHand(handData.cards, cardsElement);
         scoreElement.textContent = `Punteggio: ${handData.score}`;
         statusElement.textContent = handData.status === 'active' ? '' : handData.status.toUpperCase();
 
-        // Highlight current hand
         document.querySelectorAll('.player-hand.current-hand').forEach(el => el.classList.remove('current-hand'));
-        if (playerHands.indexOf(handData) === currentHandIndex && !isGameOver) {
+        if (playerHands.indexOf(handData) === currentHandIndex && !isGameOver && handData.status === 'active') {
              handData.element.classList.add('current-hand');
         }
     }
 
     function updateDealerDisplay(revealHidden = false) {
-        let scoreToShow = '?'; // Default to question mark
+        let scoreToShow = '?';
         let finalScore = 0;
 
-        // Reveal logic
         if (revealHidden) {
-            let cardsToReveal = [];
             dealerHand.forEach(card => {
                 if (card.hidden) {
                      card.hidden = false;
-                     updateRunningCount(card); // Count revealed card
-                     cardsToReveal.push(card); // Track which cards are newly revealed
+                     updateRunningCount(card);
                 }
             });
-
-            // Re-render hand to potentially update card elements if needed (e.g., if classes change)
-            renderHand(dealerHand, dealerCardsElement);
-
-            // Trigger flip animation for revealed cards after re-render
-            dealerCardsElement.querySelectorAll('.card').forEach((cardElement, index) => {
-                 const cardData = dealerHand[index]; // Assuming order matches dealerHand
-                 if (cardData && !cardData.hidden && !cardElement.classList.contains('flipped')) {
-                     // Flip any card that should be visible but isn't flipped yet
-                     setTimeout(() => cardElement.classList.add('flipped'), 100 + index * 100); // Stagger flip
-                 }
-            });
-
+            renderHand(dealerHand, dealerCardsElement); // Re-render to flip cards
             finalScore = calculateScore(dealerHand);
-            scoreToShow = finalScore; // Show final score
+            scoreToShow = finalScore;
         } else {
-             // Initial render or during play before reveal
              renderHand(dealerHand, dealerCardsElement);
-             // Show only the value of the upcard (usually second card) if available and not hidden
              if (dealerHand.length > 1 && !dealerHand[1].hidden) {
-                 scoreToShow = getCardValue(dealerHand[1]); // Show upcard value
+                 scoreToShow = getCardValue(dealerHand[1]);
              } else if (dealerHand.length === 1 && !dealerHand[0].hidden) {
-                 // Should not happen in standard BJ deal, but handle just in case
                  scoreToShow = getCardValue(dealerHand[0]);
              }
-             // Keep scoreToShow as '?' if hole card is still hidden
         }
-        dealerScoreElement.textContent = scoreToShow; // Update the score display element
+        dealerScoreElement.textContent = scoreToShow;
     }
 
 
      function startNewRound() {
         console.log("Starting new round...");
-        clearTimeout(cardClearTimeout); // Cancel any pending card clear timeout
-
-        // Make sure cards containers are visible
+        clearTimeout(cardClearTimeout);
         dealerCardsElement.style.opacity = '1';
         playerHandsContainer.style.opacity = '1';
 
-        if (deck.length < 52) { // Simple check, could be more sophisticated
+        if (deck.length < (decksInShoe * 52 * 0.25)) { // Reshuffle if penetration < 25%
             console.log("Deck low, creating and shuffling new shoe.");
             deck = createDeck();
             shuffleDeck(deck);
         }
 
-        playerHandsContainer.innerHTML = ''; // Clear previous hands visually
-        dealerCardsElement.innerHTML = '';   // Clear dealer cards visually
-        dealerScoreElement.textContent = '?'; // Reset dealer score display
+        playerHandsContainer.innerHTML = '';
+        dealerCardsElement.innerHTML = '';
+        dealerScoreElement.textContent = '?';
         resultElement.textContent = '';
-        resultElement.className = ''; // Clear result classes
+        resultElement.className = '';
         currentHandIndex = 0;
-        isSplitRound = false; // Reset split flag
+        isSplitRound = false;
 
-        // Create first player hand element
-        const handElement = createPlayerHandElement(0, initialBet);
+        const handElement = createPlayerHandElement(0, initialBet); // initialBet is set by deal()
         playerHands = [{
-            cards: [],
-            score: 0,
-            bet: initialBet,
-            element: handElement,
-            status: 'active', // 'active', 'stand', 'bust', 'blackjack', 'surrender'
-            canDouble: true,
-            canSplit: false,
-             doubled: false // Track if doubled
+            cards: [], score: 0, bet: initialBet, element: handElement, status: 'active',
+            canDouble: true, canSplit: false, doubled: false
         }];
         dealerHand = [];
 
-        // Deal initial cards (Player, Dealer Hidden, Player, Dealer Visible)
         dealCard(playerHands[0].cards);
-        dealCard(dealerHand, true);       // Dealer's hole card
+        dealCard(dealerHand, true);
         dealCard(playerHands[0].cards);
-        dealCard(dealerHand);              // Dealer's up card
+        dealCard(dealerHand);
 
         playerHands[0].score = calculateScore(playerHands[0].cards);
-        updateHandDisplay(playerHands[0]); // Render player hand
-        updateDealerDisplay();             // Render dealer hand (shows only up card and '?')
+        updateHandDisplay(playerHands[0]);
+        updateDealerDisplay();
 
-        const dealerScore = calculateScore(dealerHand); // Calculate potential score (including hidden)
-        const playerScore = playerHands[0].score;
-        // Check for immediate Blackjacks
-        const playerHasBlackjack = playerScore === 21 && playerHands[0].cards.length === 2;
-        const dealerHasBlackjack = dealerScore === 21 && dealerHand.length === 2;
+        const dealerPotentialScore = calculateScore(dealerHand);
+        const playerInitialScore = playerHands[0].score;
+        const playerHasBlackjack = playerInitialScore === 21 && playerHands[0].cards.length === 2;
+        const dealerHasBlackjack = dealerPotentialScore === 21 && dealerHand.length === 2;
 
         if (playerHasBlackjack) {
              playerHands[0].status = 'blackjack';
              updateHandDisplay(playerHands[0]);
              sessionStatsData.blackjacks++;
-             updateStatsDisplay();
-             // Don't end round immediately, let dealer check too (Push case)
+             // No auto-win here, wait for dealer BJ check
         }
 
-         // Check for dealer Blackjack AFTER player check (peek rule usually applies)
          if (dealerHasBlackjack) {
              console.log("Dealer has Blackjack.");
-             updateDealerDisplay(true); // Reveal dealer hand immediately if they have BJ
-             endRound(); // End round as Dealer BJ overrides most outcomes (except player BJ push)
-        } else if (playerHasBlackjack) {
-            // If player had BJ and dealer didn't, end round (Player wins BJ)
-             console.log("Player has Blackjack!");
+             updateDealerDisplay(true);
              endRound();
+        } else if (playerHasBlackjack) {
+             console.log("Player has Blackjack!");
+             endRound(); // Player BJ wins if dealer doesn't have BJ
         } else {
-            // No immediate Blackjacks, proceed with player turn
             isGameOver = false;
             playerHands[0].canSplit = checkSplitPossibility(playerHands[0]);
             updateActionButtons();
             highlightHint();
         }
-        saveGameState(); // Save state after dealing
+        saveGameState();
     }
 
 
@@ -1086,15 +1108,15 @@
         }
 
         playerMoney -= proposedBet;
-        initialBet = proposedBet; // Store the bet for this round
-        lastBet = initialBet;     // Store for rebet functionality
+        initialBet = proposedBet;
+        lastBet = initialBet;
         updatePlayerMoneyDisplay();
-        bettingArea.style.display = 'none'; // Hide betting controls
-        gameArea.style.display = 'block';   // Show game area
-        rebetButton.style.display = 'none'; // Hide rebet button during game
+        bettingArea.style.display = 'none';
+        gameArea.style.display = 'block';
+        rebetButton.style.display = 'none';
 
-        startNewRound(); // Deal the cards and start the game logic
-        saveGameState(); // Save state after bet placed and round started
+        startNewRound();
+        saveGameState();
     }
 
 
@@ -1110,19 +1132,17 @@
         }
         proposedBet = potentialBet;
         updateProposedBetDisplay();
-        // Re-enable/disable chip buttons based on the new proposed bet
-        updateBettingUI(); // This will re-evaluate chip disabled states
+        updateBettingUI();
     }
 
     function clearProposedBet() {
         proposedBet = 0;
         updateProposedBetDisplay();
-        updateBettingUI(); // Re-evaluate chip disabled states
+        updateBettingUI();
     }
 
      function updateProposedBetDisplay() {
         proposedBetDisplay.textContent = `Punta: €${proposedBet}`;
-        // Enable Deal button only if bet is valid (within limits and affordable)
         dealButton.disabled = (proposedBet < currentTableLimits.min || proposedBet > playerMoney || proposedBet > currentTableLimits.max);
         clearBetButton.disabled = (proposedBet === 0);
     }
@@ -1134,17 +1154,17 @@
         }
         if (lastBet < currentTableLimits.min || lastBet > currentTableLimits.max) {
             alert(`La puntata precedente (€${lastBet}) non è valida per i limiti attuali (€${currentTableLimits.min} - €${currentTableLimits.max}). Piazza una nuova puntata.`);
-            rebetButton.style.display = 'none'; // Hide button if invalid
+            rebetButton.style.display = 'none';
             return;
         }
         if (lastBet > playerMoney) {
             alert("Non hai abbastanza soldi per ripetere l'ultima puntata.");
-            rebetButton.style.display = 'none'; // Hide button if unaffordable
+            rebetButton.style.display = 'none';
             return;
         }
         proposedBet = lastBet;
         updateProposedBetDisplay();
-        deal(); // Automatically deal after setting the rebet amount
+        deal();
     }
 
 
@@ -1155,17 +1175,16 @@
 
         dealCard(currentHand.cards);
         currentHand.score = calculateScore(currentHand.cards);
-        currentHand.canDouble = false; // Cannot double after hitting
-        currentHand.canSplit = false;  // Cannot split after hitting
+        currentHand.canDouble = false;
+        currentHand.canSplit = false;
         updateHandDisplay(currentHand);
 
         if (currentHand.score > 21) {
             currentHand.status = 'bust';
-            updateHandDisplay(currentHand); // Show bust status
+            updateHandDisplay(currentHand);
             console.log(`Hand ${currentHandIndex + 1} Busts!`);
             moveToNextHandOrEndRound();
         } else {
-            // Player can still hit or stand
             updateActionButtons();
             highlightHint();
             saveGameState();
@@ -1178,7 +1197,7 @@
         if (currentHand.status !== 'active') return;
 
         currentHand.status = 'stand';
-        updateHandDisplay(currentHand); // Show stand status
+        updateHandDisplay(currentHand);
         console.log(`Hand ${currentHandIndex + 1} Stands.`);
         moveToNextHandOrEndRound();
     }
@@ -1186,37 +1205,33 @@
     function doubleDown() {
         if (isGameOver) return;
         const currentHand = playerHands[currentHandIndex];
-        // Allow double only on first two cards AND if affordable AND if hand is active
         if (currentHand.status !== 'active' || !currentHand.canDouble || playerMoney < currentHand.bet) {
              if (playerMoney < currentHand.bet) alert("Non hai abbastanza soldi per raddoppiare.");
-             else if (!currentHand.canDouble) alert("Puoi raddoppiare solo sulla mano iniziale.");
-             else console.log("Cannot double down now.");
+             else if (!currentHand.canDouble) alert("Puoi raddoppiare solo sulla mano iniziale (prima di Chiamare Carta).");
+             else console.log("Raddoppio non permesso ora.");
             return;
         }
 
-        playerMoney -= currentHand.bet; // Deduct the additional bet
-        currentHand.bet *= 2;           // Double the bet amount for the hand
-        currentHand.doubled = true;     // Mark hand as doubled
+        playerMoney -= currentHand.bet;
+        currentHand.bet *= 2;
+        currentHand.doubled = true;
         updatePlayerMoneyDisplay();
-        // Update hand title to show doubled bet
         const titleElement = currentHand.element.querySelector('h3');
         if (titleElement) {
-             titleElement.textContent = titleElement.textContent.replace(/€\d+/, `€${currentHand.bet}`);
+             titleElement.textContent = `Mano ${playerHands.indexOf(currentHand) + 1} - Punta: €${currentHand.bet}`;
         }
 
         console.log(`Hand ${currentHandIndex + 1} Doubles Down!`);
-        dealCard(currentHand.cards); // Deal exactly one more card
+        dealCard(currentHand.cards);
         currentHand.score = calculateScore(currentHand.cards);
         updateHandDisplay(currentHand);
-        // Hand automatically stands after doubling, unless it busts
-        currentHand.status = (currentHand.score > 21) ? 'bust' : 'stand';
-        updateHandDisplay(currentHand); // Show final score and status (bust or stand)
+        currentHand.status = (currentHand.score > 21) ? 'bust' : 'stand'; // Auto-stand after double
+        updateHandDisplay(currentHand);
 
-        moveToNextHandOrEndRound(); // Move to next hand or dealer turn
+        moveToNextHandOrEndRound();
     }
 
     function checkSplitPossibility(handData) {
-         // Can split if: active hand, exactly 2 cards, affordable, cards have same value (10, J, Q, K count as 10)
          return handData.status === 'active' &&
                handData.cards.length === 2 &&
                playerMoney >= handData.bet &&
@@ -1226,14 +1241,14 @@
     function split() {
          if (isGameOver) return;
          const currentHand = playerHands[currentHandIndex];
-         if (!currentHand.canSplit) { // Use the pre-calculated flag
+         if (!currentHand.canSplit) {
              console.log("Cannot split this hand.");
              if (playerMoney < currentHand.bet) alert("Non hai abbastanza soldi per dividere.");
              else if (currentHand.cards.length !== 2) alert("Puoi dividere solo sulla mano iniziale.");
              else if (getCardValue(currentHand.cards[0]) !== getCardValue(currentHand.cards[1])) alert("Le carte devono avere lo stesso valore per dividerle.");
              return;
          }
-         if (playerHands.length >= 4) { // Limit number of splits
+         if (playerHands.length >= 4) {
             alert("Non puoi dividere più di 4 mani.");
             return;
          }
@@ -1241,61 +1256,54 @@
          console.log(`Splitting hand ${currentHandIndex + 1}`);
          isSplitRound = true;
          const originalBet = currentHand.bet;
-         playerMoney -= originalBet; // Deduct bet for the new hand
+         playerMoney -= originalBet;
          updatePlayerMoneyDisplay();
 
-         const secondCard = currentHand.cards.pop(); // Move one card to the new hand
+         const secondCard = currentHand.cards.pop();
 
-         // Create the new hand object and element
-         const newHandIndex = currentHandIndex + 1;
+         const newHandIndex = playerHands.length; // New hand added at the end for simplicity in management
          const newHandElement = createPlayerHandElement(newHandIndex, originalBet);
          const newHand = {
-             cards: [secondCard], // Starts with the second card from the split pair
-             score: 0,
-             bet: originalBet,
-             element: newHandElement,
-             status: 'active',
-             canDouble: true, // Can double after split (usually)
-             canSplit: false, // Will be checked after dealing next card
-             doubled: false
+             cards: [secondCard], score: 0, bet: originalBet, element: newHandElement,
+             status: 'active', canDouble: true, canSplit: false, doubled: false
          };
-         // Insert the new hand into the array
-         playerHands.splice(newHandIndex, 0, newHand);
-         // Update IDs and titles of subsequent hands if any
-         for (let i = newHandIndex + 1; i < playerHands.length; i++) {
-            const title = playerHands[i].element.querySelector('h3');
-            if (title) title.textContent = `Mano ${i + 1} - Punta: €${playerHands[i].bet}`;
-            playerHands[i].element.id = `player-hand-${i}`;
-         }
+         playerHands.push(newHand); // Add new hand to the array
 
-         // Deal one new card to each split hand
+         // Update titles for all hands to reflect their new indices if needed (though new hand is added at end)
+         playerHands.forEach((hand, idx) => {
+             const title = hand.element.querySelector('h3');
+             if (title) title.textContent = `Mano ${idx + 1} - Punta: €${hand.bet}`;
+             hand.element.id = `player-hand-${idx}`;
+         });
+
+
          dealCard(currentHand.cards);
          dealCard(newHand.cards);
 
-         // Recalculate scores and check possibilities for both hands
          currentHand.score = calculateScore(currentHand.cards);
          newHand.score = calculateScore(newHand.cards);
 
-         // Check for Blackjack on split hands (usually counts as 21, not 3:2 payout)
-         if (currentHand.score === 21) currentHand.status = 'blackjack'; // Or 'stand' based on rules
-         if (newHand.score === 21) newHand.status = 'blackjack';       // Or 'stand'
+         // Blackjack on split Aces is usually 21, not Blackjack
+         if (getCardValue(currentHand.cards[0]) === 11 && currentHand.score === 21) currentHand.status = 'stand'; // Auto-stand on split Aces
+         else if (currentHand.score === 21) currentHand.status = 'blackjack';
 
-         // Re-check split possibility ONLY if Ace was split (common rule)
-         currentHand.canSplit = (getCardValue(currentHand.cards[0]) === 11) ? checkSplitPossibility(currentHand) : false;
-         newHand.canSplit = (getCardValue(newHand.cards[0]) === 11) ? checkSplitPossibility(newHand) : false;
-         // Re-check double possibility (usually allowed after split, unless Aces were split)
-         currentHand.canDouble = (currentHand.status === 'active' && getCardValue(currentHand.cards[0]) !== 11);
-         newHand.canDouble = (newHand.status === 'active' && getCardValue(newHand.cards[0]) !== 11);
+         if (getCardValue(newHand.cards[0]) === 11 && newHand.score === 21) newHand.status = 'stand';
+         else if (newHand.score === 21) newHand.status = 'blackjack';
+
+         currentHand.canSplit = (getCardValue(currentHand.cards[0]) === 11 && currentHand.cards.length === 2) ? checkSplitPossibility(currentHand) : false;
+         newHand.canSplit = (getCardValue(newHand.cards[0]) === 11 && newHand.cards.length === 2) ? checkSplitPossibility(newHand) : false;
+
+         currentHand.canDouble = (currentHand.status === 'active' && (getCardValue(currentHand.cards[0]) !== 11 || playerHands.length > 2)); // Double not allowed on split Aces in some rules unless it's a resplit
+         newHand.canDouble = (newHand.status === 'active' && (getCardValue(newHand.cards[0]) !== 11 || playerHands.length > 2));
 
 
          updateHandDisplay(currentHand);
          updateHandDisplay(newHand);
-         // If the first hand became a Blackjack/21, automatically move to the next hand
-         if(currentHand.status === 'blackjack') {
+
+         if(currentHand.status === 'stand' || currentHand.status === 'blackjack') { // If first split hand auto-stands (e.g. split Aces)
              moveToNextHandOrEndRound();
          } else {
-             // Stay on the current (first split) hand
-             updateActionButtons();
+             updateActionButtons(); // Stay on current hand if it's still active
              highlightHint();
          }
          saveGameState();
@@ -1304,28 +1312,22 @@
 
     function moveToNextHandOrEndRound() {
         const currentHand = playerHands[currentHandIndex];
-        // Check if the current hand's turn is over
         if (currentHand.status === 'bust' || currentHand.status === 'stand' || currentHand.status === 'blackjack' || currentHand.status === 'surrender') {
-            currentHand.element.classList.remove('current-hand'); // Unhighlight completed hand
-            // Check if there are more hands to play
+            currentHand.element.classList.remove('current-hand');
             if (currentHandIndex < playerHands.length - 1) {
-                 currentHandIndex++; // Move to the next hand index
+                 currentHandIndex++;
                  const nextHand = playerHands[currentHandIndex];
-                 nextHand.element.classList.add('current-hand'); // Highlight the new current hand
-
-                 // If the next hand is already finished (e.g., blackjack after split), skip it
+                 nextHand.element.classList.add('current-hand');
                  if (nextHand.status !== 'active') {
-                     moveToNextHandOrEndRound(); // Recursively move to the next one
+                     moveToNextHandOrEndRound();
                  } else {
-                     // Next hand is active, update buttons and wait for player action
                      console.log(`Moving to Hand ${currentHandIndex + 1}`);
-                     nextHand.canSplit = checkSplitPossibility(nextHand); // Re-check split on new hand's turn
+                     nextHand.canSplit = checkSplitPossibility(nextHand);
                      updateActionButtons();
                      highlightHint();
                      saveGameState();
                  }
              } else {
-                 // All player hands are finished, play dealer's hand
                  console.log("All player hands played. Playing dealer hand...");
                  playDealerHand();
              }
@@ -1333,154 +1335,126 @@
     }
 
 
-    async function playDealerHand() { // Made async to allow delays
-        updateDealerDisplay(true); // Reveal hole card and update count/score
+    async function playDealerHand() {
+        updateDealerDisplay(true);
         let dealerScore = calculateScore(dealerHand);
-        // Dealer hits on soft 17 rule (common variation, can be adjusted)
-        const hitSoft17 = true; // Change to false for "Dealer stands on all 17s"
+        const hitSoft17 = true;
 
-        // Dealer draws cards until score is 17 or higher
-        // Condition adjusted based on hitSoft17 rule
         while (dealerScore < 17 || (hitSoft17 && dealerScore === 17 && dealerHand.some(c => c.value === 'A' && calculateScore(dealerHand) === 17))) {
              console.log(`Dealer Hits (Score: ${dealerScore})`);
-             await new Promise(resolve => setTimeout(resolve, 600)); // Delay for visual effect
+             await new Promise(resolve => setTimeout(resolve, 600));
              dealCard(dealerHand);
              dealerScore = calculateScore(dealerHand);
-             updateDealerDisplay(true); // Update display after each hit
+             updateDealerDisplay(true);
         }
          console.log(`Dealer Stands with ${dealerScore}`);
-         await new Promise(resolve => setTimeout(resolve, 300)); // Short delay before ending
-         endRound(); // Proceed to determine results
+         await new Promise(resolve => setTimeout(resolve, 300));
+         endRound();
     }
 
 
     function endRound() {
         isGameOver = true;
-        updateDealerDisplay(true); // Ensure dealer hand is fully revealed
+        updateDealerDisplay(true);
         const dealerScore = calculateScore(dealerHand);
         const dealerBusted = dealerScore > 21;
         let roundOutcomeMessages = [];
-        let totalWinnings = 0; // Tracks money returned to player (original bet + profit/loss)
-        let netChange = 0;     // Tracks profit/loss compared to initial bet(s)
+        let totalWinningsFromBets = 0; // Money returned to player (original bet + profit) for bets
+        let totalBetAmountThisRound = 0; // Sum of all bets placed by player this round
         let handsWon = 0;
         let handsLost = 0;
         let handsPushed = 0;
-        let gotBlackjackWin = false; // Track if any hand won with a Blackjack
-        let wonDoubleDown = false; // Track if won with double down
+        let gotBlackjackWin = false;
+        let wonDoubleDown = false;
 
         playerHands.forEach((hand, index) => {
+            totalBetAmountThisRound += hand.bet; // Accumulate total amount wagered
             let handResult = '';
-            let handPay = 0; // Payout relative to the hand's bet (e.g., 1 for win, 1.5 for BJ, 0 for push, -1 for loss)
+            let handPayMultiplier = 0; // -1 for loss, 0 for push, 1 for win, 1.5 for BJ
             let handStatusSuffix = playerHands.length > 1 ? ` (Mano ${index + 1})` : '';
-            let currentHandWon = false;
-
+            let currentHandWonThis = false;
 
             if (hand.status === 'bust') {
                 handResult = `Mano ${index + 1} Sballa`;
-                handPay = -1;
+                handPayMultiplier = -1;
                 handsLost++;
             } else {
                  const playerFinalScore = hand.score;
-                 const isPlayerBlackjack = (hand.status === 'blackjack'); // Status set earlier
+                 const isPlayerBlackjack = (hand.status === 'blackjack');
 
                  if (dealerBusted) {
-                     if (isPlayerBlackjack) {
-                          handResult = `Blackjack!${handStatusSuffix}`;
-                          handPay = 1.5; // BJ payout
-                          gotBlackjackWin = true;
-                     } else {
-                          handResult = `Dealer Sballa!${handStatusSuffix} Vince`;
-                          handPay = 1; // Regular win
-                     }
+                     handPayMultiplier = isPlayerBlackjack ? 1.5 : 1;
+                     handResult = isPlayerBlackjack ? `Blackjack!${handStatusSuffix}` : `Dealer Sballa!${handStatusSuffix} Vince`;
+                     if(isPlayerBlackjack) gotBlackjackWin = true;
                      handsWon++;
-                     currentHandWon = true;
-                 } else { // Dealer did not bust
+                     currentHandWonThis = true;
+                 } else {
                      if (isPlayerBlackjack) {
-                          // Player BJ vs Dealer non-BJ (check for push handled implicitly below)
-                          if(dealerScore === 21) { // Dealer also has 21 (not BJ necessarily)
-                              handResult = `Pareggio${handStatusSuffix}`;
-                              handPay = 0;
-                              handsPushed++;
+                          if (dealerHand.length === 2 && dealerScore === 21) { // Dealer also has BJ
+                            handResult = `Pareggio Blackjack!${handStatusSuffix}`; handPayMultiplier = 0; handsPushed++;
                           } else {
-                              handResult = `Blackjack!${handStatusSuffix}`;
-                              handPay = 1.5;
-                              handsWon++;
-                              gotBlackjackWin = true;
-                              currentHandWon = true;
+                            handResult = `Blackjack!${handStatusSuffix}`; handPayMultiplier = 1.5; handsWon++; gotBlackjackWin = true; currentHandWonThis = true;
                           }
+                     } else if (dealerHand.length === 2 && dealerScore === 21) { // Dealer BJ vs player non-BJ
+                        handResult = `Dealer Blackjack!${handStatusSuffix} Perde`; handPayMultiplier = -1; handsLost++;
                      } else if (playerFinalScore > dealerScore) {
-                          handResult = `Mano ${index + 1} Vince`;
-                          handPay = 1;
-                          handsWon++;
-                          currentHandWon = true;
+                          handResult = `Mano ${index + 1} Vince`; handPayMultiplier = 1; handsWon++; currentHandWonThis = true;
                      } else if (playerFinalScore === dealerScore) {
-                          handResult = `Mano ${index + 1} Pareggia`;
-                          handPay = 0; // Push
-                          handsPushed++;
-                     } else { // Player score < Dealer score
-                          handResult = `Dealer Vince${handStatusSuffix}`;
-                          handPay = -1;
-                          handsLost++;
+                          handResult = `Mano ${index + 1} Pareggia`; handPayMultiplier = 0; handsPushed++;
+                     } else {
+                          handResult = `Dealer Vince${handStatusSuffix}`; handPayMultiplier = -1; handsLost++;
                      }
                  }
             }
-             // Calculate winnings for this hand (original bet + payout * bet)
-             let winningsThisHand = hand.bet + (handPay * hand.bet);
-             totalWinnings += winningsThisHand;
-             netChange += (handPay * hand.bet); // Track only the profit/loss
+             let winningsThisHandSegment = hand.bet + (handPayMultiplier * hand.bet);
+             totalWinningsFromBets += winningsThisHandSegment;
 
-             // Check for double down win
-             if (currentHandWon && hand.doubled) {
+             if (currentHandWonThis && hand.doubled) {
                  wonDoubleDown = true;
              }
 
-             // Add bet amount to result message for clarity
-             if (handPay > 0) handResult += ` (+€${handPay * hand.bet})`;
-             else if (handPay < 0) handResult += ` (-€${hand.bet})`;
-             else handResult += ` (+€0)`;
+             if (handPayMultiplier > 0) handResult += ` (+€${(handPayMultiplier * hand.bet).toFixed(0)})`;
+             else if (handPayMultiplier < 0) handResult += ` (-€${hand.bet})`;
+             else handResult += ` (Push)`;
 
              roundOutcomeMessages.push(handResult);
-             hand.element.classList.remove('current-hand'); // Ensure hand is unhighlighted
+             hand.element.classList.remove('current-hand');
         });
 
-        playerMoney += totalWinnings; // Add back original bets + winnings/losses
+        // Old playerMoney was already reduced by initialBet(s). Now add back the bets + profit/loss.
+        playerMoney += totalWinningsFromBets;
         updatePlayerMoneyDisplay();
 
-        // Determine overall result class based on net change
-         let finalResultClass = '';
-         if (netChange > 0) finalResultClass = 'win';
-         else if (netChange < 0) finalResultClass = 'lose';
-         else finalResultClass = 'push';
+        let netChange = totalWinningsFromBets - totalBetAmountThisRound; // Actual profit/loss for the round
+        let finalResultClass = '';
+        if (netChange > 0) finalResultClass = 'win';
+        else if (netChange < 0) finalResultClass = 'lose';
+        else finalResultClass = 'push';
 
         showResult(roundOutcomeMessages.join('\n'), finalResultClass);
 
-        // Update session statistics
         sessionStatsData.hands += playerHands.length;
         sessionStatsData.wins += handsWon;
         sessionStatsData.losses += handsLost;
         sessionStatsData.pushes += handsPushed;
-        // Note: sessionStatsData.blackjacks is incremented when player GETS blackjack, not necessarily when they WIN with it.
-        updateDailyChallengeProgress(handsWon, gotBlackjackWin, wonDoubleDown, playerHands); // Pass necessary info
+        // Blackjack wins are counted if player gets BJ and it results in a win or push (not loss to dealer BJ)
+        if(gotBlackjackWin) { /* sessionStatsData.blackjacks already incremented when BJ is achieved */ }
+        updateDailyChallengeProgress(handsWon, gotBlackjackWin, wonDoubleDown, playerHands);
 
         updateStatsDisplay();
-        prepareNextRoundWithDelay(); // Prepare for the next round after a delay
-        saveGameState(); // Save state after round ends
+        prepareNextRoundWithDelay();
+        saveGameState();
     }
 
-    // NEW function to handle delay before reset
     function prepareNextRoundWithDelay() {
-        const cardPersistDelay = 2000; // 2 seconds
-
-        // Start fade out animation for cards after result is shown
+        const cardPersistDelay = 2000;
         setTimeout(() => {
             dealerCardsElement.style.opacity = '0';
             playerHandsContainer.style.opacity = '0';
-        }, 500); // Start fading slightly after result appears
-
-        // Set timeout to actually clear cards and reset betting phase
-        clearTimeout(cardClearTimeout); // Clear any existing timeout
+        }, 500);
+        clearTimeout(cardClearTimeout);
         cardClearTimeout = setTimeout(() => {
-            resetBettingPhase(); // This will hide game area and show betting
+            resetBettingPhase();
         }, cardPersistDelay);
     }
 
@@ -1488,96 +1462,78 @@
     function resetBettingPhase() {
         isGameOver = true;
         proposedBet = 0;
-        initialBet = 0; // Reset initial bet for the new round
-
-        // Clear card containers only *after* the delay handled by prepareNextRoundWithDelay
-        // dealerCardsElement.innerHTML = ''; // Moved out
-        // playerHandsContainer.innerHTML = ''; // Moved out
-        dealerScoreElement.textContent = '?'; // Reset score display for next round
+        initialBet = 0;
+        dealerScoreElement.textContent = '?';
 
         updateProposedBetDisplay();
-        updateActionButtons(); // Disable game buttons, enable betting buttons conditionally
+        updateActionButtons();
 
-        bettingArea.style.display = 'flex'; // Show betting area
-        gameArea.style.display = 'none';    // Hide game area
+        bettingArea.style.display = 'flex';
+        gameArea.style.display = 'none';
 
-        // Show Rebet button only if there was a last bet, it's valid for current limits, and affordable
         if (lastBet > 0 && lastBet >= currentTableLimits.min && lastBet <= currentTableLimits.max && lastBet <= playerMoney) {
              rebetButton.style.display = 'inline-block';
         } else {
              rebetButton.style.display = 'none';
         }
-        updateBettingUI(); // Update chips based on money and limits
-        checkOutOfMoney(); // Final check if player can even place the minimum bet
+        updateBettingUI();
+        checkOutOfMoney();
     }
 
      function checkOutOfMoney() {
          if (playerMoney < currentTableLimits.min && currentTableLimits.min > 0) {
              console.log("Player out of money for this table!");
-             showResult(`Non hai abbastanza soldi (€${playerMoney}) per la puntata minima di €${currentTableLimits.min}.\nResetta i soldi o cambia tavolo.`, "lose");
+             showResult(`Non hai abbastanza soldi (€${playerMoney}) per la puntata minima di €${currentTableLimits.min}.\nResetta i soldi (se non loggato) o cambia tavolo.`, "lose");
              dealButton.disabled = true;
              rebetButton.style.display = 'none';
-             // Disable all chip buttons
              clickableChipsContainer.querySelectorAll('button').forEach(btn => btn.disabled = true);
          }
      }
 
 
     function updateActionButtons() {
-        const bettingPhase = isGameOver; // True if in betting phase
+        const bettingPhase = isGameOver;
 
-        // Game action buttons (Hit, Stand, Double, Split)
         hitButton.disabled = bettingPhase;
         standButton.disabled = bettingPhase;
         doubleButton.disabled = bettingPhase;
         splitButton.disabled = bettingPhase;
 
-        // Betting action buttons (Deal, Rebet, Clear)
         dealButton.disabled = !bettingPhase || (proposedBet < currentTableLimits.min || proposedBet > playerMoney || proposedBet > currentTableLimits.max);
         clearBetButton.disabled = !bettingPhase || (proposedBet === 0);
-        // Rebet button visibility handled in resetBettingPhase
 
         if (!bettingPhase && playerHands.length > 0 && playerHands[currentHandIndex]) {
-            // If in game phase, enable/disable based on current hand state
             const currentHand = playerHands[currentHandIndex];
             if (currentHand.status === 'active') {
                 hitButton.disabled = false;
                 standButton.disabled = false;
-                // Double allowed only if active, canDouble flag is true, and enough money
-                doubleButton.disabled = !(currentHand.canDouble && playerMoney >= currentHand.bet);
-                // Split allowed only if active, canSplit flag is true (checked value match & affordability)
-                splitButton.disabled = !(currentHand.canSplit);
+                doubleButton.disabled = !(currentHand.canDouble && playerMoney >= currentHand.bet && !currentHand.doubled); // Check not already doubled
+                splitButton.disabled = !(currentHand.canSplit && playerMoney >= currentHand.bet); // Also check money for split
             }
         }
-         // Apply hint highlights AFTER setting disabled states
          applyHintHighlight();
     }
 
     function showResult(message, resultClass = '') {
-        resultElement.innerHTML = message.replace(/\n/g, '<br>'); // Keep newline conversion
-        resultElement.className = `result-show ${resultClass}`; // Apply show and result type class
-
-        // Hide the result message after a delay (longer delay now)
-        const resultDisplayDuration = 4000; // Keep result visible longer
+        resultElement.innerHTML = message.replace(/\n/g, '<br>');
+        resultElement.className = `result-show ${resultClass}`;
+        const resultDisplayDuration = 4000;
         setTimeout(() => {
-            resultElement.className = ''; // Remove all classes to hide
+            resultElement.className = '';
         }, resultDisplayDuration);
     }
 
      function updatePlayerMoneyDisplay() {
         const moneyString = `Saldo: €${playerMoney}`;
-        playerMoneyElement.textContent = `€${playerMoney}`; // Update display inside game area (less prominent)
-        balanceDisplayElement.textContent = moneyString; // Update main balance display
-        // Also update betting UI as affordability might change
-        if(isGameOver) { // Only update chip disabled state if in betting phase
+        playerMoneyElement.textContent = `€${playerMoney}`;
+        balanceDisplayElement.textContent = moneyString;
+        if(isGameOver) {
              updateBettingUI();
-             // Update rebet button state
              if (lastBet > 0 && lastBet >= currentTableLimits.min && lastBet <= currentTableLimits.max && lastBet <= playerMoney) {
                 rebetButton.style.display = 'inline-block';
              } else {
                  rebetButton.style.display = 'none';
              }
-             // Update deal button state
              dealButton.disabled = (proposedBet < currentTableLimits.min || proposedBet > playerMoney || proposedBet > currentTableLimits.max);
         }
      }
@@ -1585,65 +1541,45 @@
     // --- UI Functions ---
 
     function setupChipButtons() {
-        clickableChipsContainer.innerHTML = ''; // Clear existing chips
+        clickableChipsContainer.innerHTML = '';
         currentTableLimits.chips.forEach(value => {
             const chipButton = document.createElement('button');
             chipButton.classList.add('chip-button');
-            chipButton.dataset.value = value; // Use data-value for styling and logic
+            chipButton.dataset.value = value;
 
             const valueSpan = document.createElement('span');
             valueSpan.classList.add('chip-value');
-            // Format value (e.g., '1K' for 1000)
             valueSpan.textContent = value >= 1000 ? (value / 1000) + 'K' : value;
             chipButton.appendChild(valueSpan);
 
             chipButton.onclick = () => addBet(value);
 
-            // Check if this chip requires premium access (based on table limits, not just chip value)
-            const isChipPremiumLocked = Object.values(TABLE_LIMITS).some(limit =>
-                limit.premium && limit.chips.includes(value) && !TABLE_LIMITS[tableSelect.value]?.chips.includes(value)
-             );
-             // Disable chip if adding it exceeds max bet OR exceeds player money OR if it's premium locked FOR THIS TABLE
-            const requiresPremiumForThisTable = currentTableLimits.premium && !isPremium; // Is the current table premium locked?
-             chipButton.disabled = (
+            const requiresPremiumForThisTable = currentTableLimits.premium && !isPremium;
+            chipButton.disabled = (
                  proposedBet + value > currentTableLimits.max ||
                  proposedBet + value > playerMoney ||
-                 (requiresPremiumForThisTable && currentTableLimits.chips.includes(value)) // Disable *all* chips on locked premium table
+                 (requiresPremiumForThisTable && currentTableLimits.chips.includes(value))
              );
 
-
-             // Add premium lock icon and behavior if the *table itself* is premium and locked
              if (requiresPremiumForThisTable && currentTableLimits.chips.includes(value)) {
                  chipButton.classList.add('premium-locked');
-                 chipButton.onclick = (event) => { // Override click
+                 chipButton.onclick = (event) => {
                      event.preventDefault();
                      checkPremiumAccess(`Tavolo ${tableSelect.options[tableSelect.selectedIndex].text}`);
                  };
              }
-
-
             clickableChipsContainer.appendChild(chipButton);
         });
     }
 
     function updateBettingUI() {
-        // This function is called when money, limits, or proposed bet change
-        setupChipButtons(); // Recreate/update chips based on current limits and premium status
-        updateProposedBetDisplay(); // Update bet display text and Deal/Clear button states
-        // Re-check if out of money for the minimum bet
+        setupChipButtons();
+        updateProposedBetDisplay();
         checkOutOfMoney();
     }
 
-
-    // --- Theme Toggle ---
-    themeToggle.addEventListener('change', () => {
-        const theme = themeToggle.checked ? 'dark' : 'light';
-        document.body.setAttribute('data-theme', theme);
-        localStorage.setItem('blackjackTheme', theme);
-        saveGameState(); // Save theme preference
-    });
     function loadTheme() {
-        const savedTheme = localStorage.getItem('blackjackTheme') || 'light'; // Default to light
+        const savedTheme = localStorage.getItem('blackjackTheme') || 'light';
         document.body.setAttribute('data-theme', savedTheme);
         themeToggle.checked = (savedTheme === 'dark');
     }
@@ -1651,15 +1587,12 @@
 
     function changeGame() {
         console.log("Redirecting to index.html...");
-        // Assuming index.html is in the same directory
         window.location.href = 'index.html';
     }
 
     // --- Premium Features Handling ---
 
     function showPremiumPopup(featureName = "questa funzionalità") {
-        // You might want to customize the message based on the featureName
-        // premiumPopup.querySelector('#premium-feature-name').textContent = featureName; // If you add an element for it
         premiumPopup.classList.add('show');
         premiumPopupOverlay.classList.add('show');
     }
@@ -1669,181 +1602,138 @@
         premiumPopupOverlay.classList.remove('show');
     }
 
-    function activatePremiumPlaceholder() {
-         // This is just a simulation
+    async function activatePremiumAndSave() { // Renamed and made async
          if (!isPremium) {
-             isPremium = true;
-             localStorage.setItem('blackjackPremium', 'true');
-             applyPremiumFeatures(); // Update UI immediately
-             closePremiumPopup();
-             saveGameState(); // Save premium status
-             alert("Premium attivato (simulazione). Le funzionalità Premium sono ora disponibili.");
-             // Re-evaluate betting UI as premium chips/tables/challenges might become available
-             updateBettingUI();
-             updateChallengeDisplay(); // Update challenge display for premium state
+             if (currentUID) { // Check if a user is logged in
+                 try {
+                     await setUserVIPStatus(currentUID); // Update Firestore
+                     isPremium = true; // Update local state
+                     localStorage.setItem('blackjackPremium', 'true'); // Update local storage
+                     applyPremiumFeatures();
+                     closePremiumPopup();
+                     await saveGameState(); // Save updated premium state to Firestore/local
+                     alert("Premium attivato! Le funzionalità Premium sono ora disponibili.");
+                     updateBettingUI();
+                     updateChallengeDisplay();
+                 } catch (error) {
+                     console.error("Errore durante l'attivazione del Premium su Firestore:", error);
+                     alert("Errore durante l'attivazione del Premium. Riprova.");
+                 }
+             } else {
+                 // Fallback for non-logged-in users or if direct Firestore update isn't desired here
+                 isPremium = true;
+                 localStorage.setItem('blackjackPremium_local', 'true'); // Use a different key for local-only premium
+                 applyPremiumFeatures();
+                 closePremiumPopup();
+                 // saveGameState(); // No need to save to Firestore if not logged in, localStorage will be handled
+                 alert("Premium attivato (simulazione locale). Le funzionalità Premium sono ora disponibili per questa sessione.");
+                 updateBettingUI();
+                 updateChallengeDisplay();
+             }
          } else {
-             closePremiumPopup(); // Already premium
+             closePremiumPopup();
          }
     }
 
-     function checkPremiumAccess(elementOrFeatureName) {
-        if (isPremium) return true; // Already premium, allow access
 
-        let featureName = "questa funzionalità Premium"; // Default name
+     function checkPremiumAccess(elementOrFeatureName) {
+        if (isPremium) return true;
+
+        let featureName = "questa funzionalità Premium";
         if (typeof elementOrFeatureName === 'string') {
             featureName = elementOrFeatureName;
         } else if (elementOrFeatureName) {
-             // Try to get a more specific name based on the element clicked
              const detailsSummary = elementOrFeatureName.closest('details')?.querySelector('summary');
              const label = document.querySelector(`label[for="${elementOrFeatureName.id}"]`);
              const option = elementOrFeatureName.tagName === 'OPTION' ? elementOrFeatureName : null;
              const chip = elementOrFeatureName.classList.contains('chip-button') ? elementOrFeatureName : null;
              const challengeItem = elementOrFeatureName.classList.contains('challenge-item') ? elementOrFeatureName : null;
 
-
-             if (detailsSummary) {
-                featureName = detailsSummary.textContent.replace(/ ?- Premium/i, '').trim();
-             } else if (label) {
-                featureName = label.textContent.replace(/\(Premium\)/i, '').trim();
-             } else if (option) {
-                 featureName = `Limite tavolo "${option.textContent.replace(' (Premium)', '')}"`;
-             } else if (chip) {
-                 featureName = `Fiche da €${chip.dataset.value}`;
-             } else if (challengeItem) {
-                 featureName = 'Sfida Premium';
-             }
+             if (detailsSummary) featureName = detailsSummary.textContent.replace(/ ?- Premium/i, '').trim();
+             else if (label) featureName = label.textContent.replace(/\(Premium\)/i, '').trim();
+             else if (option) featureName = `Limite tavolo "${option.textContent.replace(' (Premium)', '')}"`;
+             else if (chip) featureName = `Fiche da €${chip.dataset.value}`;
+             else if (challengeItem) featureName = 'Sfida Premium';
         }
-
         showPremiumPopup(featureName);
-        return false; // Access denied
+        return false;
     }
 
 
     function applyPremiumFeatures() {
          console.log("Applying premium features state. isPremium:", isPremium);
-         // Sections (Details)
          premiumFeatureSections.forEach(el => {
             const summary = el.querySelector('summary');
             if (isPremium) {
                 el.classList.remove('premium-locked');
-                el.onclick = null; // Remove blocker click handler
+                el.onclick = null;
                 if (summary) summary.style.cursor = 'pointer';
-                 // Restore original content if text was modified
-                 if (summary && summary.dataset.originalText) {
-                     summary.textContent = summary.dataset.originalText;
-                 }
+                 if (summary && summary.dataset.originalText) summary.textContent = summary.dataset.originalText;
             } else {
                 el.classList.add('premium-locked');
-                el.open = false; // Ensure locked sections are closed
+                el.open = false;
                  if (summary) {
                      summary.style.cursor = 'not-allowed';
-                     // Store original text and append lock icon? Or handle in CSS?
-                     if (!summary.dataset.originalText) {
-                         summary.dataset.originalText = summary.textContent;
-                     }
-                     // summary.textContent = summary.dataset.originalText + " 🔒"; // Optionally add lock icon
+                     if (!summary.dataset.originalText) summary.dataset.originalText = summary.textContent;
                  }
-                 // Add click handler to summary to prevent opening and show popup
-                 if (summary) {
-                     summary.onclick = (event) => {
-                         event.preventDefault(); // Prevent toggling details
-                         checkPremiumAccess(el);
-                     };
-                 } else { // Fallback if no summary? (Shouldn't happen for details)
-                    el.onclick = (event) => {
-                        event.preventDefault();
-                        checkPremiumAccess(el);
-                    };
-                 }
+                 const clickHandler = (event) => {
+                     event.preventDefault();
+                     checkPremiumAccess(el);
+                 };
+                 if (summary) summary.onclick = clickHandler; else el.onclick = clickHandler;
             }
         });
-         // Inputs (Toggles)
          premiumFeatureInputs.forEach(input => {
              const parentDiv = input.closest('.premium-option') || input.closest('div');
-             const label = parentDiv?.querySelector('label.toggle-switch') || input; // Click target
-
+             const label = parentDiv?.querySelector('label.toggle-switch') || input;
             if (isPremium) {
                  input.disabled = false;
                  if (parentDiv) parentDiv.classList.remove('premium-locked');
-                 // Remove specific premium blocker click handler
-                 label.onclick = null; // Allow normal toggle behaviour
+                 label.onclick = null;
             } else {
                  input.disabled = true;
-                 input.checked = false; // Ensure toggles are off if premium locked
+                 input.checked = false;
                  if (parentDiv) parentDiv.classList.add('premium-locked');
-                 // Add click handler to prevent interaction and show popup
                  label.onclick = (event) => {
-                     event.preventDefault(); // Prevent toggling switch
+                     event.preventDefault();
                      checkPremiumAccess(input);
                  };
             }
         });
-         // Table Limit Options
          tableSelect.querySelectorAll('option.premium-feature').forEach(option => {
             if (isPremium) {
                  option.disabled = false;
                  option.textContent = option.textContent.replace(" (Premium)", "");
              } else {
                  option.disabled = true;
-                 if (!option.textContent.includes("(Premium)")) {
-                     option.textContent += " (Premium)";
-                 }
+                 if (!option.textContent.includes("(Premium)")) option.textContent += " (Premium)";
             }
          });
-         // Premium Chips are handled dynamically in setupChipButtons based on TABLE limits
 
-         // Update related state variables based on toggles AFTER applying locks
-         trainingModeActive = trainingModeToggle.checked; // Not premium, can always toggle
-         showHintsActive = showHintsToggle.checked && isPremium; // Only active if toggle is on AND premium
+         trainingModeActive = trainingModeToggle.checked;
+         showHintsActive = showHintsToggle.checked && isPremium;
 
-         // Ensure dependent UI updates
          if (!isPremium && trainerControls.open) trainerControls.open = false;
          if (!isPremium && sessionStats.open) sessionStats.open = false;
 
-         updateTrainerDisplay(); // Update trainer display based on active state
-         updateStatsDisplay();   // Update stats display if open
-         applyHintHighlight();   // Update hints based on active state
-         updateBettingUI();      // Update chips and betting based on premium status and limits
-         updateChallengeDisplay(); // Update challenges based on premium status
+         updateTrainerDisplay();
+         updateStatsDisplay();
+         applyHintHighlight();
+         updateBettingUI();
+         updateChallengeDisplay();
     }
 
-    // Event listeners for premium toggles
-    trainingModeToggle.addEventListener('change', () => {
-         trainingModeActive = trainingModeToggle.checked;
-         console.log("Training Mode Toggled:", trainingModeActive);
-         if (trainingModeActive && trainerControls.open) updateTrainerDisplay();
-         else if (!trainingModeActive) { // Clear display if turned off
-              runningCountElement.textContent = '0';
-              decksRemainingElement.textContent = '0.0';
-              trueCountElement.textContent = '0.0';
-         }
-         saveGameState();
-    });
-    showHintsToggle.addEventListener('change', (event) => {
-         // Check premium FIRST
-         if (event.target.checked && !checkPremiumAccess(event.target)) {
-             event.target.checked = false; // Revert toggle if not premium
-             return;
-         }
-         // If check passed (or user is unchecking), update state
-         showHintsActive = event.target.checked;
-         console.log("Show Hints Toggled:", showHintsActive);
-         applyHintHighlight(); // Update highlights immediately
-         saveGameState();
-    });
-    // --- Stats Functions ---
     function resetStats() {
         if (!checkPremiumAccess('Statistiche Sessione')) return;
         if (confirm("Sei sicuro di voler azzerare le statistiche della sessione?")) {
             sessionStatsData = { hands: 0, wins: 0, losses: 0, pushes: 0, blackjacks: 0 };
-            updateStatsDisplay(); // Update UI immediately
-            saveGameState();      // Save cleared stats
+            updateStatsDisplay();
+            saveGameState();
         }
     }
 
     function updateStatsDisplay() {
-        // No need to check premium here, just update if the section is open
-        if (!sessionStats.open) return;
+        if (!sessionStats.open && !(isPremium && sessionStats.open)) return; // Check if open OR if it should be open for premium
         statsHandsElement.textContent = sessionStatsData.hands;
         statsWinsElement.textContent = sessionStatsData.wins;
         statsLossesElement.textContent = sessionStatsData.losses;
@@ -1854,665 +1744,408 @@
         statsWinRateElement.textContent = winRate;
     }
 
-     // --- Basic Strategy Hint ---
      function getHint() {
-        // Return null if hints are off, not premium, game over, or hand not active
         if (!showHintsActive || !isPremium || isGameOver || !playerHands[currentHandIndex] || playerHands[currentHandIndex].status !== 'active') {
             return null;
         }
-
         const currentHand = playerHands[currentHandIndex];
         const playerScore = currentHand.score;
-        // Use visible dealer upcard value
-        const dealerUpCardValue = (dealerHand.length > 1 && !dealerHand[1].hidden) ? getCardValue(dealerHand[1]) : 0; // 0 if not visible yet
-        // Check if hand is soft (Ace counted as 11)
-        const isSoft = currentHand.cards.some(c => c.value === 'A') && playerScore !== calculateScore(currentHand.cards.map(c => ({...c, value: (c.value === 'A' ? '1' : c.value)}))); // Crude recalculation as 1
-        const canSplit = currentHand.canSplit; // Use the pre-calculated flag
-        const canDouble = currentHand.canDouble && playerMoney >= currentHand.bet; // Use flag AND check affordability
+        const dealerUpCardValue = (dealerHand.length > 1 && !dealerHand[1].hidden) ? getCardValue(dealerHand[1]) : 0;
+        const isSoft = currentHand.cards.some(c => c.value === 'A') && playerScore !== calculateScore(currentHand.cards.map(c => ({...c, value: (c.value === 'A' ? '1' : c.value)})));
+        const canSplit = currentHand.canSplit && playerMoney >= currentHand.bet; // Ensure affordable
+        const canDouble = currentHand.canDouble && playerMoney >= currentHand.bet && !currentHand.doubled; // Ensure affordable and not already doubled
 
-        // --- Basic Strategy Logic (Simplified Example - Stands on Soft 17) ---
 
-        // 1. Split? (Highest Priority)
         if (canSplit) {
-            const cardValue = getCardValue(currentHand.cards[0]); // Value of one card in the pair
-            if (cardValue === 11 || cardValue === 8) return 'split'; // Always split Aces and 8s
-            if (cardValue === 9 && ![7, 10, 11].includes(dealerUpCardValue)) return 'split'; // Split 9s except vs 7, 10, A
-            if (cardValue === 7 && dealerUpCardValue <= 7) return 'split'; // Split 7s vs 2-7
-            if (cardValue === 6 && dealerUpCardValue <= 6) return 'split'; // Split 6s vs 2-6
-            if (cardValue === 4 && [5, 6].includes(dealerUpCardValue) && canDouble) return 'split'; // Split 4s vs 5,6 if Double After Split allowed (canDouble implies DAS here)
-            if ((cardValue === 2 || cardValue === 3) && dealerUpCardValue <= 7) return 'split'; // Split 2s, 3s vs 2-7
-            // If split not recommended, proceed to Soft/Hard logic
+            const cardValue = getCardValue(currentHand.cards[0]);
+            if (cardValue === 11 || cardValue === 8) return 'split';
+            if (cardValue === 9 && ![7, 10, 11].includes(dealerUpCardValue)) return 'split';
+            if (cardValue === 7 && dealerUpCardValue <= 7) return 'split';
+            if (cardValue === 6 && dealerUpCardValue <= 6) return 'split';
+            if (cardValue === 4 && [5, 6].includes(dealerUpCardValue) && canDouble) return 'split';
+            if ((cardValue === 2 || cardValue === 3) && dealerUpCardValue <= 7) return 'split';
         }
-
-        // 2. Soft Hands?
         if (isSoft) {
-            if (playerScore >= 19) return 'stand'; // Stand Soft 19+
+            if (playerScore >= 19) return 'stand';
             if (playerScore === 18) {
-                 if ([2, 7, 8].includes(dealerUpCardValue)) return 'stand'; // Stand Soft 18 vs 2, 7, 8
-                 if (dealerUpCardValue >= 3 && dealerUpCardValue <= 6 && canDouble) return 'double'; // Double Soft 18 vs 3-6
-                 else return 'hit'; // Hit Soft 18 vs 9, 10, A
+                 if ([2, 7, 8].includes(dealerUpCardValue)) return 'stand';
+                 if (dealerUpCardValue >= 3 && dealerUpCardValue <= 6 && canDouble) return 'double';
+                 else return 'hit';
             }
-            if (playerScore === 17) { // Soft 17
-                 if (dealerUpCardValue >= 3 && dealerUpCardValue <= 6 && canDouble) return 'double'; // Double vs 3-6
-                 else return 'hit'; // Hit vs 2, 7-A
+            if (playerScore === 17) {
+                 if (dealerUpCardValue >= 3 && dealerUpCardValue <= 6 && canDouble) return 'double';
+                 else return 'hit';
             }
-             if (playerScore === 15 || playerScore === 16) { // Soft 15/16
-                 if (dealerUpCardValue >= 4 && dealerUpCardValue <= 6 && canDouble) return 'double'; // Double vs 4-6
-                 else return 'hit'; // Hit vs 2,3, 7-A
+             if (playerScore === 15 || playerScore === 16) {
+                 if (dealerUpCardValue >= 4 && dealerUpCardValue <= 6 && canDouble) return 'double';
+                 else return 'hit';
              }
-             if (playerScore === 13 || playerScore === 14) { // Soft 13/14
-                 if (dealerUpCardValue >= 5 && dealerUpCardValue <= 6 && canDouble) return 'double'; // Double vs 5-6
-                 else return 'hit'; // Hit vs 2-4, 7-A
+             if (playerScore === 13 || playerScore === 14) {
+                 if (dealerUpCardValue >= 5 && dealerUpCardValue <= 6 && canDouble) return 'double';
+                 else return 'hit';
              }
-             // Should cover all soft hands down to A-2 (Soft 13)
-             return 'hit'; // Failsafe for lower soft hands (shouldn't be reached if logic above is complete)
+             return 'hit';
         }
-
-        // 3. Hard Hands?
-        if (playerScore >= 17) return 'stand'; // Stand Hard 17+
+        if (playerScore >= 17) return 'stand';
         if (playerScore >= 13 && playerScore <= 16) {
-             if (dealerUpCardValue <= 6) return 'stand'; // Stand Hard 13-16 vs 2-6
-             else return 'hit'; // Hit Hard 13-16 vs 7-A
+             if (dealerUpCardValue <= 6) return 'stand';
+             else return 'hit';
         }
         if (playerScore === 12) {
-             if (dealerUpCardValue >= 4 && dealerUpCardValue <= 6) return 'stand'; // Stand Hard 12 vs 4-6
-             else return 'hit'; // Hit Hard 12 vs 2,3, 7-A
+             if (dealerUpCardValue >= 4 && dealerUpCardValue <= 6) return 'stand';
+             else return 'hit';
         }
-        if (playerScore === 11 && canDouble) return 'double'; // Always Double Hard 11 if possible
+        if (playerScore === 11 && canDouble) return 'double';
         if (playerScore === 10) {
-             if (dealerUpCardValue <= 9 && canDouble) return 'double'; // Double Hard 10 vs 2-9
-             else return 'hit'; // Hit Hard 10 vs 10, A
+             if (dealerUpCardValue <= 9 && canDouble) return 'double';
+             else return 'hit';
         }
         if (playerScore === 9) {
-             if (dealerUpCardValue >= 3 && dealerUpCardValue <= 6 && canDouble) return 'double'; // Double Hard 9 vs 3-6
-             else return 'hit'; // Hit Hard 9 vs 2, 7-A
+             if (dealerUpCardValue >= 3 && dealerUpCardValue <= 6 && canDouble) return 'double';
+             else return 'hit';
         }
-        // Hard 8 or less
         return 'hit';
      }
 
      function applyHintHighlight() {
-        // Clear previous highlights
         [hitButton, standButton, doubleButton, splitButton].forEach(btn => btn.classList.remove('hint-highlight'));
-
-        const hint = getHint(); // Get the strategy hint
-        console.log("Hint:", hint);
-        if (!hint) return; // No hint available or needed
-
+        const hint = getHint();
+        if (!hint) return;
         let targetButton = null;
         switch(hint) {
             case 'hit': targetButton = hitButton; break;
             case 'stand': targetButton = standButton; break;
-            case 'double':
-                // Suggest Double if available, otherwise suggest Hit (as Double implies Hit if cannot Double)
-                targetButton = !doubleButton.disabled ? doubleButton : hitButton;
-                break;
-            case 'split':
-                targetButton = !splitButton.disabled ? splitButton : null; // Suggest split only if possible
-                break;
+            case 'double': targetButton = !doubleButton.disabled ? doubleButton : hitButton; break;
+            case 'split': targetButton = !splitButton.disabled ? splitButton : null; break;
         }
-
-        // Apply highlight only if the suggested button exists and is not disabled
         if (targetButton && !targetButton.disabled) {
             targetButton.classList.add('hint-highlight');
         } else if (hint === 'double' && targetButton === hitButton && !hitButton.disabled) {
-             // Special case: Double suggested but unavailable/unaffordable, highlight Hit if Hit is possible
              hitButton.classList.add('hint-highlight');
-             console.log("Hint fallback: Double suggested but unavailable/unaffordable, highlighting Hit.");
         } else if (hint === 'split' && targetButton === null) {
-             // Split suggested but unavailable/unaffordable, determine fallback (usually hit/stand based on hard total)
-             // This requires re-evaluating strategy without split option - simplified: highlight Hit for now
              if (!hitButton.disabled) hitButton.classList.add('hint-highlight');
-             console.log("Hint fallback: Split suggested but unavailable/unaffordable, highlighting Hit (simplified).");
         }
      }
+     function highlightHint() { applyHintHighlight(); }
+     function showHiLoInfo() { alert("Conteggio Hi-Lo:\n\n- Carte Basse (2-6): +1\n- Carte Neutre (7-9): +0\n- Carte Alte (10, J, Q, K, A): -1\n\nConteggio Reale = Conteggio Corrente / Mazzi Rimanenti."); }
 
-
-     function highlightHint() {
-         // This function is called whenever action buttons might change
-         // It simply calls applyHintHighlight which internally checks if hints are active/premium
-         applyHintHighlight();
-     }
-
-     function showHiLoInfo() {
-         alert("Conteggio Hi-Lo:\n\n" +
-               "È una strategia di conteggio delle carte nel Blackjack.\n\n" +
-               "- Carte Basse (2-6): +1 al conteggio\n" +
-               "- Carte Neutre (7-9): +0 al conteggio\n" +
-               "- Carte Alte (10, J, Q, K, A): -1 al conteggio\n\n" +
-               "Conteggio Corrente (Running Count): La somma dei valori delle carte uscite.\n" +
-               "Conteggio Reale (True Count): Running Count / Mazzi Rimanenti (stima). Indica il vantaggio.\n\n" +
-               "Un True Count positivo alto suggerisce un vantaggio per il giocatore (più carte alte rimaste), favorendo puntate maggiori. Un True Count negativo suggerisce un vantaggio per il banco.");
-     }
-
-    // --- Daily Challenge & Bonus Logic (Modified for 3 Challenges) ---
+    // --- Daily Challenge & Bonus Logic ---
 
      function getChallengesForDay(timestamp = Date.now()) {
          const date = new Date(timestamp);
          const dayOfYear = Math.floor((timestamp - new Date(date.getFullYear(), 0, 0).getTime()) / (1000 * 60 * 60 * 24));
          const year = date.getFullYear();
-         const seedBase = `${year}-${dayOfYear}`; // Unique seed for the day
-
-         // Simple Pseudo-Random Number Generator based on seed
-         const simpleHash = (str) => {
-            let hash = 0;
-            for (let i = 0; i < str.length; i++) {
-                const char = str.charCodeAt(i);
-                hash = ((hash << 5) - hash) + char;
-                hash |= 0; // Convert to 32bit integer
-            }
-            return Math.abs(hash); // Use absolute value for seeding RNG
-         };
-
-         // Simple Seedable RNG (Mulberry32)
-         const mulberry32 = (seed) => {
-             return function() {
-               var t = seed += 0x6D2B79F5;
-               t = Math.imul(t ^ t >>> 15, t | 1);
-               t ^= t + Math.imul(t ^ t >>> 7, t | 61);
-               return ((t ^ t >>> 14) >>> 0) / 4294967296;
-             }
-         }
-
-         const generatedChallenges = [];
-         const usedTypes = new Set(); // Ensure different challenge types
-
+         const seedBase = `${year}-${dayOfYear}`;
+         const simpleHash = (str) => { let hash = 0; for (let i = 0; i < str.length; i++) { hash = ((hash << 5) - hash) + str.charCodeAt(i); hash |= 0; } return Math.abs(hash); };
+         const mulberry32 = (seed) => () => { var t = seed += 0x6D2B79F5; t = Math.imul(t ^ t >>> 15, t | 1); t ^= t + Math.imul(t ^ t >>> 7, t | 61); return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+         const generatedChallenges = []; const usedTypes = new Set();
          const availableChallengeTypes = [
              { type: 'win_hands', baseTarget: 5, description: (t) => `Vinci ${t} mani` },
              { type: 'get_blackjack', baseTarget: 1, description: (t) => `Ottieni ${t === 1 ? 'un' : t} Blackjack vincente/i` },
              { type: 'play_hands', baseTarget: 10, description: (t) => `Gioca ${t} mani` },
              { type: 'double_down_win', baseTarget: 2, description: (t) => `Vinci ${t} mano/i con Raddoppio`},
-             { type: 'reach_score', baseTarget: 20, description: (t) => `Ottieni un punteggio di ${t} o più (senza sballare)` },
+             { type: 'reach_score_exact', baseTarget: 20, description: (t) => `Ottieni un punteggio di esattamente ${t} (senza sballare)` }, // Modified for exact score
              { type: 'win_streak', baseTarget: 3, description: (t) => `Ottieni una serie di ${t} vittorie consecutive` },
-             // Add more challenge types if desired
          ];
-
          for(let i = 0; i < DAILY_CHALLENGE_COUNT; i++) {
-             const challengeSeed = simpleHash(seedBase + `-${i}`); // Unique seed for each challenge slot
-             const rng = mulberry32(challengeSeed);
-
-             let selectedType;
-             let attempts = 0;
-             // Try to pick an unused challenge type
-             do {
-                 const selectedTypeIndex = Math.floor(rng() * availableChallengeTypes.length);
-                 selectedType = availableChallengeTypes[selectedTypeIndex];
-                 attempts++;
-             } while (usedTypes.has(selectedType.type) && attempts < availableChallengeTypes.length * 2)
-
-             usedTypes.add(selectedType.type); // Mark type as used
-
+             const challengeSeed = simpleHash(seedBase + `-${i}`); const rng = mulberry32(challengeSeed);
+             let selectedType, attempts = 0;
+             do { selectedType = availableChallengeTypes[Math.floor(rng() * availableChallengeTypes.length)]; attempts++; }
+             while (usedTypes.has(selectedType.type) && attempts < availableChallengeTypes.length * 3)
+             usedTypes.add(selectedType.type);
              const isPremiumChallenge = (i === PREMIUM_CHALLENGE_INDEX);
-             const targetMultiplier = 1 + Math.floor(rng() * (isPremiumChallenge ? 4 : 3)); // Premium challenge can be harder (1-4x)
+             const targetMultiplier = selectedType.type === 'get_blackjack' ? 1 : (1 + Math.floor(rng() * (isPremiumChallenge ? 3 : 2))); // BJ target usually 1, others vary
              const target = selectedType.baseTarget * targetMultiplier;
-             const reward = isPremiumChallenge ? PREMIUM_CHALLENGE_REWARD : (NORMAL_CHALLENGE_REWARD_BASE + Math.floor(rng() * 51)); // Normal reward 100-150
-
-             generatedChallenges.push({
-                 id: `${seedBase}-${i}`, // Unique ID including slot index
-                 type: selectedType.type,
-                 target: target,
-                 current: 0,
-                 reward: reward,
-                 description: selectedType.description(target),
-                 completed: false,
-                 isPremium: isPremiumChallenge,
-                 lastCheckTimestamp: timestamp // Store when it was generated/checked
-             });
+             const reward = isPremiumChallenge ? PREMIUM_CHALLENGE_REWARD : (NORMAL_CHALLENGE_REWARD_BASE + Math.floor(rng() * 51));
+             generatedChallenges.push({ id: `${seedBase}-${i}`, type: selectedType.type, target: target, current: 0, reward: reward, description: selectedType.description(target), completed: false, isPremium: isPremiumChallenge, lastCheckTimestamp: timestamp });
          }
-
          return generatedChallenges;
      }
 
      function loadDailyChallenges() {
-        const savedChallenges = JSON.parse(localStorage.getItem('blackjackDailyChallenges') || 'null');
+        const savedChallenges = JSON.parse(localStorage.getItem('blackjackDailyChallenges_v2') || 'null'); // Use new key for new structure
         const now = Date.now();
-        const todayIdBase = getChallengesForDay(now)[0].id.split('-').slice(0, 2).join('-'); // Get YYYY-DayOfYear part
+        const todayIdBase = getChallengesForDay(now)[0].id.split('-').slice(0,2).join('-'); // YYYY-DayOfYear
 
-        // Check if saved challenges exist and are for today
         if (savedChallenges && Array.isArray(savedChallenges) && savedChallenges.length === DAILY_CHALLENGE_COUNT && savedChallenges[0].id.startsWith(todayIdBase)) {
-            // Load existing challenges for today
             dailyChallenges = savedChallenges;
-            console.log("Loaded existing daily challenges:", dailyChallenges);
         } else {
-            // Generate new challenges for today
             dailyChallenges = getChallengesForDay(now);
-            localStorage.setItem('blackjackDailyChallenges', JSON.stringify(dailyChallenges));
-            console.log("Generated new daily challenges:", dailyChallenges);
         }
-         updateChallengeDisplay(); // Update UI with loaded/new challenges
+        updateChallengeDisplay();
+        saveGameState(); // Save generated/loaded challenges
      }
 
-     // Update challenge progress based on round results
-     function updateDailyChallengeProgress(handsWonThisRound, gotBlackjackWinThisRound, wonDoubleDownThisRound, handsPlayedThisRound) {
+     function updateDailyChallengeProgress(handsWonThisRound, gotBlackjackWinThisRound, wonDoubleDownThisRound, playedHandsData) {
          if (!dailyChallenges || dailyChallenges.length === 0) return;
-
          let challengeUpdated = false;
-         const dealerScore = calculateScore(dealerHand); // Needed for some checks
 
-         dailyChallenges.forEach((challenge, index) => {
-             if (challenge.completed) return; // Skip completed
-             // Skip premium challenge if user is not premium
-             if (challenge.isPremium && !isPremium) return;
-
-             let progressMadeThisRound = 0;
-             let handSpecificCheck = false;
-
+         dailyChallenges.forEach(challenge => {
+             if (challenge.completed || (challenge.isPremium && !isPremium)) return;
+             let progressMade = 0;
              switch (challenge.type) {
-                 case 'win_hands':
-                     progressMadeThisRound = handsWonThisRound;
+                 case 'win_hands': progressMade = handsWonThisRound; break;
+                 case 'get_blackjack': if (gotBlackjackWinThisRound) progressMade = 1; break;
+                 case 'play_hands': progressMade = playedHandsData.length; break;
+                 case 'double_down_win': if (wonDoubleDownThisRound) progressMade = 1; break;
+                 case 'reach_score_exact':
+                     if (playedHandsData.some(h => h.status !== 'bust' && h.score === challenge.target)) progressMade = 1;
                      break;
-                 case 'get_blackjack':
-                     if (gotBlackjackWinThisRound) {
-                         progressMadeThisRound = 1;
-                     }
-                     break;
-                 case 'play_hands':
-                     progressMadeThisRound = handsPlayedThisRound.length;
-                     break;
-                 case 'double_down_win':
-                     if(wonDoubleDownThisRound) {
-                         progressMadeThisRound = 1; // Count per round where at least one double win occurred
-                     }
-                     break;
-                 case 'reach_score':
-                      handSpecificCheck = true;
-                      handsPlayedThisRound.forEach(hand => {
-                          if (hand.status !== 'bust' && hand.score >= challenge.target) {
-                              progressMadeThisRound = 1; // Increment only once per round if condition met
-                          }
-                      });
-                      break;
-                 // case 'win_streak': // Needs more complex state tracking across rounds
-                 //     // Logic to track consecutive wins would go here
-                 //     break;
-
              }
-
-             if (progressMadeThisRound > 0) {
-                const previousProgress = challenge.current;
-                challenge.current += progressMadeThisRound;
-                challenge.current = Math.min(challenge.current, challenge.target); // Cap at target
-
-                if (challenge.current > previousProgress) { // Only mark as updated if progress actually increased
-                    challengeUpdated = true;
-                    console.log(`Challenge '${challenge.description}' progress: ${challenge.current}/${challenge.target}`);
-                }
-
-
-                if (challenge.current >= challenge.target && !challenge.completed) {
-                    // Challenge Completed!
-                    challenge.completed = true;
-                    playerMoney += challenge.reward;
-                    console.log(`Daily challenge completed! ${challenge.description} +€${challenge.reward}`);
-                    // Show separate result for each completed challenge? Or combine?
-                    showResult(`Sfida Completata!\n${challenge.description}\n+€${challenge.reward}`, 'win');
-                    updatePlayerMoneyDisplay();
-                }
+             if (progressMade > 0) {
+                 challenge.current = Math.min(challenge.current + progressMade, challenge.target);
+                 challengeUpdated = true;
+                 if (challenge.current >= challenge.target) {
+                     challenge.completed = true; playerMoney += challenge.reward;
+                     showResult(`Sfida Completata!\n${challenge.description}\n+€${challenge.reward}`, 'win');
+                 }
              }
          });
-
-         if (challengeUpdated) {
-            // Save progress and update display if any challenge made progress
-            localStorage.setItem('blackjackDailyChallenges', JSON.stringify(dailyChallenges));
-            updateChallengeDisplay();
-         }
+         if (challengeUpdated) { updateChallengeDisplay(); saveGameState(); }
      }
 
-
-    // Helper to calculate payout multiplier (-1, 0, 1, 1.5) - needed for double_down_win challenge
-    function calculateHandPayout(hand, dealerScore) {
-        const playerFinalScore = hand.score;
-        const isPlayerBlackjack = hand.status === 'blackjack';
-        const dealerBusted = dealerScore > 21;
-
-        if (hand.status === 'bust') return -1;
-        if (dealerBusted) return isPlayerBlackjack ? 1.5 : 1;
-        // Check for dealer blackjack ONLY if player doesn't have one
-        if (!isPlayerBlackjack && dealerHand.length === 2 && dealerScore === 21) return -1;
-        // Player BJ vs Dealer non-BJ (or non-21)
-        if (isPlayerBlackjack) return (dealerScore === 21) ? 0 : 1.5; // Push vs dealer 21, win otherwise
-        // Regular hand comparison
-        if (playerFinalScore > dealerScore) return 1;
-        if (playerFinalScore === dealerScore) return 0;
-        return -1; // Player score < dealer score
-    }
-
-
-     function updateChallengeDisplay() {
+    function updateChallengeDisplay() {
          if (!dailyChallengesContainer) return;
-         dailyChallengesContainer.innerHTML = ''; // Clear previous
-         challengesLoading.style.display = 'none'; // Hide loading text
-
-         if (!dailyChallenges || dailyChallenges.length === 0) {
-            dailyChallengesContainer.innerHTML = '<p>Nessuna sfida attiva oggi.</p>';
-            return;
-         }
-
-         dailyChallenges.forEach((challenge, index) => {
-             const challengeDiv = document.createElement('div');
-             challengeDiv.classList.add('challenge-item');
-             challengeDiv.dataset.id = challenge.id;
-             challengeDiv.dataset.completed = challenge.completed;
-
+         dailyChallengesContainer.innerHTML = ''; challengesLoading.style.display = 'none';
+         if (!dailyChallenges || dailyChallenges.length === 0) { dailyChallengesContainer.innerHTML = '<p>Nessuna sfida attiva.</p>'; return; }
+         dailyChallenges.forEach(challenge => {
+             const div = document.createElement('div'); div.classList.add('challenge-item');
+             div.dataset.id = challenge.id; div.dataset.completed = challenge.completed;
              const isLocked = challenge.isPremium && !isPremium;
-             if (isLocked) {
-                 challengeDiv.classList.add('locked');
-                 challengeDiv.onclick = () => checkPremiumAccess(challengeDiv); // Show popup on click
-             }
-             if (challenge.isPremium) {
-                 challengeDiv.classList.add('premium-challenge');
-             }
-
-
-             const descriptionP = document.createElement('p');
-             descriptionP.classList.add('challenge-description');
-             descriptionP.textContent = challenge.description + (challenge.isPremium ? ' (Premium)' : '');
-
-             const progressP = document.createElement('p');
-             progressP.classList.add('challenge-progress-text');
-             progressP.textContent = `Progresso: ${isLocked ? '🔒' : challenge.current} / ${challenge.target}`;
-
-             const progressBarDiv = document.createElement('div');
-             progressBarDiv.classList.add('challenge-progress-bar');
-             const progressInnerDiv = document.createElement('div');
-             progressInnerDiv.classList.add('challenge-progress');
-             const progressPercent = challenge.target > 0 ? (challenge.current / challenge.target) * 100 : 0;
-             progressInnerDiv.style.width = isLocked ? '0%' : `${progressPercent}%`;
-             progressBarDiv.appendChild(progressInnerDiv);
-
-             const rewardP = document.createElement('p');
-             rewardP.classList.add('challenge-reward');
+             if (isLocked) { div.classList.add('locked'); div.onclick = () => checkPremiumAccess(div); }
+             if (challenge.isPremium) div.classList.add('premium-challenge');
+             const descP = document.createElement('p'); descP.classList.add('challenge-description');
+             descP.textContent = challenge.description + (challenge.isPremium ? ' (Premium)' : '');
+             const progP = document.createElement('p'); progP.classList.add('challenge-progress-text');
+             progP.textContent = `Progresso: ${isLocked ? '🔒' : challenge.current} / ${challenge.target}`;
+             const barDiv = document.createElement('div'); barDiv.classList.add('challenge-progress-bar');
+             const innerDiv = document.createElement('div'); innerDiv.classList.add('challenge-progress');
+             innerDiv.style.width = isLocked ? '0%' : `${challenge.target > 0 ? (challenge.current / challenge.target) * 100 : 0}%`;
+             barDiv.appendChild(innerDiv);
+             const rewardP = document.createElement('p'); rewardP.classList.add('challenge-reward');
              rewardP.innerHTML = `Ricompensa: <span style="color: var(--highlight-color); font-weight: bold;">€${challenge.reward}</span>`;
-
-
-             challengeDiv.appendChild(descriptionP);
-             challengeDiv.appendChild(progressP);
-             challengeDiv.appendChild(progressBarDiv);
-             challengeDiv.appendChild(rewardP);
-
+             div.append(descP, progP, barDiv, rewardP);
              if (challenge.completed && !isLocked) {
-                 const completedP = document.createElement('p');
-                 completedP.classList.add('challenge-completed-text');
-                 completedP.textContent = 'Completata!';
-                 challengeDiv.appendChild(completedP);
+                 const compP = document.createElement('p'); compP.classList.add('challenge-completed-text');
+                 compP.textContent = 'Completata!'; div.appendChild(compP);
              }
-
-
-             dailyChallengesContainer.appendChild(challengeDiv);
+             dailyChallengesContainer.appendChild(div);
          });
      }
 
     // --- Daily Bonus & Streak Logic ---
     function isSameDay(timestamp1, timestamp2) {
-        if (!timestamp1 || !timestamp2) return false; // Handle initial case
-        const date1 = new Date(timestamp1);
-        const date2 = new Date(timestamp2);
-        return date1.getFullYear() === date2.getFullYear() &&
-               date1.getMonth() === date2.getMonth() &&
-               date1.getDate() === date2.getDate();
+        if (!timestamp1 || !timestamp2) return false;
+        const date1 = new Date(timestamp1); const date2 = new Date(timestamp2);
+        return date1.getFullYear() === date2.getFullYear() && date1.getMonth() === date2.getMonth() && date1.getDate() === date2.getDate();
     }
-
     function isConsecutiveDay(timestamp1, timestamp2) {
          if (!timestamp1 || !timestamp2) return false;
-         const date1 = new Date(timestamp1); // Earlier date
-         const date2 = new Date(timestamp2); // Later date
+         const date1 = new Date(timestamp1); const date2 = new Date(timestamp2);
          const oneDay = 24 * 60 * 60 * 1000;
-         // Set both times to noon to avoid DST issues? Or just check date components.
          const date1StartOfDay = new Date(date1.getFullYear(), date1.getMonth(), date1.getDate()).getTime();
          const date2StartOfDay = new Date(date2.getFullYear(), date2.getMonth(), date2.getDate()).getTime();
-
          return (date2StartOfDay - date1StartOfDay) === oneDay;
     }
-
-
     function checkDailyBonusAndStreak() {
-        const savedBonusInfo = JSON.parse(localStorage.getItem('blackjackDailyBonusInfo') || 'null');
+        const savedInfo = JSON.parse(localStorage.getItem('blackjackDailyBonusInfo_v2') || 'null'); // New key
         const now = Date.now();
+        if (savedInfo) dailyBonusInfo = savedInfo;
+        else dailyBonusInfo = { collectedToday: false, lastLoginTimestamp: 0, consecutiveDays: 0 };
 
-        if (savedBonusInfo) {
-            dailyBonusInfo = savedBonusInfo;
-        } else {
-            // Initialize if no saved data
-             dailyBonusInfo = { collectedToday: false, lastLoginTimestamp: 0, consecutiveDays: 0 };
-        }
-
-
-        // Check if it's a new day since the last login
         if (!isSameDay(now, dailyBonusInfo.lastLoginTimestamp)) {
-            console.log("New day detected.");
-            // Reset collected flag for the new day
             dailyBonusInfo.collectedToday = false;
-            // Check for consecutive login streak
             if (dailyBonusInfo.lastLoginTimestamp !== 0 && isConsecutiveDay(dailyBonusInfo.lastLoginTimestamp, now)) {
                 dailyBonusInfo.consecutiveDays++;
-                console.log(`Consecutive login streak: ${dailyBonusInfo.consecutiveDays} days.`);
-            } else if (dailyBonusInfo.lastLoginTimestamp !== 0) { // Don't reset if it's the very first login
-                console.log("Consecutive login streak broken.");
-                dailyBonusInfo.consecutiveDays = 1; // Reset to 1 for today's login
-            } else {
-                 dailyBonusInfo.consecutiveDays = 1; // First login ever
-                 console.log("First login detected.");
-            }
-
-            // Update last login timestamp to now
+            } else if (dailyBonusInfo.lastLoginTimestamp !== 0) {
+                dailyBonusInfo.consecutiveDays = 1;
+            } else { dailyBonusInfo.consecutiveDays = 1; } // First login
             dailyBonusInfo.lastLoginTimestamp = now;
-            // Attempt to collect the bonus for the new day
             collectDailyBonus();
-            // Save updated bonus info (including streak and timestamp)
-            localStorage.setItem('blackjackDailyBonusInfo', JSON.stringify(dailyBonusInfo));
-        } else {
-            // Same day, check if bonus was already collected
-            if (dailyBonusInfo.collectedToday) {
-                 console.log("Daily bonus already collected today.");
-            } else {
-                 // Bonus not collected yet today (e.g., closed and reopened browser)
-                 console.log("Daily bonus available for today (re-opened).");
-                 collectDailyBonus(); // Attempt collection again
-                 // Save state in case collection was successful now
-                 localStorage.setItem('blackjackDailyBonusInfo', JSON.stringify(dailyBonusInfo));
-            }
+        } else if (!dailyBonusInfo.collectedToday) {
+             collectDailyBonus(); // Allow collection if missed on same day somehow
         }
+        // Saving of dailyBonusInfo happens in collectDailyBonus or after loading if no collection happens
+        saveGameState(); // Ensure it's saved even if no bonus was collected immediately
     }
-
-
      function collectDailyBonus() {
-         // Can only collect once per day
-         if (dailyBonusInfo.collectedToday) {
-             console.log("Attempted to collect bonus, but already collected today.");
-             return;
-         }
-
-         const baseBonusAmount = 1000; // Base daily bonus
-         // Calculate streak bonus (starts from day 2)
-         const streakBonusAmount = (dailyBonusInfo.consecutiveDays > 1) ? (dailyBonusInfo.consecutiveDays - 1) * 50 : 0; // Smaller streak bonus
-         const totalBonus = baseBonusAmount + streakBonusAmount;
-
+         if (dailyBonusInfo.collectedToday) return;
+         const baseBonus = 500; // Reduced base for balance
+         const streakBonus = (dailyBonusInfo.consecutiveDays > 1) ? (dailyBonusInfo.consecutiveDays - 1) * 25 : 0; // Smaller streak
+         const totalBonus = baseBonus + streakBonus;
          playerMoney += totalBonus;
-         dailyBonusInfo.collectedToday = true; // Mark as collected for today
-
-         console.log(`Daily Bonus Collected: Base €${baseBonusAmount}, Streak Bonus (€${streakBonusAmount}), Total €${totalBonus}`);
-         // Prepare message
-         let bonusMessage = `Bonus Giornaliero Riscosso!\n+€${baseBonusAmount}`;
-         if (streakBonusAmount > 0) {
-             bonusMessage += `\nSerie Accessi (${dailyBonusInfo.consecutiveDays} giorni): +€${streakBonusAmount}`;
-         }
-
-         updatePlayerMoneyDisplay();
-         showResult(bonusMessage, 'win');
-
-         // Note: Saving is handled in checkDailyBonusAndStreak after collection attempt
+         dailyBonusInfo.collectedToday = true;
+         let bonusMessage = `Bonus Giornaliero!\n+€${baseBonus}`;
+         if (streakBonus > 0) bonusMessage += `\nSerie (${dailyBonusInfo.consecutiveDays}g): +€${streakBonus}`;
+         updatePlayerMoneyDisplay(); showResult(bonusMessage, 'win');
+         saveGameState(); // Save after collection
      }
 
-
     // --- Save/Load Game State ---
-    function saveGameState() {
+    async function saveGameState() { // Make async for Firestore
         const gameState = {
-            playerMoney: playerMoney,
-            lastBet: lastBet,
-            isPremium: isPremium,
-             sessionStats: sessionStatsData,
-            theme: themeToggle.checked ? 'dark' : 'light',
-            trainingMode: trainingModeToggle.checked,
-            showHints: showHintsToggle.checked,
-            // Save open states of details elements
-            utilityOpen: utilityControls.open,
-            trainerOpen: trainerControls.open,
-            statsOpen: sessionStats.open,
-            challengeOpen: dailyChallengesDetails.open, // Save parent details open state
-             selectedTable: tableSelect.value,
-            // Save daily bonus and streak info
-            dailyBonusInfo: dailyBonusInfo,
-            // Save daily challenge state (array now)
+            playerMoney: playerMoney, lastBet: lastBet, isPremium: isPremium,
+            sessionStats: sessionStatsData, theme: themeToggle.checked ? 'dark' : 'light',
+            trainingMode: trainingModeToggle.checked, showHints: showHintsToggle.checked,
+            utilityOpen: utilityControls.open, trainerOpen: trainerControls.open,
+            statsOpen: sessionStats.open, challengeOpen: dailyChallengesDetails.open,
+            selectedTable: tableSelect.value, dailyBonusInfo: dailyBonusInfo,
             dailyChallenges: dailyChallenges,
-            // --- Do not save mid-game state for simplicity ---
-            // currentDeck: deck,
-            // currentPlayerHands: playerHands,
-            // currentDealerHand: dealerHand,
-            // currentHandIndex: currentHandIndex,
-            // isGameOver: isGameOver,
-            // proposedBet: proposedBet // If saving mid-betting phase
         };
-        localStorage.setItem('blackjackGameState', JSON.stringify(gameState));
-        // console.log("Game state saved."); // Reduce console noise
+        const localGameStateKey = currentUID ? `blackjackGameState_${currentUID}` : 'blackjackGameState_local';
+        localStorage.setItem(localGameStateKey, JSON.stringify(gameState));
+
+        if (currentUID) {
+            try {
+                await updateSaldoInFirestore(currentUID, playerMoney);
+                // Potentially save other parts of gameState to Firestore user document if needed
+                // For now, only saldo and isPremium (via setUserVIPStatus) are in Firestore.
+                console.log("Stato del gioco (saldo) salvato su Firestore.");
+            } catch (error) {
+                console.error("Errore nel salvare il saldo su Firestore:", error);
+            }
+        }
+        // console.log("Game state saved.");
     }
 
-    function loadGameState() {
-        loadTheme(); // Load theme preference first
+    async function loadGameState() { // Make async for Firestore
+        loadTheme();
+        let savedState = {};
+        const localGameStateKey_local = 'blackjackGameState_local'; // Generic local key
 
-        const savedState = JSON.parse(localStorage.getItem('blackjackGameState') || '{}');
+        if (currentUID) { // User is logged in
+            const firestoreSaldo = await getSaldoFromFirestore(currentUID);
+            playerMoney = (firestoreSaldo !== undefined && firestoreSaldo !== null) ? firestoreSaldo : DEFAULT_PLAYER_MONEY;
+            isPremium = await checkUserVIPStatus(currentUID);
+            localStorage.setItem('blackjackPremium', isPremium ? 'true' : 'false'); // Sync local for immediate UI updates
 
-        // Load Player Money and Bets
-        playerMoney = savedState.playerMoney !== undefined ? savedState.playerMoney : 1000;
-        lastBet = savedState.lastBet !== undefined ? savedState.lastBet : 0;
-        // Load Premium Status and Session Stats
-        isPremium = savedState.isPremium !== undefined ? savedState.isPremium : false;
-        localStorage.setItem('blackjackPremium', isPremium ? 'true' : 'false'); // Sync localStorage premium flag
-
-        sessionStatsData = savedState.sessionStats !== undefined ? savedState.sessionStats : { hands: 0, wins: 0, losses: 0, pushes: 0, blackjacks: 0 };
-        // Load Toggle States
-        trainingModeToggle.checked = savedState.trainingMode !== undefined ? savedState.trainingMode : false;
-        // Show Hints toggle state depends on saved value AND premium status
-        showHintsToggle.checked = (savedState.showHints !== undefined ? savedState.showHints : false) && isPremium;
-        // Load Details Open States
-        utilityControls.open = savedState.utilityOpen !== undefined ? savedState.utilityOpen : false;
-        // Only open premium sections if premium is active
-        trainerControls.open = (savedState.trainerOpen !== undefined ? savedState.trainerOpen : false) && isPremium;
-        sessionStats.open = (savedState.statsOpen !== undefined ? savedState.statsOpen : false) && isPremium;
-        dailyChallengesDetails.open = savedState.challengeOpen !== undefined ? savedState.challengeOpen : false;
-        // Load Table Limits
-         const savedTable = savedState.selectedTable || 'low';
-         if (TABLE_LIMITS[savedTable]) {
-             // If saved table is premium but user isn't, default to low
-             if (TABLE_LIMITS[savedTable].premium && !isPremium) {
-                 tableSelect.value = 'low';
-                 currentTableLimits = TABLE_LIMITS.low;
-                 console.log("Saved table was premium, user not premium. Defaulting to low limits.");
-             } else {
-                 tableSelect.value = savedTable;
-                 currentTableLimits = TABLE_LIMITS[savedTable];
-             }
-         } else {
-             tableSelect.value = 'low'; // Fallback to low if saved value is invalid
-             currentTableLimits = TABLE_LIMITS.low;
-         }
-
-        // Apply premium feature styling/locks based on loaded 'isPremium' status
-        applyPremiumFeatures();
-
-        // Load Daily Bonus/Streak Info (before checking bonus)
-        dailyBonusInfo = savedState.dailyBonusInfo !== undefined ? savedState.dailyBonusInfo : { collectedToday: false, lastLoginTimestamp: 0, consecutiveDays: 0 };
-
-        // Load Daily Challenges (before checking bonus)
-        dailyChallenges = savedState.dailyChallenges !== undefined ? savedState.dailyChallenges : [];
-        // Check if loaded challenges are valid for today, otherwise reload
-        if (dailyChallenges.length > 0) {
-             const todayIdBase = getChallengesForDay(Date.now())[0].id.split('-').slice(0, 2).join('-');
-             if (!dailyChallenges[0].id.startsWith(todayIdBase)) {
-                 console.log("Saved challenges are outdated, generating new ones.");
-                 loadDailyChallenges(); // This will generate today's challenges and update display
-             } else {
-                 updateChallengeDisplay(); // Update display with loaded challenges
-             }
-        } else {
-             loadDailyChallenges(); // Load challenges if none were saved or array empty
+            // Try loading other game state aspects from user-specific localStorage
+            const userSpecificLocalKey = `blackjackGameState_${currentUID}`;
+            savedState = JSON.parse(localStorage.getItem(userSpecificLocalKey) || '{}');
+            authStatusDisplayElement.textContent = `Connesso`; // Simpler, real email later
+        } else { // User not logged in
+            savedState = JSON.parse(localStorage.getItem(localGameStateKey_local) || '{}');
+            playerMoney = savedState.playerMoney !== undefined ? savedState.playerMoney : DEFAULT_PLAYER_MONEY;
+            isPremium = savedState.isPremium === true; // Check local premium if not logged in
+            authStatusDisplayElement.textContent = "Non collegato";
         }
 
+        lastBet = savedState.lastBet !== undefined ? savedState.lastBet : 0;
+        sessionStatsData = savedState.sessionStats || { hands: 0, wins: 0, losses: 0, pushes: 0, blackjacks: 0 };
+        trainingModeToggle.checked = savedState.trainingMode === true;
+        showHintsToggle.checked = (savedState.showHints === true) && isPremium;
+        utilityControls.open = savedState.utilityOpen === true;
+        trainerControls.open = (savedState.trainerOpen === true) && isPremium;
+        sessionStats.open = (savedState.statsOpen === true) && isPremium;
+        dailyChallengesDetails.open = savedState.challengeOpen === true;
 
-        // Check Daily Bonus & Streak Status (AFTER loading state)
+        const savedTable = savedState.selectedTable || 'low';
+        if (TABLE_LIMITS[savedTable]) {
+             if (TABLE_LIMITS[savedTable].premium && !isPremium) {
+                 tableSelect.value = 'low'; currentTableLimits = TABLE_LIMITS.low;
+             } else {
+                 tableSelect.value = savedTable; currentTableLimits = TABLE_LIMITS[savedTable];
+             }
+        } else { tableSelect.value = 'low'; currentTableLimits = TABLE_LIMITS.low; }
+
+        applyPremiumFeatures(); // Apply based on loaded 'isPremium'
+
+        dailyBonusInfo = savedState.dailyBonusInfo || { collectedToday: false, lastLoginTimestamp: 0, consecutiveDays: 0 };
+        dailyChallenges = savedState.dailyChallenges || [];
+
+        // After loading all state, then check/load daily items based on the user's status
         checkDailyBonusAndStreak();
+        loadDailyChallenges(); // This will generate if outdated or missing for current user status
 
-        // Update UI elements based on loaded state
         updatePlayerMoneyDisplay();
-        updateStatsDisplay(); // Updates only if section is open
-        updateTrainerDisplay(); // Updates only if section is open and mode is active
-        updateBettingUI(); // Sets up chips based on limits/money/premium
-
+        updateStatsDisplay();
+        updateTrainerDisplay();
+        updateBettingUI();
         console.log("Game state loaded.");
-        // Reset to betting phase when loading (simplest approach)
         resetBettingPhase();
     }
 
 
-     // --- Initialization ---
-     deck = createDeck();
-     shuffleDeck(deck);
-     // Event Listener for Table Limit Change
-    tableSelect.addEventListener('change', (event) => {
-         const selectedLimitKey = event.target.value;
-         const newLimits = TABLE_LIMITS[selectedLimitKey];
+    // --- Initialization ---
+    function initializeEventListeners() {
+        themeToggle.addEventListener('change', async () => {
+            const theme = themeToggle.checked ? 'dark' : 'light';
+            document.body.setAttribute('data-theme', theme);
+            localStorage.setItem('blackjackTheme', theme); // Also save to general local storage for theme persistence
+            await saveGameState();
+        });
+        trainingModeToggle.addEventListener('change', async () => {
+             trainingModeActive = trainingModeToggle.checked;
+             if (trainingModeActive && trainerControls.open) updateTrainerDisplay();
+             else if (!trainingModeActive) { runningCountElement.textContent = '0'; decksRemainingElement.textContent = '0.0'; trueCountElement.textContent = '0.0';}
+             await saveGameState();
+        });
+        showHintsToggle.addEventListener('change', async (event) => {
+             if (event.target.checked && !checkPremiumAccess(event.target)) { event.target.checked = false; return; }
+             showHintsActive = event.target.checked; applyHintHighlight(); await saveGameState();
+        });
+        tableSelect.addEventListener('change', async (event) => {
+             const selectedLimitKey = event.target.value; const newLimits = TABLE_LIMITS[selectedLimitKey];
+             if (!newLimits) return;
+             if (newLimits.premium && !checkPremiumAccess(event.target.options[event.target.selectedIndex])) {
+                 tableSelect.value = Object.keys(TABLE_LIMITS).find(key => TABLE_LIMITS[key] === currentTableLimits) || 'low'; return;
+             }
+             currentTableLimits = newLimits; proposedBet = 0; lastBet = 0; rebetButton.style.display = 'none';
+             await saveGameState(); updateBettingUI(); alert("Limiti del tavolo cambiati. Piazza una nuova puntata.");
+        });
 
-         if (!newLimits) return; // Should not happen
-
-         // Check premium access BEFORE changing limits
-         if (newLimits.premium && !checkPremiumAccess(event.target.options[event.target.selectedIndex])) {
-             // If premium check fails, revert selection to the previous valid limit
-             tableSelect.value = Object.keys(TABLE_LIMITS).find(key => TABLE_LIMITS[key] === currentTableLimits) || 'low';
-             return; // Stop further processing
-         }
-
-         // If check passes (or not premium), apply the change
-         console.log(`Changing table limits to: ${selectedLimitKey}`);
-         currentTableLimits = newLimits;
-         proposedBet = 0; // Reset proposed bet when limits change
-         lastBet = 0;     // Also reset last bet as it might be invalid now
-         rebetButton.style.display = 'none';
-         saveGameState();   // Save the new limit selection
-         updateBettingUI(); // Update chips and betting display immediately
-
-         alert("Limiti del tavolo cambiati. Piazza una nuova puntata.");
-     });
-
-     // Event listeners for details toggle + save state
-     // Use 'toggle' event on the <details> elements
-     utilityControls.addEventListener('toggle', saveGameState);
-     dailyChallengesDetails.addEventListener('toggle', saveGameState); // Save state for challenge details
-
-     trainerControls.addEventListener('toggle', (event) => {
-         if (event.target.open && !checkPremiumAccess(trainerControls)) {
-             event.target.open = false; // Prevent opening if not premium
-             event.preventDefault(); // Stop the toggle action
-         } else {
-             if (event.target.open) updateTrainerDisplay(); // Update display when opened
-             saveGameState(); // Save open/closed state
-         }
-      });
-     sessionStats.addEventListener('toggle', (event) => {
-         if (event.target.open && !checkPremiumAccess(sessionStats)) {
-             event.target.open = false; // Prevent opening if not premium
-             event.preventDefault();
-         } else {
-              if (event.target.open) updateStatsDisplay(); // Update display when opened
-              saveGameState(); // Save open/closed state
-         }
-      });
+        // Buttons with onclick in HTML are fine, but for dynamically added or cleaner setup:
+        dealButton.onclick = deal;
+        rebetButton.onclick = rebet;
+        clearBetButton.onclick = clearProposedBet;
+        hitButton.onclick = hit;
+        standButton.onclick = stand;
+        doubleButton.onclick = doubleDown;
+        splitButton.onclick = split;
+        resetStatsButton.onclick = resetStats;
+        changeGameButton.onclick = changeGame;
+        hiloInfoButton.onclick = showHiLoInfo;
+        closePremiumPopupButton.onclick = closePremiumPopup;
+        activatePremiumButton.onclick = activatePremiumAndSave; // Changed to new async function
+        premiumPopupOverlay.onclick = closePremiumPopup;
 
 
-    // --- Initialization on Load ---
-    window.onload = () => {
-        console.log("Window loaded. Initializing game...");
-        loadGameState(); // Load saved state, theme, check bonus, apply premium etc.
-        // loadGameState now calls resetBettingPhase at the end
+        utilityControls.addEventListener('toggle', saveGameState);
+        dailyChallengesDetails.addEventListener('toggle', saveGameState);
+        trainerControls.addEventListener('toggle', (event) => {
+             if (event.target.open && !checkPremiumAccess(trainerControls)) { event.target.open = false; event.preventDefault(); }
+             else { if (event.target.open) updateTrainerDisplay(); saveGameState(); }
+        });
+        sessionStats.addEventListener('toggle', (event) => {
+             if (event.target.open && !checkPremiumAccess(sessionStats)) { event.target.open = false; event.preventDefault(); }
+             else { if (event.target.open) updateStatsDisplay(); saveGameState(); }
+        });
+    }
+
+
+    // --- Game Initialization on Load ---
+    window.onload = async () => {
+        console.log("Window loaded. Initializing Blackjack game with Firebase...");
+        initializeEventListeners(); // Setup listeners first
+        // The onAuthStateChanged listener will trigger loadGameState and other UI updates
+        // loadGameState will be called once auth state is known.
+        // For initial load before auth state is confirmed, can show a loading state or use local data.
+        // For simplicity here, onAuthStateChanged will handle the main data load.
+        // We can call loadTheme here as it doesn't depend on auth.
+        loadTheme();
+        updateBettingUI(); // Initial chip setup based on default limits
+        // If no user is logged in after a brief moment, proceed with local/default state
+        setTimeout(() => {
+            if (currentUID === null) { // Check if auth listener has set a UID
+                console.log("No user logged in after initial delay, loading default/local state.");
+                loadGameState(); // This will use local storage or defaults if currentUID is still null
+            }
+        }, 1500); // Wait a bit for Firebase auth to initialize
     };
+
+    // Initialize deck (will be shuffled by loadGameState or startNewRound)
+    deck = createDeck();
+    shuffleDeck(deck);
 
 </script>
 </body>
