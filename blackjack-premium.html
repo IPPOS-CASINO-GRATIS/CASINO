@@ -3,200 +3,490 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Blackjack Premium</title>
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-J1YN9CKJS2"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-      gtag('config', 'G-J1YN9CKJS2');
-    </script>
+    <title>Blackjack Premium V7 - Corretto</title>
     <meta name="google-adsense-account" content="ca-pub-9456850571765688">
-    <meta name="description" content="Gioca a Blackjack online Pro con funzionalità avanzate! Salva il tuo saldo e stato Premium con Firebase. Allenati con il conteggio, statistiche, sfide giornaliere con ricompense, multi-mano (via split) e opzioni premium." />
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
-<style>
-  /* CSS Originale da blackjack-base.html (con piccole correzioni se necessarie) */
-  @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap'); /* Font Migliorato */
+    <meta name="description" content="Gioca a Blackjack online Pro con funzionalità avanzate! Allenati con il conteggio, statistiche, sfide giornaliere con ricompense, multi-mano (via split) e opzioni premium." />
+    <style>
+        /* --- Stili CSS (originali, non modificati se non per coerenza) --- */
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap'); /* Font Migliorato */
 
-  :root {
-    /* --- Theme Variables --- */
-    --bg-color: #1e5631; /* Sfondo verde tavolo */
-    --text-color: #ffffff;
-    --card-bg: white;
-    --card-text-black: black;
-    --card-text-red: #c0392b; /* Rosso carte più definito */
-    --button-bg: #2c3e50; /* Blu scuro coerente */
-    --button-text: #ecf0f1; /* Testo chiaro coerente */
-    --button-hover-bg: #34495e;
-    --button-active-bg: #253342;
-    --button-disabled-opacity: 0.5;
-    --highlight-color: #f1c40f; /* Giallo evidenziazione */
-    --border-color: rgba(255, 255, 255, 0.25); /* Bordo più visibile */
-    --panel-bg: rgba(0, 0, 0, 0.35); /* Sfondo pannelli semi-trasparente */
-    --accent-color: #3498db; /* Blu accento */
-    --dealer-hidden-card-bg: #8b4513; /* Dorso carta banco */
-    --font-main: 'Poppins', sans-serif; /* Font Principale */
-    --result-bg-color: rgba(0, 0, 0, 0.85); /* Sfondo risultato più scuro */
-    --result-text-color: #ffffff;
-    --result-win-glow: rgba(46, 204, 113, 0.8); /* Verde vittoria */
-    --result-lose-glow: rgba(231, 76, 60, 0.8); /* Rosso sconfitta */
-    --result-push-glow: rgba(243, 156, 18, 0.8); /* Arancio pareggio */
-    --details-summary-bg: rgba(0, 0, 0, 0.45);
-    --premium-glow: gold; /* Colore per evidenziare le feature premium */
-    --high-stakes-chip-border: #b8860b; /* Bordo fiche 1k (oro scuro) */
-    --very-high-stakes-chip-border: #00bcd4; /* Bordo fiche 2k (ciano) */
+        :root {
+            /* --- Theme Variables --- */
+            --bg-color: #1e5631; /* Sfondo verde tavolo */
+            --text-color: #ffffff;
+            --card-bg: white;
+            --card-text-black: black;
+            --card-text-red: #c0392b; /* Rosso carte più definito */
+            --button-bg: #2c3e50; /* Blu scuro coerente */
+            --button-text: #ecf0f1; /* Testo chiaro coerente */
+            --button-hover-bg: #34495e;
+            --button-active-bg: #253342;
+            --button-disabled-opacity: 0.5;
+            --highlight-color: #f1c40f; /* Giallo evidenziazione */
+            --border-color: rgba(255, 255, 255, 0.25); /* Bordo più visibile */
+            --panel-bg: rgba(0, 0, 0, 0.35); /* Sfondo pannelli semi-trasparente */
+            --accent-color: #3498db; /* Blu accento */
+            --dealer-hidden-card-bg: #8b4513; /* Dorso carta banco */
+            --font-main: 'Poppins', sans-serif; /* Font Principale */
+            --result-bg-color: rgba(0, 0, 0, 0.85); /* Sfondo risultato più scuro */
+            --result-text-color: #ffffff;
+            --result-win-glow: rgba(46, 204, 113, 0.8); /* Verde vittoria */
+            --result-lose-glow: rgba(231, 76, 60, 0.8); /* Rosso sconfitta */
+            --result-push-glow: rgba(243, 156, 18, 0.8); /* Arancio pareggio */
+            --details-summary-bg: rgba(0, 0, 0, 0.45);
+            --premium-glow: gold; /* Colore per evidenziare le feature premium */
+            --high-stakes-chip-border: #b8860b; /* Bordo fiche 1k (oro scuro) */
+            --very-high-stakes-chip-border: #00bcd4; /* Bordo fiche 2k (ciano) */
 
-    /* --- Customization Variables --- */
-    /* Optional: Uncomment to add a velvet texture background */
-    /* --table-bg-image: url('path/to/velvet-texture.png'); */
-    --table-bg-image: none;
-    --card-back-image: linear-gradient(45deg, rgba(255,255,255,0.1) 25%, transparent 25%), linear-gradient(-45deg, rgba(255,255,255,0.1) 25%, transparent 25%), linear-gradient(45deg, transparent 75%, rgba(255,255,255,0.1) 75%), linear-gradient(-45deg, transparent 75%, rgba(255,255,255,0.1) 75%);
-    --card-back-bg-color: var(--dealer-hidden-card-bg);
-    --card-back-pattern-size: 18px 18px;
+            /* --- Customization Variables --- */
+            /* Optional: Uncomment to add a velvet texture background */
+            /* --table-bg-image: url('path/to/velvet-texture.png'); */
+            --table-bg-image: none;
+            --card-back-image: linear-gradient(45deg, rgba(255,255,255,0.1) 25%, transparent 25%), linear-gradient(-45deg, rgba(255,255,255,0.1) 25%, transparent 25%), linear-gradient(45deg, transparent 75%, rgba(255,255,255,0.1) 75%), linear-gradient(-45deg, transparent 75%, rgba(255,255,255,0.1) 75%);
+            --card-back-bg-color: var(--dealer-hidden-card-bg);
+            --card-back-pattern-size: 18px 18px;
 
-    /* --- Spacing Variables --- */
-    --spacing-unit: 8px;
-    --section-margin-bottom: calc(var(--spacing-unit) * 4); /* Spazio tra sezioni */
-    --element-margin-bottom: calc(var(--spacing-unit) * 2); /* Spazio tra elementi */
-    --padding-standard: calc(var(--spacing-unit) * 2);
-    --padding-large: calc(var(--spacing-unit) * 3);
+            /* --- Spacing Variables --- */
+            --spacing-unit: 8px;
+            --section-margin-bottom: calc(var(--spacing-unit) * 4); /* Spazio tra sezioni */
+            --element-margin-bottom: calc(var(--spacing-unit) * 2); /* Spazio tra elementi */
+            --padding-standard: calc(var(--spacing-unit) * 2);
+            --padding-large: calc(var(--spacing-unit) * 3);
 
-    /* --- Animation Variables --- */
-    --animation-factor: 1; /* Default speed */
-    --auth-status-bg: rgba(0,0,0,0.2); /* Aggiunto per coerenza */
-  }
+            /* --- Animation Variables --- */
+            --animation-factor: 1; /* Default speed */
+        }
 
-  body[data-theme="dark"] {
-    /* Dark Theme */
-    --bg-color: #2c3e50;
-    --text-color: #ecf0f1;
-    --card-bg: #34495e;
-    --card-text-black: #ecf0f1;
-    --card-text-red: #e74c3c;
-    --button-bg: #95a5a6;
-    --button-text: #2c3e50;
-    --button-hover-bg: #bdc3c7;
-    --button-active-bg: #7f8c8d;
-    --highlight-color: #f1c40f;
-    --border-color: rgba(255, 255, 255, 0.2);
-    --panel-bg: rgba(255, 255, 255, 0.1);
-    --accent-color: #5dade2;
-    --dealer-hidden-card-bg: #4e4e4e;
-    --details-summary-bg: rgba(255, 255, 255, 0.15);
-    --card-back-bg-color: var(--dealer-hidden-card-bg);
-    --table-bg-image: radial-gradient(circle at top center, #34495e 0%, var(--bg-color) 70%);
-    --auth-status-bg: rgba(255, 255, 255, 0.05); /* Aggiunto per coerenza */
-  }
-  *, *::before, *::after { box-sizing: border-box; }
-  body {
-    background-image: var(--table-bg-image); background-size: cover; background-position: center; background-repeat: no-repeat; background-color: var(--bg-color); font-family: var(--font-main); text-align: center; color: var(--text-color); padding: var(--padding-large) var(--padding-standard); margin: 0; transition: background-color 0.3s, color 0.3s, background-image 0.3s; min-height: 100vh; font-size: 16px; line-height: 1.6; padding-top: 70px; /* Spazio per auth/balance */
-  }
-  .game-container { max-width: 1200px; margin: 0 auto; position: relative; overflow-x: hidden; }
-  h1 { margin-bottom: var(--element-margin-bottom); font-size: 2.4em; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #fff; text-shadow: 1px 1px 3px rgba(0,0,0,0.5); }
-  h2 { margin-bottom: var(--element-margin-bottom); font-size: 1.7em; font-weight: 600; letter-spacing: 0.5px; color: var(--highlight-color); border-bottom: 1px solid var(--border-color); padding-bottom: var(--spacing-unit); }
-  h3 { margin-top: 0; margin-bottom: var(--element-margin-bottom); font-size: 1.3em; font-weight: 600; color: var(--accent-color); }
-  #player-info, #dealer-info, #betting-area, #controls-area, details { background-color: var(--panel-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: var(--padding-large); margin-bottom: var(--section-margin-bottom); box-shadow: 0 5px 15px rgba(0,0,0,0.35); text-align: left; }
-  #controls-area, #betting-area { text-align: center; }
-  details { padding: 0; overflow: hidden; text-align: left; }
-  #top-bar-info { position: fixed; top: 10px; right: 15px; display: flex; flex-direction: column; align-items: flex-end; gap: 5px; z-index: 1000; }
-  #auth-status-display { background-color: var(--auth-status-bg); color: var(--text-color); padding: 6px 10px; border-radius: 6px; font-size: 0.8em; border: 1px solid var(--border-color); box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
-  #balance-display { background-color: var(--panel-bg); color: var(--highlight-color); padding: 8px 15px; border-radius: 8px; font-size: 1.1em; font-weight: bold; border: 1px solid var(--border-color); box-shadow: 0 2px 4px rgba(0,0,0,0.3); transition: background-color 0.3s, color 0.3s; }
-  #player-balance, #bet-chips-display, #insurance-bet-display, #dealer-score, #running-count-display { margin-bottom: var(--element-margin-bottom); font-size: 1.1em; padding: calc(var(--spacing-unit)*0.75) var(--padding-standard); background-color: rgba(0,0,0,0.2); border-radius: 6px; display: inline-block; margin-right: var(--spacing-unit); }
-  #player-balance { font-weight: 700; background-color: transparent; padding-left: 0; }
-  #running-count-display { font-weight: 600; }
-  .cards { margin: var(--element-margin-bottom) auto; display: flex; justify-content: center; min-height: 115px; gap: var(--spacing-unit); flex-wrap: wrap; perspective: 1200px; padding: var(--spacing-unit) 0; }
-  .card { display: inline-block; border: 1px solid rgba(0,0,0,0.2); border-radius: 10px; background: var(--card-bg); width: 75px; height: 110px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); margin: calc(var(--spacing-unit) / 2); position: relative; transform-style: preserve-3d; transition: transform calc(0.7s * var(--animation-factor)) cubic-bezier(0.4, 0.0, 0.2, 1), box-shadow 0.3s ease; }
-  .card.hidden { transform: rotateY(180deg); }
-  .card.revealed { transform: rotateY(0deg); }
-  .card:hover { box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4); }
-  .card-inner { position: relative; width: 100%; height: 100%; text-align: center; transform-style: preserve-3d; }
-  .card-face { position: absolute; width: 100%; height: 100%; -webkit-backface-visibility: hidden; backface-visibility: hidden; border-radius: 10px; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 5px; box-sizing: border-box; }
-  .card-front { background-color: var(--card-bg); background-image: linear-gradient(to bottom, rgba(255,255,255,0.05) 0%, rgba(0,0,0,0.05) 100%); color: var(--card-text-black); font-size: 28px; font-weight: 600; transform: rotateY(0deg); border: 1px solid rgba(0,0,0,0.1); }
-  .card-back { background-color: var(--card-back-bg-color); color: var(--text-color); transform: rotateY(180deg); background-image: var(--card-back-image); background-size: var(--card-back-pattern-size); background-position: center; }
-  .card-front.red { color: var(--card-text-red); } .card-front.black { color: var(--card-text-black); } .card .suit { font-size: 20px; font-weight: normal; line-height: 1.1; }
-  #action-buttons, #betting-controls, #insurance-controls { margin-top: var(--element-margin-bottom); display: flex; flex-wrap: wrap; justify-content: center; gap: var(--element-margin-bottom); }
-  button, .button-style { padding: 12px 25px; font-size: 1em; font-weight: 600; font-family: var(--font-main); cursor: pointer; border: none; border-radius: 8px; background-color: var(--button-bg); color: var(--button-text); transition: background-color 0.2s ease, opacity 0.3s ease, transform 0.15s ease, box-shadow 0.2s ease; user-select: none; -webkit-user-select: none; box-shadow: 0 3px 6px rgba(0, 0, 0, 0.25); letter-spacing: 0.5px; text-transform: none; display: inline-flex; align-items: center; justify-content: center; gap: var(--spacing-unit); text-decoration: none; line-height: 1.4; vertical-align: middle; }
-  button:hover:not(:disabled), .button-style:hover:not([aria-disabled="true"]) { background-color: var(--button-hover-bg); transform: translateY(-2px); box-shadow: 0 5px 10px rgba(0, 0, 0, 0.35); }
-  button:active:not(:disabled), .button-style:active:not([aria-disabled="true"]) { background-color: var(--button-active-bg); transform: translateY(0px); box-shadow: 0 2px 4px rgba(0, 0, 0, 0.25); }
-  button:disabled, .button-style[aria-disabled="true"] { opacity: var(--button-disabled-opacity); cursor: not-allowed; box-shadow: none; transform: none; background-color: #555 !important; color: #aaa !important; }
-  button i, .button-style i { font-size: 1.1em; line-height: 1; }
-  button.hint-highlight { box-shadow: 0 0 12px 4px var(--highlight-color) !important; border: 1px solid var(--highlight-color); transform: translateY(-1px); }
-  .premium-feature-visual { border-left: 5px solid var(--premium-glow); padding-left: var(--padding-standard); margin-left: calc(-1 * var(--padding-standard) - 5px); filter: drop-shadow(0 0 5px var(--premium-glow)); }
-  details.premium-feature-visual summary, .premium-feature-visual label { color: var(--premium-glow); font-weight: 700; }
-  .premium-feature-visual .toggle-switch input:checked + .slider { background-color: var(--premium-glow); }
-  .premium-feature-visual .toggle-switch input:focus + .slider { box-shadow: 0 0 3px var(--premium-glow); }
-  button.premium-action-visual, .button-style.premium-action-visual { box-shadow: 0 0 6px 1px var(--premium-glow), 0 3px 6px rgba(0, 0, 0, 0.25); }
-  button.premium-action-visual:hover:not(:disabled), .button-style.premium-action-visual:hover:not([aria-disabled="true"]) { box-shadow: 0 0 10px 2px var(--premium-glow), 0 5px 10px rgba(0, 0, 0, 0.35); }
-  #betting-area h3 { margin-bottom: var(--element-margin-bottom); text-align: center; }
-  #proposed-bet-display { font-size: 1.6em; font-weight: 700; color: var(--highlight-color); min-height: 1.6em; background-color: rgba(0,0,0,0.3); padding: var(--spacing-unit) var(--padding-standard); border-radius: 6px; margin-bottom: var(--element-margin-bottom); display: inline-block; min-width: 120px; text-align: center; }
-  #clickable-chips { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--element-margin-bottom); margin-bottom: var(--element-margin-bottom); padding: var(--spacing-unit) 0; }
-  .chip-button { width: 65px; height: 65px; cursor: pointer; border-radius: 50%; border: 5px solid rgba(255, 255, 255, 0.6); transition: transform 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s ease, box-shadow 0.2s ease, border-color 0.2s ease; box-shadow: inset 0 3px 5px rgba(0, 0, 0, 0.5), 0 3px 5px rgba(0,0,0,0.3); user-select: none; -webkit-user-select: none; background-color: transparent; display: flex; justify-content: center; align-items: center; overflow: hidden; padding: 0; transform: scale(1); }
-  .chip-button img { display: block; width: 100%; height: 100%; object-fit: contain; pointer-events: none; }
-  .chip-button:hover:not([disabled]) { transform: scale(1.1); border-color: white; box-shadow: inset 0 3px 5px rgba(0, 0, 0, 0.5), 0 0 15px 4px var(--highlight-color); }
-  .chip-button:active:not([disabled]) { transform: scale(0.92); box-shadow: inset 0 5px 7px rgba(0, 0, 0, 0.6); transition-duration: 0.05s; }
-  .chip-button[disabled] { opacity: 0.4; cursor: not-allowed; transform: none; border-color: rgba(255, 255, 255, 0.4); box-shadow: inset 0 3px 5px rgba(0, 0, 0, 0.5); }
-  .chip-button.high-stakes-chip { border-color: var(--high-stakes-chip-border); }
-  .chip-button.high-stakes-chip:hover:not([disabled]) { box-shadow: inset 0 3px 5px rgba(0, 0, 0, 0.5), 0 0 15px 4px var(--premium-glow); border-color: var(--premium-glow); }
-  .chip-button.very-high-stakes-chip { border-color: var(--very-high-stakes-chip-border); }
-  .chip-button.very-high-stakes-chip:hover:not([disabled]) { box-shadow: inset 0 3px 5px rgba(0, 0, 0, 0.5), 0 0 15px 4px var(--very-high-stakes-chip-border); border-color: var(--very-high-stakes-chip-border); }
-  #player-hands-container { display: flex; justify-content: center; gap: var(--padding-large); flex-wrap: wrap; margin-top: var(--element-margin-bottom); }
-  .player-hand { border: 3px solid var(--border-color); border-radius: 10px; padding: var(--padding-standard); min-width: 220px; background-color: rgba(0,0,0,0.2); position: relative; transition: border-color 0.3s, box-shadow 0.3s; box-shadow: 0 4px 8px rgba(0,0,0,0.3); text-align: center; }
-  .player-hand h3 { margin-top: 0; margin-bottom: var(--spacing-unit); font-size: 1.1em; color: var(--accent-color); text-align: center; font-weight: 700; }
-  .player-hand .cards { min-height: 110px; margin-bottom: var(--spacing-unit); }
-  .player-score, .hand-bet { font-size: 1em; margin-bottom: var(--spacing-unit); font-weight: 700; }
-  .hand-status { font-size: 1em; font-weight: 700; color: var(--highlight-color); min-height: 1.2em; text-align: center; text-transform: uppercase; letter-spacing: 1px; }
-  .player-hand.current-hand { border-color: var(--highlight-color); box-shadow: 0 0 20px rgba(241, 196, 15, 0.8); }
-  #result-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.75); opacity: 0; visibility: hidden; z-index: 99; transition: opacity 0.4s ease-out, visibility 0s linear 0.4s; backdrop-filter: blur(4px); }
-  #result-overlay.show { opacity: 1; visibility: visible; transition-delay: 0s; cursor: pointer;}
-  #result-message { opacity: 0; visibility: hidden; transform: translate(-50%, -50%) scale(0.8); transition: opacity 0.4s ease-out 0.1s, visibility 0s linear 0.5s, transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) 0.1s; position: fixed; top: 50%; left: 50%; z-index: 100; background-color: var(--result-bg-color); color: var(--result-text-color); padding: var(--padding-large) calc(var(--padding-large) * 1.8); border-radius: 15px; font-size: 2.8em; font-weight: 700; text-align: center; white-space: pre-line; min-width: 350px; max-width: 90%; box-shadow: 0 0 30px 10px rgba(0, 0, 0, 0.7); cursor: default;}
-  #result-message.result-show { opacity: 1; visibility: visible; transform: translate(-50%, -50%) scale(1); transition: opacity 0.4s ease-out, visibility 0s linear 0s, transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-  #result-message.win { box-shadow: 0 0 35px 15px var(--result-win-glow); }
-  #result-message.lose { box-shadow: 0 0 35px 15px var(--result-lose-glow); }
-  #result-message.push { box-shadow: 0 0 35px 15px var(--result-push-glow); }
-  details { max-width: 700px; margin-left: auto; margin-right: auto; }
-  details summary { font-weight: 700; cursor: pointer; padding: var(--padding-standard) var(--padding-large); background-color: var(--details-summary-bg); list-style: none; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid transparent; transition: background-color 0.2s, border-color 0.2s; font-size: 1.1em; }
-  details:not([open]) summary:hover { background-color: rgba(0,0,0,0.55); }
-  details[open] summary { border-bottom-color: var(--border-color); background-color: rgba(0,0,0,0.6); }
-  details summary::-webkit-details-marker, details summary::marker { display: none; }
-  details .content-wrapper { padding: var(--padding-large); border-top: 1px solid var(--border-color); background-color: rgba(0,0,0,0.1); }
-  details h3 { margin-top: 0; margin-bottom: var(--element-margin-bottom); color: var(--accent-color); font-size: 1.2em; text-align: center; border-bottom: 1px solid var(--border-color); padding-bottom: var(--spacing-unit); font-weight: 600; }
-  details summary::after { content: '▼'; font-size: 1.2em; font-weight: normal; margin-left: var(--element-margin-bottom); transition: transform 0.2s ease-in-out; display: inline-block; }
-  details[open] summary::after { transform: rotate(180deg); }
-  .control-item, .stat-item, .strategy-card, .challenge-item { margin-bottom: var(--element-margin-bottom); padding-bottom: var(--element-margin-bottom); border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: var(--spacing-unit); }
-  .control-item:last-child, .stat-item:last-child, .strategy-card:last-child, .challenge-item:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
-  .control-item label, .stat-item .label, .strategy-card p, .challenge-item .description { flex-basis: 60%; text-align: left; font-weight: 600; }
-  .control-item select, .control-item input[type="number"], .stat-item .value, .challenge-item .progress { flex-basis: 35%; text-align: right; }
-  select, input[type="number"] { padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border-color); background-color: rgba(255, 255, 255, 0.1); color: var(--text-color); font-family: var(--font-main); font-size: 0.95em; min-width: 80px; }
-  progress { width: 100%; max-width: 150px; vertical-align: middle; } /* Limit width */
-  .challenge-item .progress { display: flex; align-items: center; justify-content: flex-end; gap: var(--spacing-unit); }
-  .challenge-item .progress span { font-size: 0.9em; }
-  .challenge-item.completed .description { text-decoration: line-through; opacity: 0.7; }
-  .challenge-item.completed .reward { font-weight: bold; color: var(--highlight-color); }
-  #strategy-table { width: 100%; border-collapse: collapse; margin-top: var(--element-margin-bottom); }
-  #strategy-table th, #strategy-table td { border: 1px solid var(--border-color); padding: 8px; text-align: center; font-size: 0.9em; }
-  #strategy-table th { background-color: rgba(0,0,0,0.3); font-weight: 700; }
-  .toggle-switch { position: relative; display: inline-block; width: 50px; height: 26px; vertical-align: middle; flex-shrink: 0; }
-  .toggle-switch input { opacity: 0; width: 0; height: 0; }
-  .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #555; transition: .4s; border-radius: 26px; }
-  .slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
-  input:checked + .slider { background-color: var(--accent-color); }
-  input:focus + .slider { box-shadow: 0 0 3px var(--accent-color); }
-  input:checked + .slider:before { transform: translateX(24px); }
-  .visually-hidden { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0, 0, 0, 0); border: 0; }
-  .notification { position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-50px); background-color: var(--accent-color); color: white; padding: 14px 24px; border-radius: 8px; z-index: 101; opacity: 0; transition: opacity 0.5s ease-out, transform 0.5s ease-out; font-size: 1.05em; font-weight: 600; box-shadow: 0 4px 8px rgba(0,0,0,0.4); min-width: 250px; }
-  .notification.win { background-color: var(--result-win-glow); color: white;}
-  .notification.info { background-color: var(--accent-color); color: white;}
-  .notification.warn { background-color: var(--result-push-glow); color: black;}
-  .notification.error { background-color: var(--result-lose-glow); color: white;}
-  .notification.show { opacity: 1; transform: translateX(-50%) translateY(0px); }
-  @media (max-width: 992px) { details { max-width: 90%; } .control-item label, .stat-item .label { flex-basis: 50%; } .control-item select, .control-item input, .stat-item .value { flex-basis: 45%; } }
-  @media (max-width: 768px) { body { font-size: 15px; } h1 { font-size: 2em; } h2 { font-size: 1.5em; } .card { width: 65px; height: 95px; border-radius: 8px; } .card-front { font-size: 22px; } .card .suit { font-size: 16px; } button, .button-style { font-size: 0.95em; padding: 10px 20px; } .chip-button { width: 60px; height: 60px; border-width: 4px; } #clickable-chips { gap: var(--spacing-unit); } .player-hand { min-width: 190px; padding: var(--padding-standard); } #player-hands-container { gap: var(--padding-standard); } #result-message { font-size: 2.2em; padding: var(--padding-standard) var(--padding-large); } #player-info, #dealer-info, #betting-area, #controls-area, details { padding: var(--padding-standard); } details .content-wrapper { padding: var(--padding-standard); } #strategy-table th, #strategy-table td { font-size: 0.8em; padding: 6px; } .challenge-item { flex-direction: column; align-items: stretch; } .challenge-item .description, .challenge-item .progress, .challenge-item .reward { flex-basis: auto; text-align: left; width: 100%; } .challenge-item .progress { justify-content: flex-start; } progress { max-width: none; width: 60%; } /* Adjust progress bar width */ }
-  @media (max-width: 480px) { body { font-size: 14px; padding: var(--padding-standard) var(--spacing-unit); } .game-container { padding: var(--spacing-unit); } h1 { font-size: 1.6em; } h2 { font-size: 1.3em; } h3 { font-size: 1.1em; } .cards { min-height: 90px; gap: calc(var(--spacing-unit)*0.5); } .card { width: 55px; height: 80px; border-radius: 6px; margin: 2px; } .card-front { font-size: 18px; } .card .suit { font-size: 13px; }  #action-buttons, #betting-controls, #insurance-controls { gap: var(--spacing-unit); margin-top: var(--spacing-unit); } button, .button-style { font-size: 0.9em; padding: 9px 16px; } .chip-button { width: 50px; height: 50px; border-width: 3px; } #clickable-chips { gap: var(--spacing-unit); } .player-hand { min-width: 0; width: calc(100% - var(--padding-standard)); padding: var(--padding-standard); } #player-hands-container { gap: var(--element-margin-bottom); } .player-hand .cards { min-height: 85px; } #result-message { font-size: 1.8em; padding: var(--padding-standard) var(--padding-large); min-width: 90%; } details { font-size: 0.95em; max-width: 100%; border-radius: 8px; } details summary { padding: var(--padding-standard); font-size: 1em; } details .content-wrapper { padding: var(--padding-standard); } #proposed-bet-display { font-size: 1.4em; } #player-info, #dealer-info, #betting-area, #controls-area { padding: var(--padding-standard); margin-bottom: var(--element-margin-bottom); border-radius: 8px;} .control-item, .stat-item { flex-direction: column; align-items: flex-start; } .control-item label, .stat-item .label, .control-item select, .control-item input, .stat-item .value { flex-basis: auto; width: 100%; text-align: left; } .control-item select, .control-item input { text-align: left; } #strategy-table th, #strategy-table td { font-size: 0.7em; padding: 4px; } progress { width: 80%; } }
-</style>
+        body[data-theme="dark"] {
+            /* Dark Theme */
+            --bg-color: #2c3e50;
+            --text-color: #ecf0f1;
+            --card-bg: #34495e;
+            --card-text-black: #ecf0f1;
+            --card-text-red: #e74c3c;
+            --button-bg: #95a5a6;
+            --button-text: #2c3e50;
+            --button-hover-bg: #bdc3c7;
+            --button-active-bg: #7f8c8d;
+            --highlight-color: #f1c40f;
+            --border-color: rgba(255, 255, 255, 0.2);
+            --panel-bg: rgba(255, 255, 255, 0.1);
+            --accent-color: #5dade2;
+            --dealer-hidden-card-bg: #4e4e4e;
+            --details-summary-bg: rgba(255, 255, 255, 0.15);
+            --card-back-bg-color: var(--dealer-hidden-card-bg);
+            --table-bg-image: radial-gradient(circle at top center, #34495e 0%, var(--bg-color) 70%);
+        }
+
+        /* --- Stili Generali --- */
+        *, *::before, *::after { box-sizing: border-box; }
+
+        body {
+            background-image: var(--table-bg-image);
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-color: var(--bg-color);
+            font-family: var(--font-main);
+            text-align: center;
+            color: var(--text-color);
+            padding: var(--padding-large) var(--padding-standard);
+            margin: 0;
+            transition: background-color 0.3s, color 0.3s, background-image 0.3s;
+            min-height: 100vh;
+            font-size: 16px;
+            line-height: 1.6;
+        }
+
+        .game-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        h1 {
+            margin-bottom: var(--element-margin-bottom);
+            font-size: 2.4em;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #fff;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.5);
+        }
+        h2 {
+            margin-bottom: var(--element-margin-bottom);
+            font-size: 1.7em;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            color: var(--highlight-color);
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: var(--spacing-unit);
+        }
+         h3 {
+            margin-top: 0;
+            margin-bottom: var(--element-margin-bottom);
+            font-size: 1.3em;
+            font-weight: 600;
+            color: var(--accent-color);
+        }
+
+        /* --- Layout a Blocchi Visivi --- */
+        #player-info, #dealer-info, #betting-area, #controls-area, details {
+            background-color: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: var(--padding-large);
+            margin-bottom: var(--section-margin-bottom);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.35);
+            text-align: left;
+        }
+         #controls-area, #betting-area { text-align: center; }
+         details { padding: 0; overflow: hidden; text-align: left; }
+
+        /* --- Spacing & Display Info --- */
+         #player-balance, #bet-chips-display, #insurance-bet-display, #dealer-score, #running-count-display {
+            margin-bottom: var(--element-margin-bottom);
+            font-size: 1.1em;
+            padding: calc(var(--spacing-unit)*0.75) var(--padding-standard);
+            background-color: rgba(0,0,0,0.2);
+            border-radius: 6px;
+            display: inline-block;
+            margin-right: var(--spacing-unit);
+        }
+         #player-balance { font-weight: 700; background-color: transparent; padding-left: 0; }
+         #running-count-display { font-weight: 600; /* Visibile di default per premium */ }
+
+        /* --- Carte --- */
+        .cards {
+            margin: var(--element-margin-bottom) auto;
+            display: flex;
+            justify-content: center;
+            min-height: 115px; /* Altezza carta + margine */
+            gap: var(--spacing-unit);
+            flex-wrap: wrap;
+            perspective: 1200px;
+            padding: var(--spacing-unit) 0;
+        }
+        .card {
+            display: inline-block;
+            border: 1px solid rgba(0,0,0,0.2);
+            border-radius: 10px;
+            background: var(--card-bg);
+            width: 75px;
+            height: 110px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            margin: calc(var(--spacing-unit) / 2);
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform calc(0.7s * var(--animation-factor)) cubic-bezier(0.4, 0.0, 0.2, 1), box-shadow 0.3s ease;
+            /* transform: rotateY(180deg); */ /* Inizia nascosta */
+        }
+        .card.hidden {
+            transform: rotateY(180deg);
+        }
+        .card.revealed {
+            transform: rotateY(0deg);
+        }
+        .card:hover { box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4); }
+        .card-inner { position: relative; width: 100%; height: 100%; text-align: center; transform-style: preserve-3d; }
+        .card-face { position: absolute; width: 100%; height: 100%; -webkit-backface-visibility: hidden; backface-visibility: hidden; border-radius: 10px; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 5px; box-sizing: border-box; }
+        .card-front { background-color: var(--card-bg); background-image: linear-gradient(to bottom, rgba(255,255,255,0.05) 0%, rgba(0,0,0,0.05) 100%); color: var(--card-text-black); font-size: 28px; font-weight: 600; transform: rotateY(0deg); border: 1px solid rgba(0,0,0,0.1); }
+        .card-back { background-color: var(--card-back-bg-color); color: var(--text-color); transform: rotateY(180deg); background-image: var(--card-back-image); background-size: var(--card-back-pattern-size); background-position: center; }
+        /* Rimosso .card.flipped, ora usiamo .revealed */
+        .card-front.red { color: var(--card-text-red); }
+        .card-front.black { color: var(--card-text-black); }
+        .card .suit { font-size: 20px; font-weight: normal; line-height: 1.1; }
+
+        /* --- Pulsanti & Controlli --- */
+         #action-buttons, #betting-controls, #insurance-controls {
+            margin-top: var(--element-margin-bottom);
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: var(--element-margin-bottom);
+         }
+
+        /* Stile Base Pulsante Unificato */
+         button, .button-style {
+             padding: 12px 25px;
+             font-size: 1em;
+             font-weight: 600;
+             font-family: var(--font-main);
+             cursor: pointer;
+             border: none;
+             border-radius: 8px;
+             background-color: var(--button-bg);
+             color: var(--button-text);
+             transition: background-color 0.2s ease, opacity 0.3s ease, transform 0.15s ease, box-shadow 0.2s ease;
+             user-select: none; -webkit-user-select: none;
+             box-shadow: 0 3px 6px rgba(0, 0, 0, 0.25);
+             letter-spacing: 0.5px;
+             text-transform: none;
+             display: inline-flex;
+             align-items: center;
+             justify-content: center;
+             gap: var(--spacing-unit);
+             text-decoration: none;
+             line-height: 1.4;
+             vertical-align: middle;
+         }
+        button:hover:not(:disabled), .button-style:hover:not([aria-disabled="true"]) {
+            background-color: var(--button-hover-bg);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.35);
+        }
+        button:active:not(:disabled), .button-style:active:not([aria-disabled="true"]) {
+            background-color: var(--button-active-bg);
+            transform: translateY(0px);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.25);
+        }
+        button:disabled, .button-style[aria-disabled="true"] {
+            opacity: var(--button-disabled-opacity);
+            cursor: not-allowed;
+            box-shadow: none;
+            transform: none;
+            background-color: #555 !important;
+            color: #aaa !important;
+        }
+        button i, .button-style i { font-size: 1.1em; line-height: 1; }
+        button.hint-highlight { box-shadow: 0 0 12px 4px var(--highlight-color); border: 1px solid var(--highlight-color); transform: translateY(-1px); }
+         /* Stile per evidenziare feature premium */
+        .premium-feature-visual {
+            border-left: 5px solid var(--premium-glow);
+            padding-left: var(--padding-standard);
+            margin-left: calc(-1 * var(--padding-standard) - 5px); /* Adatta per non cambiare larghezza */
+            filter: drop-shadow(0 0 5px var(--premium-glow));
+        }
+         details.premium-feature-visual summary, .premium-feature-visual label {
+             color: var(--premium-glow);
+             font-weight: 700;
+         }
+         .premium-feature-visual .toggle-switch input:checked + .slider { background-color: var(--premium-glow); }
+         .premium-feature-visual .toggle-switch input:focus + .slider { box-shadow: 0 0 3px var(--premium-glow); }
+         /* Evidenziazione per pulsanti premium */
+         button.premium-action-visual, .button-style.premium-action-visual {
+             box-shadow: 0 0 6px 1px var(--premium-glow), 0 3px 6px rgba(0, 0, 0, 0.25);
+         }
+         button.premium-action-visual:hover:not(:disabled), .button-style.premium-action-visual:hover:not([aria-disabled="true"]) {
+             box-shadow: 0 0 10px 2px var(--premium-glow), 0 5px 10px rgba(0, 0, 0, 0.35);
+         }
+
+
+        /* --- Area Puntate & Fiches --- */
+         #betting-area h3 { margin-bottom: var(--element-margin-bottom); text-align: center; }
+         #proposed-bet-display {
+             font-size: 1.6em;
+             font-weight: 700;
+             color: var(--highlight-color);
+             min-height: 1.6em;
+             background-color: rgba(0,0,0,0.3);
+             padding: var(--spacing-unit) var(--padding-standard);
+             border-radius: 6px;
+             margin-bottom: var(--element-margin-bottom);
+             display: inline-block;
+             min-width: 120px;
+             text-align: center;
+         }
+         #clickable-chips {
+             display: flex;
+             flex-wrap: wrap;
+             justify-content: center;
+             gap: var(--element-margin-bottom);
+             margin-bottom: var(--element-margin-bottom);
+             padding: var(--spacing-unit) 0;
+         }
+         .chip-button {
+             width: 65px;
+             height: 65px;
+             cursor: pointer;
+             border-radius: 50%;
+             border: 5px solid rgba(255, 255, 255, 0.6);
+             transition: transform 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+             box-shadow: inset 0 3px 5px rgba(0, 0, 0, 0.5), 0 3px 5px rgba(0,0,0,0.3);
+             user-select: none; -webkit-user-select: none;
+             background-color: transparent;
+             display: flex; justify-content: center; align-items: center; overflow: hidden; padding: 0;
+             transform: scale(1);
+         }
+         .chip-button img { display: block; width: 100%; height: 100%; object-fit: contain; pointer-events: none; }
+         .chip-button:hover:not([disabled]) {
+             transform: scale(1.1);
+             border-color: white;
+             box-shadow: inset 0 3px 5px rgba(0, 0, 0, 0.5), 0 0 15px 4px var(--highlight-color);
+         }
+         .chip-button:active:not([disabled]) {
+             transform: scale(0.92);
+             box-shadow: inset 0 5px 7px rgba(0, 0, 0, 0.6);
+             transition-duration: 0.05s;
+         }
+         .chip-button[disabled] { opacity: 0.4; cursor: not-allowed; transform: none; border-color: rgba(255, 255, 255, 0.4); box-shadow: inset 0 3px 5px rgba(0, 0, 0, 0.5); }
+         /* Stili specifici per fiches High Stakes */
+         .chip-button.high-stakes-chip { border-color: var(--high-stakes-chip-border); }
+         .chip-button.high-stakes-chip:hover:not([disabled]) { box-shadow: inset 0 3px 5px rgba(0, 0, 0, 0.5), 0 0 15px 4px var(--premium-glow); border-color: var(--premium-glow); }
+         .chip-button.very-high-stakes-chip { border-color: var(--very-high-stakes-chip-border); }
+         .chip-button.very-high-stakes-chip:hover:not([disabled]) { box-shadow: inset 0 3px 5px rgba(0, 0, 0, 0.5), 0 0 15px 4px var(--very-high-stakes-chip-border); border-color: var(--very-high-stakes-chip-border); }
+
+        /* --- Mani Multiple (Split) --- */
+        #player-hands-container { display: flex; justify-content: center; gap: var(--padding-large); flex-wrap: wrap; margin-top: var(--element-margin-bottom); }
+        .player-hand { border: 3px solid var(--border-color); border-radius: 10px; padding: var(--padding-standard); min-width: 220px; background-color: rgba(0,0,0,0.2); position: relative; transition: border-color 0.3s, box-shadow 0.3s; box-shadow: 0 4px 8px rgba(0,0,0,0.3); text-align: center; }
+        .player-hand h3 { margin-top: 0; margin-bottom: var(--spacing-unit); font-size: 1.1em; color: var(--accent-color); text-align: center; font-weight: 700; }
+        .player-hand .cards { min-height: 110px; margin-bottom: var(--spacing-unit); }
+        .player-score, .hand-bet { font-size: 1em; margin-bottom: var(--spacing-unit); font-weight: 700; }
+        .hand-status { font-size: 1em; font-weight: 700; color: var(--highlight-color); min-height: 1.2em; text-align: center; text-transform: uppercase; letter-spacing: 1px; }
+        .player-hand.current-hand { border-color: var(--highlight-color); box-shadow: 0 0 20px rgba(241, 196, 15, 0.8); }
+
+        /* --- Messaggio Risultato --- */
+         #result-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.75); opacity: 0; visibility: hidden; z-index: 99; transition: opacity 0.4s ease-out, visibility 0s linear 0.4s; backdrop-filter: blur(4px); }
+         #result-overlay.show { opacity: 1; visibility: visible; transition-delay: 0s; cursor: pointer;}
+         #result-message { opacity: 0; visibility: hidden; transform: translate(-50%, -50%) scale(0.8); transition: opacity 0.4s ease-out 0.1s, visibility 0s linear 0.5s, transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) 0.1s; position: fixed; top: 50%; left: 50%; z-index: 100; background-color: var(--result-bg-color); color: var(--result-text-color); padding: var(--padding-large) calc(var(--padding-large) * 1.8); border-radius: 15px; font-size: 2.8em; font-weight: 700; text-align: center; white-space: pre-line; min-width: 350px; max-width: 90%; box-shadow: 0 0 30px 10px rgba(0, 0, 0, 0.7); cursor: default;}
+         #result-message.result-show { opacity: 1; visibility: visible; transform: translate(-50%, -50%) scale(1); transition: opacity 0.4s ease-out, visibility 0s linear 0s, transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+         #result-message.win { box-shadow: 0 0 35px 15px var(--result-win-glow); }
+         #result-message.lose { box-shadow: 0 0 35px 15px var(--result-lose-glow); }
+         #result-message.push { box-shadow: 0 0 35px 15px var(--result-push-glow); }
+
+        /* --- Sezioni Details (Opzioni, Stats, etc.) --- */
+        details { max-width: 700px; margin-left: auto; margin-right: auto; }
+        details summary {
+            font-weight: 700;
+            cursor: pointer;
+            padding: var(--padding-standard) var(--padding-large);
+            background-color: var(--details-summary-bg);
+            list-style: none;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid transparent;
+            transition: background-color 0.2s, border-color 0.2s;
+            font-size: 1.1em;
+        }
+        details:not([open]) summary:hover { background-color: rgba(0,0,0,0.55); }
+        details[open] summary { border-bottom-color: var(--border-color); background-color: rgba(0,0,0,0.6); }
+        details summary::-webkit-details-marker, details summary::marker { display: none; }
+        details .content-wrapper { padding: var(--padding-large); border-top: 1px solid var(--border-color); background-color: rgba(0,0,0,0.1); }
+        details h3 { margin-top: 0; margin-bottom: var(--element-margin-bottom); color: var(--accent-color); font-size: 1.2em; text-align: center; border-bottom: 1px solid var(--border-color); padding-bottom: var(--spacing-unit); font-weight: 600; }
+        details summary::after { content: '▼'; font-size: 1.2em; font-weight: normal; margin-left: var(--element-margin-bottom); transition: transform 0.2s ease-in-out; display: inline-block; }
+        details[open] summary::after { transform: rotate(180deg); }
+
+        /* Stili interni alle sezioni Details */
+        .control-item, .stat-item, .strategy-card, .challenge-item {
+            margin-bottom: var(--element-margin-bottom);
+            padding-bottom: var(--element-margin-bottom);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: var(--spacing-unit);
+        }
+        .control-item:last-child, .stat-item:last-child, .strategy-card:last-child, .challenge-item:last-child {
+            border-bottom: none;
+            margin-bottom: 0; padding-bottom: 0;
+        }
+        .control-item label, .stat-item .label, .strategy-card p, .challenge-item .description {
+            flex-basis: 60%;
+            text-align: left; font-weight: 600;
+        }
+        .control-item select, .control-item input[type="number"], .stat-item .value, .challenge-item .progress {
+            flex-basis: 35%;
+            text-align: right;
+        }
+        select, input[type="number"] {
+             padding: 8px 12px;
+             border-radius: 6px; border: 1px solid var(--border-color); background-color: rgba(255, 255, 255, 0.1); color: var(--text-color); font-family: var(--font-main); font-size: 0.95em; min-width: 80px;
+        }
+        progress { width: 100%; max-width: 150px; vertical-align: middle; } /* Limit width */
+        .challenge-item .progress { display: flex; align-items: center; justify-content: flex-end; gap: var(--spacing-unit); }
+        .challenge-item .progress span { font-size: 0.9em; }
+        .challenge-item.completed .description { text-decoration: line-through; opacity: 0.7; }
+        .challenge-item.completed .reward { font-weight: bold; color: var(--highlight-color); }
+
+        #strategy-table { width: 100%; border-collapse: collapse; margin-top: var(--element-margin-bottom); }
+        #strategy-table th, #strategy-table td { border: 1px solid var(--border-color); padding: 8px; text-align: center; font-size: 0.9em; }
+        #strategy-table th { background-color: rgba(0,0,0,0.3); font-weight: 700; }
+
+        /* --- Elementi Speciali --- */
+         .toggle-switch { position: relative; display: inline-block; width: 50px; height: 26px; vertical-align: middle; flex-shrink: 0; }
+         .toggle-switch input { opacity: 0; width: 0; height: 0; }
+         .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #555; transition: .4s; border-radius: 26px; }
+         .slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+         input:checked + .slider { background-color: var(--accent-color); }
+         input:focus + .slider { box-shadow: 0 0 3px var(--accent-color); }
+         input:checked + .slider:before { transform: translateX(24px); }
+
+         .visually-hidden { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0, 0, 0, 0); border: 0; }
+
+         .notification { position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-50px); background-color: var(--accent-color); color: white; padding: 14px 24px; border-radius: 8px; z-index: 101; opacity: 0; transition: opacity 0.5s ease-out, transform 0.5s ease-out; font-size: 1.05em; font-weight: 600; box-shadow: 0 4px 8px rgba(0,0,0,0.4); min-width: 250px; }
+         .notification.win { background-color: var(--result-win-glow); color: white;}
+         .notification.info { background-color: var(--accent-color); color: white;}
+         .notification.warn { background-color: var(--result-push-glow); color: black;}
+         .notification.error { background-color: var(--result-lose-glow); color: white;}
+         .notification.show { opacity: 1; transform: translateX(-50%) translateY(0px); }
+
+
+        /* --- Responsiveness --- */
+        @media (max-width: 992px) {
+            details { max-width: 90%; }
+            .control-item label, .stat-item .label { flex-basis: 50%; }
+            .control-item select, .control-item input, .stat-item .value { flex-basis: 45%; }
+        }
+
+        @media (max-width: 768px) {
+             body { font-size: 15px; }
+             h1 { font-size: 2em; }
+             h2 { font-size: 1.5em; }
+             .card { width: 65px; height: 95px; border-radius: 8px; }
+             .card-front { font-size: 22px; }
+             .card .suit { font-size: 16px; }
+             button, .button-style { font-size: 0.95em; padding: 10px 20px; }
+             .chip-button { width: 60px; height: 60px; border-width: 4px; }
+             #clickable-chips { gap: var(--spacing-unit); }
+             .player-hand { min-width: 190px; padding: var(--padding-standard); }
+             #player-hands-container { gap: var(--padding-standard); }
+             #result-message { font-size: 2.2em; padding: var(--padding-standard) var(--padding-large); }
+             #player-info, #dealer-info, #betting-area, #controls-area, details { padding: var(--padding-standard); }
+             details .content-wrapper { padding: var(--padding-standard); }
+             #strategy-table th, #strategy-table td { font-size: 0.8em; padding: 6px; }
+             .challenge-item { flex-direction: column; align-items: stretch; }
+             .challenge-item .description, .challenge-item .progress, .challenge-item .reward { flex-basis: auto; text-align: left; width: 100%; }
+             .challenge-item .progress { justify-content: flex-start; }
+             progress { max-width: none; width: 60%; } /* Adjust progress bar width */
+        }
+
+        @media (max-width: 480px) {
+             body { font-size: 14px; padding: var(--padding-standard) var(--spacing-unit); }
+             .game-container { padding: var(--spacing-unit); }
+             h1 { font-size: 1.6em; }
+             h2 { font-size: 1.3em; }
+             h3 { font-size: 1.1em; }
+             .cards { min-height: 90px; gap: calc(var(--spacing-unit)*0.5); }
+             .card { width: 55px; height: 80px; border-radius: 6px; margin: 2px; }
+             .card-front { font-size: 18px; }
+             .card .suit { font-size: 13px; }
+              #action-buttons, #betting-controls, #insurance-controls { gap: var(--spacing-unit); margin-top: var(--spacing-unit); }
+             button, .button-style { font-size: 0.9em; padding: 9px 16px; }
+             .chip-button { width: 50px; height: 50px; border-width: 3px; }
+             #clickable-chips { gap: var(--spacing-unit); }
+             .player-hand { min-width: 0; width: calc(100% - var(--padding-standard)); padding: var(--padding-standard); }
+             #player-hands-container { gap: var(--element-margin-bottom); }
+             .player-hand .cards { min-height: 85px; }
+             #result-message { font-size: 1.8em; padding: var(--padding-standard) var(--padding-large); min-width: 90%; }
+             details { font-size: 0.95em; max-width: 100%; border-radius: 8px; }
+             details summary { padding: var(--padding-standard); font-size: 1em; }
+             details .content-wrapper { padding: var(--padding-standard); }
+             #proposed-bet-display { font-size: 1.4em; }
+             #player-info, #dealer-info, #betting-area, #controls-area { padding: var(--padding-standard); margin-bottom: var(--element-margin-bottom); border-radius: 8px;}
+             .control-item, .stat-item { flex-direction: column; align-items: flex-start; }
+             .control-item label, .stat-item .label, .control-item select, .control-item input, .stat-item .value { flex-basis: auto; width: 100%; text-align: left; }
+             .control-item select, .control-item input { text-align: left; }
+             #strategy-table th, #strategy-table td { font-size: 0.7em; padding: 4px; }
+             progress { width: 80%; }
+        }
+    </style>
 </head>
-<body data-theme="light"> <div class="game-container">
+<body data-theme="light">
+
+<div class="game-container">
     <h1>Blackjack Premium</h1>
 
     <div id="notification-area"></div>
@@ -2129,4 +2419,3 @@
 
 </body>
 </html>
-}
